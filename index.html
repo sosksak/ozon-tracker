@@ -3,9 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>🐴 💰 OZON Grind Tracker</title>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>💰 OZON Grind Tracker v2</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="config.js"></script>
+<script src="config.js?v=2"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
 
@@ -22,6 +25,7 @@
   --red: #ff5252;
   --orange: #ffab40;
   --purple: #bb86fc;
+  --cyan: #00e5ff;
 }
 
 * { margin:0; padding:0; box-sizing:border-box; }
@@ -41,8 +45,7 @@ body {
   background: var(--bg-dark);
   display: flex; align-items: center; justify-content: center;
   flex-direction: column; gap: 16px;
-  z-index: 9999;
-  transition: opacity 0.5s;
+  z-index: 9999; transition: opacity 0.5s;
 }
 .loading-overlay.hidden { opacity: 0; pointer-events: none; }
 .loading-spinner { font-size: 60px; animation: spin 1s linear infinite; }
@@ -73,6 +76,24 @@ body {
 }
 .header .subtitle { font-size: 13px; color: var(--text-dim); margin-top: 2px; }
 
+/* TAB NAV */
+.tab-nav {
+  display: flex; margin: 12px 16px 0; border-radius: 14px; overflow: hidden;
+  background: var(--bg-card); border: 1px solid rgba(255,255,255,0.08);
+}
+.tab-btn {
+  flex: 1; padding: 12px 8px; border: none; background: none;
+  color: var(--text-dim); font-family: 'Nunito', sans-serif;
+  font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.3s;
+  text-align: center;
+}
+.tab-btn.active { background: rgba(255,215,0,0.15); color: var(--gold); }
+.tab-btn:first-child { border-radius: 14px 0 0 14px; }
+.tab-btn:last-child { border-radius: 0 14px 14px 0; }
+
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
 /* VAULT */
 .vault {
   margin: 16px; padding: 20px;
@@ -87,6 +108,76 @@ body {
 .vault-stat { text-align: center; background: rgba(255,255,255,0.05); border-radius: 12px; padding: 10px 6px; }
 .vault-stat .val { font-size: 18px; font-weight: 800; color: var(--gold-light); }
 .vault-stat .lbl { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+
+/* ACTIVE SHIFT */
+.active-shift {
+  margin: 16px; padding: 20px;
+  background: linear-gradient(145deg, #1a3a2a, #0f2a1a);
+  border-radius: 20px; border: 2px solid var(--green);
+  position: relative; overflow: hidden;
+}
+.active-shift.inactive { border-color: rgba(255,255,255,0.1); background: var(--bg-card); }
+.active-shift h3 { font-size: 15px; margin-bottom: 14px; text-align: center; }
+.active-shift h3.live { color: var(--green); }
+.active-shift h3.off { color: var(--text-dim); }
+
+.shift-timer {
+  text-align: center; margin-bottom: 16px;
+}
+.timer-display {
+  font-size: 48px; font-weight: 900; color: var(--green);
+  font-variant-numeric: tabular-nums; letter-spacing: 2px;
+}
+.timer-sub { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
+
+.shift-controls { display: flex; gap: 8px; margin-bottom: 12px; }
+.shift-ctrl-btn {
+  flex: 1; padding: 14px 8px; border-radius: 14px; border: none;
+  font-family: 'Nunito', sans-serif; font-size: 14px; font-weight: 800;
+  cursor: pointer; transition: all 0.3s;
+}
+.btn-start { background: linear-gradient(135deg, #00c853, #00e676); color: #1a1a2e; }
+.btn-break { background: linear-gradient(135deg, #ff8f00, #ffab40); color: #1a1a2e; }
+.btn-resume { background: linear-gradient(135deg, #2196f3, #42a5f5); color: #fff; }
+.btn-end { background: linear-gradient(135deg, #c62828, #ff5252); color: #fff; }
+.shift-ctrl-btn:active { transform: scale(0.95); }
+.shift-ctrl-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.break-log {
+  margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.2);
+  border-radius: 10px; max-height: 120px; overflow-y: auto;
+}
+.break-log h4 { font-size: 12px; color: var(--text-dim); margin-bottom: 6px; }
+.break-item {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 12px; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.break-item:last-child { border: none; }
+.break-item .b-type { color: var(--orange); }
+.break-item .b-dur { color: var(--text-dim); }
+.break-total { margin-top: 8px; text-align: center; font-size: 13px; font-weight: 700; color: var(--orange); }
+
+/* QUESTS */
+.quests {
+  margin: 0 16px 16px; padding: 16px;
+  background: var(--bg-card); border-radius: 16px;
+  border: 1px solid rgba(0,229,255,0.2);
+}
+.quests h3 { font-size: 14px; color: var(--cyan); margin-bottom: 12px; text-align: center; }
+.quest-item {
+  background: rgba(255,255,255,0.04); border-radius: 12px; padding: 12px;
+  margin-bottom: 8px; border-left: 3px solid var(--cyan);
+  transition: all 0.3s;
+}
+.quest-item.completed { border-left-color: var(--green); opacity: 0.6; }
+.quest-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.quest-title { font-size: 13px; font-weight: 700; }
+.quest-reward { font-size: 12px; color: var(--gold); }
+.quest-progress { width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; }
+.quest-fill { height: 100%; border-radius: 3px; transition: width 0.5s; }
+.quest-fill.active { background: linear-gradient(90deg, var(--cyan), #80deea); }
+.quest-fill.done { background: var(--green); }
+.quest-text { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
 
 /* LEVEL */
 .level-section {
@@ -143,13 +234,14 @@ body {
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
 .form-group { display: flex; flex-direction: column; }
 .form-group label { font-size: 12px; color: var(--text-dim); margin-bottom: 4px; }
-.form-group input {
+.form-group input, .form-group select {
   padding: 10px 12px; background: rgba(255,255,255,0.08);
   border: 1px solid rgba(255,255,255,0.12); border-radius: 10px;
   color: var(--text); font-family: 'Nunito', sans-serif; font-size: 15px; font-weight: 600;
   outline: none; transition: border 0.3s;
 }
-.form-group input:focus { border-color: var(--gold); }
+.form-group input:focus, .form-group select:focus { border-color: var(--gold); }
+.form-group select option { background: var(--bg-dark); color: var(--text); }
 .btn-add {
   width: 100%; padding: 14px;
   background: linear-gradient(135deg, var(--gold-dark), var(--gold));
@@ -211,17 +303,19 @@ body {
 @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 .slide-up { animation: slideUp 0.4s ease; }
 @keyframes shake { 25%{transform:translateX(-5px)} 50%{transform:translateX(5px)} 75%{transform:translateX(-3px)} 100%{transform:translateX(0)} }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+.pulse { animation: pulse 2s ease infinite; }
 
 /* SYNC STATUS */
 .sync-status {
   position: fixed; bottom: 12px; right: 12px;
   padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 700;
-  background: rgba(0,0,0,0.7); z-index: 100;
-  transition: all 0.3s;
+  background: rgba(0,0,0,0.7); z-index: 100; transition: all 0.3s;
 }
 .sync-status.ok { color: var(--green); }
 .sync-status.error { color: var(--red); }
 .sync-status.syncing { color: var(--orange); }
+.sync-status.warn { color: var(--orange); }
 
 /* TOAST */
 .toast {
@@ -249,6 +343,16 @@ body {
   <div class="subtitle">Копим как Скрудж МакДак 🦆</div>
 </div>
 
+<!-- TAB NAVIGATION -->
+<div class="tab-nav">
+  <button class="tab-btn active" onclick="switchTab('live')" id="tabLive">⚡ СМЕНА</button>
+  <button class="tab-btn" onclick="switchTab('add')" id="tabAdd">➕ ДОБАВИТЬ</button>
+  <button class="tab-btn" onclick="switchTab('stats')" id="tabStats">📊 СТАТА</button>
+</div>
+
+<!-- ============ TAB: LIVE SHIFT ============ -->
+<div class="tab-content active" id="contentLive">
+
 <div class="vault" id="vault">
   <div class="vault-total">
     <span id="totalEarned">0</span> <span class="currency">₽</span>
@@ -259,6 +363,76 @@ body {
     <div class="vault-stat"><div class="val" id="avgRate">0</div><div class="lbl">₽/час сред.</div></div>
   </div>
 </div>
+
+<!-- ACTIVE SHIFT PANEL -->
+<div class="active-shift inactive" id="activeShiftPanel">
+  <h3 class="off" id="shiftStatusTitle">🏠 СМЕНА НЕ НАЧАТА</h3>
+
+  <div class="shift-timer">
+    <div class="timer-display" id="timerDisplay">00:00:00</div>
+    <div class="timer-sub" id="timerSub">Нажми «Начать смену»</div>
+  </div>
+
+  <div class="shift-controls">
+    <button class="shift-ctrl-btn btn-start" id="btnStart" onclick="startShift()">▶ НАЧАТЬ СМЕНУ</button>
+    <button class="shift-ctrl-btn btn-break" id="btnBreak" onclick="startBreak()" style="display:none">☕ ПЕРЕРЫВ</button>
+    <button class="shift-ctrl-btn btn-resume" id="btnResume" onclick="endBreak()" style="display:none">▶ РАБОТАЮ</button>
+    <button class="shift-ctrl-btn btn-end" id="btnEnd" onclick="endShift()" style="display:none">⏹ ЗАВЕРШИТЬ</button>
+  </div>
+
+  <!-- Break type selector (hidden by default) -->
+  <div id="breakTypeSelector" style="display:none; margin-bottom: 12px;">
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;">
+      <button class="shift-ctrl-btn" style="background:rgba(255,171,64,0.2);color:var(--orange);font-size:12px;padding:10px" onclick="confirmBreak('🍔 Обед')">🍔 Обед</button>
+      <button class="shift-ctrl-btn" style="background:rgba(255,171,64,0.2);color:var(--orange);font-size:12px;padding:10px" onclick="confirmBreak('🚬 Курение')">🚬 Курение</button>
+      <button class="shift-ctrl-btn" style="background:rgba(255,171,64,0.2);color:var(--orange);font-size:12px;padding:10px" onclick="confirmBreak('🚶 Другое')">🚶 Другое</button>
+    </div>
+  </div>
+
+  <div class="break-log" id="breakLog" style="display:none">
+    <h4>☕ Перерывы:</h4>
+    <div id="breakList"></div>
+    <div class="break-total" id="breakTotal"></div>
+  </div>
+</div>
+
+<!-- DAILY QUESTS -->
+<div class="quests" id="questsPanel">
+  <h3>⚔️ КВЕСТЫ ДНЯ</h3>
+  <div id="questList"></div>
+</div>
+
+</div>
+
+<!-- ============ TAB: ADD SHIFT ============ -->
+<div class="tab-content" id="contentAdd">
+
+<div class="difficulty">
+  <h3>🎯 ЦЕЛЬ ₽/ЧАС</h3>
+  <div class="diff-buttons">
+    <button class="diff-btn easy" onclick="setDifficulty('easy')" data-diff="easy">😎 ЛАЙТ<span class="goal-val">800₽</span></button>
+    <button class="diff-btn normal active" onclick="setDifficulty('normal')" data-diff="normal">💪 НОРМАЛ<span class="goal-val">850₽</span></button>
+    <button class="diff-btn hard" onclick="setDifficulty('hard')" data-diff="hard">🔥 ХАРД<span class="goal-val">900₽</span></button>
+  </div>
+</div>
+
+<div class="add-shift">
+  <h3>➕ ДОБАВИТЬ СМЕНУ ВРУЧНУЮ</h3>
+  <div class="form-row">
+    <div class="form-group"><label>📅 Дата</label><input type="date" id="inputDate"></div>
+    <div class="form-group"><label>⏱ Чистые часы</label><input type="number" id="inputHours" placeholder="9" step="0.5" min="0.5" max="24"></div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label>💵 Заработок ₽</label><input type="number" id="inputEarned" placeholder="8600" min="0"></div>
+    <div class="form-group"><label>📝 Заметка</label><input type="text" id="inputNote" placeholder="541 операция..."></div>
+  </div>
+  <button class="btn-add" id="btnAdd" onclick="addShift()">🪙 ДОБАВИТЬ</button>
+</div>
+
+</div>
+
+<!-- ============ TAB: STATS ============ -->
+<div class="tab-content" id="contentStats">
 
 <div class="streak-bar" id="streakBar" style="display:none;">
   <div class="streak-icon">🔥</div>
@@ -279,28 +453,6 @@ body {
   <div class="xp-bar"><div class="xp-fill" id="xpFill" style="width:0%"></div></div>
 </div>
 
-<div class="difficulty">
-  <h3>🎯 ЦЕЛЬ ₽/ЧАС</h3>
-  <div class="diff-buttons">
-    <button class="diff-btn easy" onclick="setDifficulty('easy')" data-diff="easy">😎 ЛАЙТ<span class="goal-val">800₽</span></button>
-    <button class="diff-btn normal active" onclick="setDifficulty('normal')" data-diff="normal">💪 НОРМАЛ<span class="goal-val">850₽</span></button>
-    <button class="diff-btn hard" onclick="setDifficulty('hard')" data-diff="hard">🔥 ХАРД<span class="goal-val">900₽</span></button>
-  </div>
-</div>
-
-<div class="add-shift">
-  <h3>➕ ДОБАВИТЬ СМЕНУ</h3>
-  <div class="form-row">
-    <div class="form-group"><label>📅 Дата</label><input type="date" id="inputDate"></div>
-    <div class="form-group"><label>⏱ Часы</label><input type="number" id="inputHours" placeholder="9.5" step="0.5" min="0.5" max="24"></div>
-  </div>
-  <div class="form-row">
-    <div class="form-group"><label>💵 Заработок ₽</label><input type="number" id="inputEarned" placeholder="8600" min="0"></div>
-    <div class="form-group"><label>📝 Заметка</label><input type="text" id="inputNote" placeholder="дневная смена..."></div>
-  </div>
-  <button class="btn-add" id="btnAdd" onclick="addShift()">🪙 ДОБАВИТЬ</button>
-</div>
-
 <div class="achievements">
   <h3>🏆 ДОСТИЖЕНИЯ</h3>
   <div class="ach-grid" id="achGrid"></div>
@@ -311,18 +463,16 @@ body {
   <div id="shiftList"></div>
 </div>
 
+</div>
+
 <div class="sync-status ok" id="syncStatus">☁️ Облако</div>
 
 <script>
 // ====== SUPABASE INIT ======
 let sb = null;
-try {
-  sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-} catch (e) {
-  console.error('Supabase init failed:', e);
-}
+try { sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch(e) { console.error('Supabase init failed:', e); }
 
-// ====== DATA ======
+// ====== CONSTANTS ======
 const LEVELS = [
   { lvl:1, name:'Новичок',        icon:'🐣', title:'Начало пути',         xp:0 },
   { lvl:2, name:'Кладовщик',      icon:'📦', title:'Освоился на складе',   xp:50000 },
@@ -357,7 +507,21 @@ const ACHIEVEMENTS = [
 let shifts = [];
 let difficulty = localStorage.getItem('ozon_difficulty') || 'normal';
 
-// ====== TOAST NOTIFICATIONS ======
+// Active shift state (stored in localStorage)
+let activeShift = JSON.parse(localStorage.getItem('ozon_active_shift') || 'null');
+// activeShift = { startTime, breaks: [{type, start, end}], currentBreak: null, status: 'working'|'break'|null }
+
+let timerInterval = null;
+
+// ====== TAB SWITCHING ======
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
+  document.getElementById('content' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
+}
+
+// ====== TOAST ======
 function showToast(msg, type = 'success') {
   const existing = document.querySelector('.toast');
   if (existing) existing.remove();
@@ -365,16 +529,11 @@ function showToast(msg, type = 'success') {
   toast.className = `toast ${type}`;
   toast.textContent = msg;
   document.body.appendChild(toast);
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => toast.classList.add('show'));
-  });
-  setTimeout(() => {
-    toast.classList.remove('show');
-    setTimeout(() => toast.remove(), 400);
-  }, 2500);
+  requestAnimationFrame(() => requestAnimationFrame(() => toast.classList.add('show')));
+  setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 400); }, 2500);
 }
 
-// ====== HELPER: compute rate ======
+// ====== HELPERS ======
 function enrichShift(s) {
   s.hours = parseFloat(s.hours) || 0;
   s.earned = parseFloat(s.earned) || 0;
@@ -382,17 +541,288 @@ function enrichShift(s) {
   return s;
 }
 
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function formatDuration(ms) {
+  const totalSec = Math.floor(ms / 1000);
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+
+function formatShortDuration(ms) {
+  const mins = Math.round(ms / 60000);
+  if (mins < 60) return mins + ' мин';
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return h + 'ч ' + (m > 0 ? m + 'м' : '');
+}
+
+function saveActiveShift() {
+  if (activeShift) {
+    localStorage.setItem('ozon_active_shift', JSON.stringify(activeShift));
+  } else {
+    localStorage.removeItem('ozon_active_shift');
+  }
+}
+
+// ====== ACTIVE SHIFT ======
+function startShift() {
+  activeShift = {
+    startTime: Date.now(),
+    breaks: [],
+    currentBreak: null,
+    status: 'working'
+  };
+  saveActiveShift();
+  renderActiveShift();
+  startTimer();
+  showToast('🚀 Смена начата! Погнали!', 'success');
+}
+
+function startBreak() {
+  document.getElementById('breakTypeSelector').style.display = 'block';
+  document.getElementById('btnBreak').style.display = 'none';
+}
+
+function confirmBreak(type) {
+  if (!activeShift) return;
+  activeShift.currentBreak = { type, start: Date.now(), end: null };
+  activeShift.status = 'break';
+  saveActiveShift();
+  document.getElementById('breakTypeSelector').style.display = 'none';
+  renderActiveShift();
+  showToast(`☕ Перерыв: ${type}`, 'warn');
+}
+
+function endBreak() {
+  if (!activeShift || !activeShift.currentBreak) return;
+  activeShift.currentBreak.end = Date.now();
+  activeShift.breaks.push({...activeShift.currentBreak});
+  activeShift.currentBreak = null;
+  activeShift.status = 'working';
+  saveActiveShift();
+  renderActiveShift();
+  showToast('💪 Снова в деле!', 'success');
+}
+
+function endShift() {
+  if (!activeShift) return;
+  // If on break, end it first
+  if (activeShift.currentBreak) {
+    activeShift.currentBreak.end = Date.now();
+    activeShift.breaks.push({...activeShift.currentBreak});
+    activeShift.currentBreak = null;
+  }
+
+  const totalMs = Date.now() - activeShift.startTime;
+  const breakMs = activeShift.breaks.reduce((sum, b) => sum + (b.end - b.start), 0);
+  const workMs = totalMs - breakMs;
+  const workHours = Math.round((workMs / 3600000) * 10) / 10; // 1 decimal
+
+  const breakSummary = activeShift.breaks.map(b => b.type + ' ' + formatShortDuration(b.end - b.start)).join(', ');
+
+  // Prefill the add form
+  switchTab('add');
+  document.getElementById('inputHours').value = workHours;
+  document.getElementById('inputNote').value = breakSummary ? `Перерывы: ${breakSummary}` : '';
+
+  const now = new Date();
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
+  const dd = String(now.getDate()).padStart(2, '0');
+  document.getElementById('inputDate').value = `${yyyy}-${mm}-${dd}`;
+
+  showToast(`⏱ Чистая работа: ${workHours}ч. Впиши заработок!`, 'success');
+
+  // Clear active shift
+  activeShift = null;
+  saveActiveShift();
+  clearInterval(timerInterval);
+  renderActiveShift();
+}
+
+function startTimer() {
+  clearInterval(timerInterval);
+  timerInterval = setInterval(updateTimer, 1000);
+  updateTimer();
+}
+
+function updateTimer() {
+  if (!activeShift) return;
+  const now = Date.now();
+  const totalMs = now - activeShift.startTime;
+  const breakMs = activeShift.breaks.reduce((sum, b) => sum + ((b.end || now) - b.start), 0)
+    + (activeShift.currentBreak ? (now - activeShift.currentBreak.start) : 0);
+  const workMs = totalMs - breakMs;
+
+  document.getElementById('timerDisplay').textContent = formatDuration(workMs);
+
+  if (activeShift.status === 'break') {
+    const breakDur = now - activeShift.currentBreak.start;
+    document.getElementById('timerSub').textContent = `☕ Перерыв: ${activeShift.currentBreak.type} (${formatShortDuration(breakDur)})`;
+  } else {
+    document.getElementById('timerSub').textContent = `🟢 Работаешь | Всего: ${formatDuration(totalMs)} | Перерывы: ${formatShortDuration(breakMs)}`;
+  }
+}
+
+function renderActiveShift() {
+  const panel = document.getElementById('activeShiftPanel');
+  const titleEl = document.getElementById('shiftStatusTitle');
+  const btnStart = document.getElementById('btnStart');
+  const btnBreak = document.getElementById('btnBreak');
+  const btnResume = document.getElementById('btnResume');
+  const btnEnd = document.getElementById('btnEnd');
+  const breakLog = document.getElementById('breakLog');
+  const breakSelector = document.getElementById('breakTypeSelector');
+
+  if (!activeShift) {
+    panel.className = 'active-shift inactive';
+    titleEl.textContent = '🏠 СМЕНА НЕ НАЧАТА';
+    titleEl.className = 'off';
+    document.getElementById('timerDisplay').textContent = '00:00:00';
+    document.getElementById('timerSub').textContent = 'Нажми «Начать смену»';
+    btnStart.style.display = '';
+    btnBreak.style.display = 'none';
+    btnResume.style.display = 'none';
+    btnEnd.style.display = 'none';
+    breakLog.style.display = 'none';
+    breakSelector.style.display = 'none';
+    return;
+  }
+
+  panel.className = 'active-shift';
+  btnStart.style.display = 'none';
+  btnEnd.style.display = '';
+
+  if (activeShift.status === 'break') {
+    titleEl.textContent = '☕ НА ПЕРЕРЫВЕ';
+    titleEl.className = 'live';
+    titleEl.style.color = 'var(--orange)';
+    btnBreak.style.display = 'none';
+    btnResume.style.display = '';
+    document.getElementById('timerDisplay').style.color = 'var(--orange)';
+  } else {
+    titleEl.textContent = '🟢 СМЕНА ИДЁТ';
+    titleEl.className = 'live';
+    titleEl.style.color = '';
+    btnBreak.style.display = '';
+    btnResume.style.display = 'none';
+    document.getElementById('timerDisplay').style.color = '';
+  }
+
+  // Break log
+  if (activeShift.breaks.length > 0) {
+    breakLog.style.display = '';
+    const list = document.getElementById('breakList');
+    const totalBreak = activeShift.breaks.reduce((sum, b) => sum + ((b.end || Date.now()) - b.start), 0);
+    list.innerHTML = activeShift.breaks.map(b => {
+      const dur = (b.end || Date.now()) - b.start;
+      return `<div class="break-item"><span class="b-type">${escapeHtml(b.type)}</span><span class="b-dur">${formatShortDuration(dur)}</span></div>`;
+    }).join('');
+    document.getElementById('breakTotal').textContent = `Всего перерывов: ${formatShortDuration(totalBreak)}`;
+  } else {
+    breakLog.style.display = 'none';
+  }
+}
+
+// ====== QUESTS ======
+function generateQuests() {
+  const goal = DIFFICULTIES[difficulty].goal;
+  const today = new Date().toISOString().slice(0, 10);
+  const todayShifts = shifts.filter(s => s.date === today);
+  const todayEarned = todayShifts.reduce((s, x) => s + x.earned, 0);
+  const todayHours = todayShifts.reduce((s, x) => s + x.hours, 0);
+  const todayRate = todayHours > 0 ? Math.round(todayEarned / todayHours) : 0;
+
+  const isOnShift = !!activeShift;
+  const workMs = isOnShift ? getWorkMs() : 0;
+  const workHours = workMs / 3600000;
+
+  const quests = [
+    {
+      id: 'start_shift', icon: '🚀', title: 'Выйти на смену',
+      desc: 'Начни свою смену сегодня',
+      progress: (isOnShift || todayShifts.length > 0) ? 1 : 0, target: 1,
+      reward: '🏅 Просто прийти — уже победа'
+    },
+    {
+      id: 'work_4h', icon: '⏱', title: 'Отработать 4 часа',
+      desc: 'Набей 4 часа чистой работы',
+      progress: Math.min(todayHours + workHours, 4), target: 4,
+      reward: '+XP к прогрессу'
+    },
+    {
+      id: 'work_8h', icon: '💪', title: 'Марафон: 8 часов',
+      desc: 'Полная смена — 8 часов работы',
+      progress: Math.min(todayHours + workHours, 8), target: 8,
+      reward: '🦆 Достоин МакДака'
+    },
+    {
+      id: 'earn_5k', icon: '💰', title: 'Заработать 5000₽',
+      desc: 'Сегодняшний заработок ≥ 5000₽',
+      progress: Math.min(todayEarned, 5000), target: 5000,
+      reward: '💵 Кэш'
+    },
+    {
+      id: 'earn_8k', icon: '🤑', title: 'Заработать 8000₽',
+      desc: 'Погнали на 8K сегодня!',
+      progress: Math.min(todayEarned, 8000), target: 8000,
+      reward: '🏆 Молодец!'
+    },
+    {
+      id: 'hit_goal', icon: '🎯', title: `Выбить ${goal}₽/час`,
+      desc: `Средний rate за день ≥ ${goal}₽/час`,
+      progress: todayRate >= goal ? 1 : 0, target: 1,
+      reward: '🔥 В цели!'
+    },
+  ];
+
+  return quests;
+}
+
+function getWorkMs() {
+  if (!activeShift) return 0;
+  const now = Date.now();
+  const totalMs = now - activeShift.startTime;
+  const breakMs = activeShift.breaks.reduce((sum, b) => sum + ((b.end || now) - b.start), 0)
+    + (activeShift.currentBreak ? (now - activeShift.currentBreak.start) : 0);
+  return totalMs - breakMs;
+}
+
+function renderQuests() {
+  const quests = generateQuests();
+  const container = document.getElementById('questList');
+  container.innerHTML = quests.map(q => {
+    const pct = Math.min((q.progress / q.target) * 100, 100);
+    const done = pct >= 100;
+    const progressText = q.target <= 1
+      ? (done ? '✅ Выполнено' : '⬜ Не выполнено')
+      : (q.target >= 1000 ? `${Math.floor(q.progress).toLocaleString('ru-RU')} / ${q.target.toLocaleString('ru-RU')}` : `${q.progress.toFixed(1)} / ${q.target}`);
+    return `<div class="quest-item ${done ? 'completed' : ''}">
+      <div class="quest-header">
+        <div class="quest-title">${q.icon} ${q.title}</div>
+        <div class="quest-reward">${q.reward}</div>
+      </div>
+      <div class="quest-progress"><div class="quest-fill ${done ? 'done' : 'active'}" style="width:${pct}%"></div></div>
+      <div class="quest-text">${q.desc} — ${progressText}</div>
+    </div>`;
+  }).join('');
+}
+
 // ====== SUPABASE OPS ======
 async function loadShifts() {
   setSyncStatus('syncing', '⏳ Загрузка...');
-
-  // Try Supabase first
   if (sb) {
     try {
       const { data, error } = await sb.from('shifts').select('*').order('date', { ascending: false });
       if (error) throw error;
       shifts = data.map(enrichShift);
-      // Backup to localStorage on successful load
       backupToLocal();
       setSyncStatus('ok', '☁️ Синхронизировано');
       return;
@@ -401,8 +831,6 @@ async function loadShifts() {
       setSyncStatus('error', '❌ Облако недоступно');
     }
   }
-
-  // Fallback to localStorage
   try {
     const local = JSON.parse(localStorage.getItem('ozon_tracker'));
     if (local && Array.isArray(local.shifts)) {
@@ -410,30 +838,18 @@ async function loadShifts() {
       setSyncStatus('warn', '📱 Локальные данные');
       showToast('Загружены локальные данные', 'warn');
     }
-  } catch(e2) {
-    console.error('Local load error:', e2);
-  }
+  } catch(e2) { console.error('Local load error:', e2); }
 }
 
 async function insertShift(shift) {
   setSyncStatus('syncing', '⏳ Сохранение...');
-
-  if (!sb) {
-    setSyncStatus('error', '❌ Нет соединения');
-    showToast('Supabase недоступен', 'error');
-    return false;
-  }
-
+  if (!sb) { setSyncStatus('error', '❌ Нет соединения'); showToast('Supabase недоступен', 'error'); return false; }
   try {
     const { data, error } = await sb.from('shifts').insert([{
-      date: shift.date,
-      hours: shift.hours,
-      earned: shift.earned,
-      note: shift.note || '',
-      difficulty: difficulty
+      date: shift.date, hours: shift.hours, earned: shift.earned,
+      note: shift.note || '', difficulty: difficulty
     }]).select();
     if (error) throw error;
-
     const s = enrichShift(data[0]);
     shifts.unshift(s);
     shifts.sort((a, b) => b.date.localeCompare(a.date));
@@ -452,12 +868,7 @@ async function insertShift(shift) {
 async function removeShift(id) {
   if (!confirm('Удалить эту смену?')) return;
   setSyncStatus('syncing', '⏳ Удаление...');
-
-  if (!sb) {
-    setSyncStatus('error', '❌ Нет соединения');
-    return;
-  }
-
+  if (!sb) { setSyncStatus('error', '❌ Нет соединения'); return; }
   try {
     const { error } = await sb.from('shifts').delete().eq('id', id);
     if (error) throw error;
@@ -474,9 +885,7 @@ async function removeShift(id) {
 }
 
 function backupToLocal() {
-  try {
-    localStorage.setItem('ozon_tracker', JSON.stringify({ shifts, difficulty }));
-  } catch (e) { /* localStorage full or unavailable */ }
+  try { localStorage.setItem('ozon_tracker', JSON.stringify({ shifts, difficulty })); } catch(e) {}
 }
 
 function setSyncStatus(type, text) {
@@ -486,35 +895,32 @@ function setSyncStatus(type, text) {
   el.textContent = text;
 }
 
-// ====== HIDE LOADING (always) ======
 function hideLoading() {
   const overlay = document.getElementById('loadingOverlay');
-  if (overlay) {
-    overlay.classList.add('hidden');
-    setTimeout(() => overlay.style.display = 'none', 500);
-  }
+  if (overlay) { overlay.classList.add('hidden'); setTimeout(() => overlay.style.display = 'none', 500); }
 }
 
 // ====== INIT ======
 async function init() {
-  // Set today's date (local timezone safe)
   const now = new Date();
   const yyyy = now.getFullYear();
   const mm = String(now.getMonth() + 1).padStart(2, '0');
   const dd = String(now.getDate()).padStart(2, '0');
   document.getElementById('inputDate').value = `${yyyy}-${mm}-${dd}`;
-
   setDifficulty(difficulty, false);
 
-  try {
-    await loadShifts();
-  } catch (e) {
-    console.error('Init load error:', e);
-    setSyncStatus('error', '❌ Ошибка загрузки');
+  try { await loadShifts(); } catch(e) { console.error('Init error:', e); setSyncStatus('error', '❌ Ошибка загрузки'); }
+
+  // Restore active shift if was running
+  if (activeShift) {
+    renderActiveShift();
+    startTimer();
+  } else {
+    renderActiveShift();
   }
 
   render();
-  hideLoading(); // ALWAYS hide, even on error
+  hideLoading();
 }
 
 // ====== DIFFICULTY ======
@@ -533,14 +939,12 @@ async function addShift() {
   const note = document.getElementById('inputNote').value.trim();
 
   if (!date || !hours || !earned || hours <= 0 || earned <= 0) {
-    const btn = document.querySelector('.btn-add');
-    btn.style.animation = 'shake 0.4s ease';
-    setTimeout(() => btn.style.animation = '', 400);
+    document.querySelector('.btn-add').style.animation = 'shake 0.4s ease';
+    setTimeout(() => document.querySelector('.btn-add').style.animation = '', 400);
     showToast('Заполни дату, часы и заработок', 'error');
     return;
   }
 
-  // Check for duplicate date
   if (shifts.some(s => s.date === date)) {
     if (!confirm(`Смена на ${date} уже есть. Добавить ещё одну?`)) return;
   }
@@ -560,6 +964,7 @@ async function addShift() {
     document.getElementById('inputNote').value = '';
     rainCoins(Math.min(Math.floor(earned / 500), 30));
     render();
+    switchTab('live');
   }
 }
 
@@ -611,7 +1016,7 @@ function render() {
     document.getElementById('xpText').textContent = 'MAX LEVEL! 🦆';
   }
 
-  // Streak — properly checks consecutive calendar days
+  // Streak
   const streak = calcStreak(goal);
   const streakBar = document.getElementById('streakBar');
   if (streak > 0) { streakBar.style.display = 'flex'; document.getElementById('streakCount').textContent = streak; }
@@ -638,72 +1043,40 @@ function render() {
       const noteHtml = s.note ? `<div class="shift-note">${escapeHtml(s.note)}</div>` : '';
       return `<div class="shift-card ${cls} slide-up">
         <button class="shift-delete" onclick="removeShift(${s.id})">✕</button>
-        <div class="shift-left">
-          <div class="shift-date">${dateStr}</div>
-          <div class="shift-hours">${s.hours} ч</div>
-          ${noteHtml}
-        </div>
-        <div class="shift-right">
-          <div class="shift-earned">${s.earned.toLocaleString('ru-RU')} ₽</div>
-          <div class="shift-rate ${rateCls}">${icon} ${s.rate} ₽/час</div>
-        </div>
+        <div class="shift-left"><div class="shift-date">${dateStr}</div><div class="shift-hours">${s.hours} ч</div>${noteHtml}</div>
+        <div class="shift-right"><div class="shift-earned">${s.earned.toLocaleString('ru-RU')} ₽</div><div class="shift-rate ${rateCls}">${icon} ${s.rate} ₽/час</div></div>
       </div>`;
     }).join('');
   }
+
+  // Quests
+  renderQuests();
 }
 
-// ====== STREAK: consecutive calendar days where rate >= goal ======
+// ====== STREAK ======
 function calcStreak(goal) {
-  // Get unique dates with their best rate, sorted newest first
   const dateMap = {};
   for (const s of shifts) {
-    if (!dateMap[s.date] || s.rate > dateMap[s.date]) {
-      dateMap[s.date] = s.rate;
-    }
+    if (!dateMap[s.date] || s.rate > dateMap[s.date]) dateMap[s.date] = s.rate;
   }
-
   const dates = Object.keys(dateMap).sort((a, b) => b.localeCompare(a));
   if (dates.length === 0) return 0;
-
   let streak = 0;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
+  const today = new Date(); today.setHours(0, 0, 0, 0);
   for (let i = 0; i < dates.length; i++) {
     const shiftDate = new Date(dates[i] + 'T00:00:00');
-
-    // First iteration: check if most recent shift is today or yesterday
-    if (i === 0) {
-      const daysDiff = Math.floor((today - shiftDate) / 86400000);
-      if (daysDiff > 1) return 0; // Last shift was more than 1 day ago
-    }
-
-    // Check consecutive: each date should be exactly 1 day after the next one in sorted order
-    if (i > 0) {
-      const prevDate = new Date(dates[i - 1] + 'T00:00:00');
-      const gap = Math.floor((prevDate - shiftDate) / 86400000);
-      if (gap !== 1) break; // Gap found, streak broken
-    }
-
-    if (dateMap[dates[i]] >= goal) {
-      streak++;
-    } else {
-      break; // Missed goal, streak broken
-    }
+    if (i === 0) { if (Math.floor((today - shiftDate) / 86400000) > 1) return 0; }
+    if (i > 0) { if (Math.floor((new Date(dates[i-1]+'T00:00:00') - shiftDate) / 86400000) !== 1) break; }
+    if (dateMap[dates[i]] >= goal) streak++; else break;
   }
-
   return streak;
-}
-
-// ====== XSS protection for notes ======
-function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
 }
 
 // ====== START ======
 init();
+
+// Update quests every 30 seconds (for timer-based ones)
+setInterval(() => { if (activeShift) renderQuests(); }, 30000);
 </script>
 </body>
 </html>
