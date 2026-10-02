@@ -6,9 +6,9 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>💰 OZON Grind Tracker v2</title>
+<title>💰 OZON Grind Tracker v3.1</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="config.js?v=2"></script>
+<script src="config.js?v=3"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
 
@@ -121,9 +121,7 @@ body {
 .active-shift h3.live { color: var(--green); }
 .active-shift h3.off { color: var(--text-dim); }
 
-.shift-timer {
-  text-align: center; margin-bottom: 16px;
-}
+.shift-timer { text-align: center; margin-bottom: 16px; }
 .timer-display {
   font-size: 48px; font-weight: 900; color: var(--green);
   font-variant-numeric: tabular-nums; letter-spacing: 2px;
@@ -289,12 +287,18 @@ body {
 .shift-right .shift-rate.ok { color: var(--orange); }
 .shift-right .shift-rate.bad { color: var(--red); }
 .shift-note { font-size: 11px; color: var(--text-dim); margin-top: 4px; font-style: italic; }
-.shift-delete {
-  position: absolute; top: 8px; right: 8px;
-  background: none; border: none; color: var(--text-dim);
-  font-size: 14px; cursor: pointer; opacity: 0.4; padding: 4px;
+.shift-actions {
+  position: absolute; top: 6px; right: 6px;
+  display: flex; gap: 4px;
 }
-.shift-delete:hover { opacity: 1; color: var(--red); }
+.shift-action-btn {
+  background: none; border: none; color: var(--text-dim);
+  font-size: 14px; cursor: pointer; opacity: 0.4; padding: 4px 6px;
+  border-radius: 6px; transition: all 0.2s;
+}
+.shift-action-btn:hover { opacity: 1; }
+.shift-action-btn.edit:hover { color: var(--cyan); }
+.shift-action-btn.delete:hover { color: var(--red); }
 
 .empty-state { text-align: center; padding: 30px 20px; color: var(--text-dim); }
 .empty-state .emoji { font-size: 50px; margin-bottom: 10px; }
@@ -305,6 +309,43 @@ body {
 @keyframes shake { 25%{transform:translateX(-5px)} 50%{transform:translateX(5px)} 75%{transform:translateX(-3px)} 100%{transform:translateX(0)} }
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
 .pulse { animation: pulse 2s ease infinite; }
+
+/* MODAL */
+.modal-overlay {
+  position: fixed; top:0; left:0; width:100%; height:100%;
+  background: rgba(0,0,0,0.75); z-index: 5000;
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px; opacity: 0; pointer-events: none; transition: opacity 0.3s;
+}
+.modal-overlay.show { opacity: 1; pointer-events: auto; }
+.modal {
+  background: var(--bg-card); border-radius: 20px; padding: 24px;
+  width: 100%; max-width: 380px; border: 2px solid var(--gold-dark);
+  transform: translateY(30px); transition: transform 0.3s;
+}
+.modal-overlay.show .modal { transform: translateY(0); }
+.modal h3 { font-size: 18px; color: var(--gold); text-align: center; margin-bottom: 16px; }
+.modal .form-group { margin-bottom: 12px; }
+.modal .form-group label { font-size: 13px; color: var(--text-dim); margin-bottom: 4px; display: block; }
+.modal .form-group input {
+  width: 100%; padding: 12px; background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15); border-radius: 10px;
+  color: var(--text); font-family: 'Nunito', sans-serif; font-size: 16px; font-weight: 700;
+  outline: none;
+}
+.modal .form-group input:focus { border-color: var(--gold); }
+.modal-info { font-size: 12px; color: var(--text-dim); text-align: center; margin-bottom: 14px; line-height: 1.5; }
+.modal-buttons { display: flex; gap: 10px; }
+.modal-btn {
+  flex: 1; padding: 14px; border: none; border-radius: 12px;
+  font-family: 'Nunito', sans-serif; font-size: 15px; font-weight: 800;
+  cursor: pointer; transition: all 0.2s;
+}
+.modal-btn:active { transform: scale(0.95); }
+.modal-btn.primary { background: linear-gradient(135deg, var(--gold-dark), var(--gold)); color: #1a1a2e; }
+.modal-btn.secondary { background: rgba(255,255,255,0.1); color: var(--text); }
+.modal-btn.danger { background: linear-gradient(135deg, #c62828, #ff5252); color: #fff; }
+.modal-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* SYNC STATUS */
 .sync-status {
@@ -465,6 +506,55 @@ body {
 
 </div>
 
+<!-- ============ MODAL: END SHIFT ============ -->
+<div class="modal-overlay" id="endShiftModal">
+  <div class="modal">
+    <h3>💰 СМЕНА ЗАВЕРШЕНА!</h3>
+    <div class="modal-info" id="endShiftInfo"></div>
+    <div class="form-group">
+      <label>💵 Сколько заработал? (₽)</label>
+      <input type="number" id="endShiftEarned" placeholder="8600" min="0" inputmode="numeric">
+    </div>
+    <div class="form-group">
+      <label>📝 Заметка (необязательно)</label>
+      <input type="text" id="endShiftNote" placeholder="541 операция...">
+    </div>
+    <div class="modal-buttons">
+      <button class="modal-btn secondary" onclick="cancelEndShift()">✕ Отмена</button>
+      <button class="modal-btn primary" id="btnSaveEndShift" onclick="saveEndShift()">💾 СОХРАНИТЬ</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: EDIT SHIFT ============ -->
+<div class="modal-overlay" id="editShiftModal">
+  <div class="modal">
+    <h3>✏️ РЕДАКТИРОВАТЬ СМЕНУ</h3>
+    <input type="hidden" id="editShiftId">
+    <div class="form-group">
+      <label>📅 Дата</label>
+      <input type="date" id="editDate">
+    </div>
+    <div class="form-group">
+      <label>⏱ Чистые часы</label>
+      <input type="number" id="editHours" step="0.5" min="0.5" max="24">
+    </div>
+    <div class="form-group">
+      <label>💵 Заработок ₽</label>
+      <input type="number" id="editEarned" min="0">
+    </div>
+    <div class="form-group">
+      <label>📝 Заметка</label>
+      <input type="text" id="editNote">
+    </div>
+    <div class="modal-buttons">
+      <button class="modal-btn secondary" onclick="closeEditModal()">✕ Отмена</button>
+      <button class="modal-btn danger" onclick="deleteFromEdit()" style="flex:0.6">🗑</button>
+      <button class="modal-btn primary" id="btnSaveEdit" onclick="saveEditShift()">💾 СОХРАНИТЬ</button>
+    </div>
+  </div>
+</div>
+
 <div class="sync-status ok" id="syncStatus">☁️ Облако</div>
 
 <script>
@@ -509,7 +599,7 @@ let difficulty = localStorage.getItem('ozon_difficulty') || 'normal';
 
 // Active shift state (stored in localStorage)
 let activeShift = JSON.parse(localStorage.getItem('ozon_active_shift') || 'null');
-// activeShift = { startTime, breaks: [{type, start, end}], currentBreak: null, status: 'working'|'break'|null }
+let pendingEndShift = null; // data for end-shift modal
 
 let timerInterval = null;
 
@@ -620,31 +710,88 @@ function endShift() {
     activeShift.currentBreak = null;
   }
 
-  const totalMs = Date.now() - activeShift.startTime;
+  const endTime = Date.now();
+  const totalMs = endTime - activeShift.startTime;
   const breakMs = activeShift.breaks.reduce((sum, b) => sum + (b.end - b.start), 0);
   const workMs = totalMs - breakMs;
-  const workHours = Math.round((workMs / 3600000) * 10) / 10; // 1 decimal
+  const workHours = Math.round((workMs / 3600000) * 10) / 10;
 
   const breakSummary = activeShift.breaks.map(b => b.type + ' ' + formatShortDuration(b.end - b.start)).join(', ');
-
-  // Prefill the add form
-  switchTab('add');
-  document.getElementById('inputHours').value = workHours;
-  document.getElementById('inputNote').value = breakSummary ? `Перерывы: ${breakSummary}` : '';
 
   const now = new Date();
   const yyyy = now.getFullYear();
   const mm = String(now.getMonth() + 1).padStart(2, '0');
   const dd = String(now.getDate()).padStart(2, '0');
-  document.getElementById('inputDate').value = `${yyyy}-${mm}-${dd}`;
 
-  showToast(`⏱ Чистая работа: ${workHours}ч. Впиши заработок!`, 'success');
+  // Store pending data for modal
+  pendingEndShift = {
+    date: `${yyyy}-${mm}-${dd}`,
+    hours: workHours,
+    totalMs: totalMs,
+    breakMs: breakMs,
+    breakSummary: breakSummary,
+    breakCount: activeShift.breaks.length
+  };
 
-  // Clear active shift
-  activeShift = null;
-  saveActiveShift();
-  clearInterval(timerInterval);
-  renderActiveShift();
+  // Show end-shift modal
+  document.getElementById('endShiftInfo').innerHTML =
+    `⏱ Чистая работа: <b>${workHours} ч</b><br>` +
+    `🕐 Всего на смене: ${formatShortDuration(totalMs)}<br>` +
+    (breakMs > 0 ? `☕ Перерывов: ${activeShift.breaks.length} (${formatShortDuration(breakMs)})` : '☕ Без перерывов');
+  document.getElementById('endShiftEarned').value = '';
+  document.getElementById('endShiftNote').value = breakSummary ? `Перерывы: ${breakSummary}` : '';
+  document.getElementById('endShiftModal').classList.add('show');
+
+  // Focus earned input
+  setTimeout(() => document.getElementById('endShiftEarned').focus(), 300);
+}
+
+function cancelEndShift() {
+  document.getElementById('endShiftModal').classList.remove('show');
+  pendingEndShift = null;
+  // Don't clear activeShift — shift continues
+  showToast('Смена продолжается', 'warn');
+}
+
+async function saveEndShift() {
+  if (!pendingEndShift) return;
+  const earned = parseFloat(document.getElementById('endShiftEarned').value);
+  if (!earned || earned <= 0) {
+    showToast('Впиши заработок!', 'error');
+    document.getElementById('endShiftEarned').focus();
+    return;
+  }
+
+  const note = document.getElementById('endShiftNote').value.trim();
+  const btn = document.getElementById('btnSaveEndShift');
+  btn.disabled = true;
+  btn.textContent = '⏳ Сохраняю...';
+
+  const ok = await insertShift({
+    date: pendingEndShift.date,
+    hours: pendingEndShift.hours,
+    earned: earned,
+    note: note
+  });
+
+  btn.disabled = false;
+  btn.textContent = '💾 СОХРАНИТЬ';
+
+  if (ok) {
+    // Close modal
+    document.getElementById('endShiftModal').classList.remove('show');
+
+    // Clear active shift
+    activeShift = null;
+    saveActiveShift();
+    clearInterval(timerInterval);
+    pendingEndShift = null;
+
+    renderActiveShift();
+    rainCoins(Math.min(Math.floor(earned / 500), 30));
+    render();
+    showToast(`✅ Смена сохранена! +${earned.toLocaleString('ru-RU')} ₽`, 'success');
+  }
 }
 
 function startTimer() {
@@ -855,12 +1002,33 @@ async function insertShift(shift) {
     shifts.sort((a, b) => b.date.localeCompare(a.date));
     backupToLocal();
     setSyncStatus('ok', '☁️ Сохранено ✓');
-    showToast(`+${s.earned.toLocaleString('ru-RU')} ₽ 💰`, 'success');
     return true;
   } catch (e) {
     console.error('Insert error:', e);
     setSyncStatus('error', '❌ Ошибка сохранения');
     showToast('Ошибка сохранения — попробуй ещё', 'error');
+    return false;
+  }
+}
+
+async function updateShift(id, updates) {
+  setSyncStatus('syncing', '⏳ Обновление...');
+  if (!sb) { setSyncStatus('error', '❌ Нет соединения'); showToast('Supabase недоступен', 'error'); return false; }
+  try {
+    const { data, error } = await sb.from('shifts').update(updates).eq('id', id).select();
+    if (error) throw error;
+    const idx = shifts.findIndex(s => s.id === id);
+    if (idx >= 0) {
+      shifts[idx] = enrichShift(data[0]);
+    }
+    shifts.sort((a, b) => b.date.localeCompare(a.date));
+    backupToLocal();
+    setSyncStatus('ok', '☁️ Обновлено ✓');
+    return true;
+  } catch (e) {
+    console.error('Update error:', e);
+    setSyncStatus('error', '❌ Ошибка обновления');
+    showToast('Ошибка обновления', 'error');
     return false;
   }
 }
@@ -898,6 +1066,56 @@ function setSyncStatus(type, text) {
 function hideLoading() {
   const overlay = document.getElementById('loadingOverlay');
   if (overlay) { overlay.classList.add('hidden'); setTimeout(() => overlay.style.display = 'none', 500); }
+}
+
+// ====== EDIT SHIFT MODAL ======
+function openEditModal(id) {
+  const shift = shifts.find(s => s.id === id);
+  if (!shift) return;
+  document.getElementById('editShiftId').value = id;
+  document.getElementById('editDate').value = shift.date;
+  document.getElementById('editHours').value = shift.hours;
+  document.getElementById('editEarned').value = shift.earned;
+  document.getElementById('editNote').value = shift.note || '';
+  document.getElementById('editShiftModal').classList.add('show');
+}
+
+function closeEditModal() {
+  document.getElementById('editShiftModal').classList.remove('show');
+}
+
+async function saveEditShift() {
+  const id = parseInt(document.getElementById('editShiftId').value);
+  const date = document.getElementById('editDate').value;
+  const hours = parseFloat(document.getElementById('editHours').value);
+  const earned = parseFloat(document.getElementById('editEarned').value);
+  const note = document.getElementById('editNote').value.trim();
+
+  if (!date || !hours || !earned || hours <= 0 || earned <= 0) {
+    showToast('Заполни все поля!', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('btnSaveEdit');
+  btn.disabled = true;
+  btn.textContent = '⏳...';
+
+  const ok = await updateShift(id, { date, hours, earned, note });
+
+  btn.disabled = false;
+  btn.textContent = '💾 СОХРАНИТЬ';
+
+  if (ok) {
+    closeEditModal();
+    showToast('✏️ Смена обновлена!', 'success');
+    render();
+  }
+}
+
+async function deleteFromEdit() {
+  const id = parseInt(document.getElementById('editShiftId').value);
+  closeEditModal();
+  await removeShift(id);
 }
 
 // ====== INIT ======
@@ -1042,7 +1260,10 @@ function render() {
       const dateStr = d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
       const noteHtml = s.note ? `<div class="shift-note">${escapeHtml(s.note)}</div>` : '';
       return `<div class="shift-card ${cls} slide-up">
-        <button class="shift-delete" onclick="removeShift(${s.id})">✕</button>
+        <div class="shift-actions">
+          <button class="shift-action-btn edit" onclick="openEditModal(${s.id})" title="Редактировать">✏️</button>
+          <button class="shift-action-btn delete" onclick="removeShift(${s.id})" title="Удалить">✕</button>
+        </div>
         <div class="shift-left"><div class="shift-date">${dateStr}</div><div class="shift-hours">${s.hours} ч</div>${noteHtml}</div>
         <div class="shift-right"><div class="shift-earned">${s.earned.toLocaleString('ru-RU')} ₽</div><div class="shift-rate ${rateCls}">${icon} ${s.rate} ₽/час</div></div>
       </div>`;

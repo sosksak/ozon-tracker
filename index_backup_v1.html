@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>🐴 💰 OZON Grind Tracker</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
+
+:root {
+  --gold: #FFD700;
+  --gold-dark: #DAA520;
+  --gold-light: #FFF4CC;
+  --bg-dark: #1a1a2e;
+  --bg-card: #16213e;
+  --bg-card2: #1c2a4a;
+  --text: #eee;
+  --text-dim: #8899aa;
+  --green: #00e676;
+  --red: #ff5252;
+  --orange: #ffab40;
+  --purple: #bb86fc;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family: 'Nunito', sans-serif;
+  background: var(--bg-dark);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+  padding-bottom: 100px;
+}
+
+/* LOADING */
+.loading-overlay {
+  position: fixed; top:0; left:0; width:100%; height:100%;
+  background: var(--bg-dark);
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column; gap: 16px;
+  z-index: 9999;
+  transition: opacity 0.5s;
+}
+.loading-overlay.hidden { opacity: 0; pointer-events: none; }
+.loading-spinner { font-size: 60px; animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* COIN RAIN */
+.coin-rain { position: fixed; top:0; left:0; width:100%; height:100%; pointer-events: none; z-index: 999; }
+.coin { position: absolute; font-size: 28px; animation: coinFall 1.5s ease-in forwards; opacity: 0; }
+@keyframes coinFall {
+  0% { transform: translateY(-50px) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+}
+
+/* HEADER */
+.header {
+  background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+  padding: 20px 16px 16px; text-align: center; position: relative; overflow: hidden;
+}
+.header::after {
+  content: ''; position: absolute; bottom:0; left:0;
+  width: 100%; height: 4px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+.header h1 {
+  font-size: 22px; font-weight: 900;
+  background: linear-gradient(135deg, var(--gold), #fff, var(--gold));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.header .subtitle { font-size: 13px; color: var(--text-dim); margin-top: 2px; }
+
+/* VAULT */
+.vault {
+  margin: 16px; padding: 20px;
+  background: linear-gradient(145deg, #1e2a45, #162040);
+  border-radius: 20px; border: 2px solid var(--gold-dark);
+  position: relative; overflow: hidden;
+}
+.vault::before { content: '🪙'; position: absolute; right: 12px; top: 10px; font-size: 50px; opacity: 0.15; }
+.vault-total { font-size: 36px; font-weight: 900; color: var(--gold); text-shadow: 0 0 20px rgba(255,215,0,0.3); }
+.vault-total .currency { font-size: 20px; color: var(--gold-dark); }
+.vault-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 14px; }
+.vault-stat { text-align: center; background: rgba(255,255,255,0.05); border-radius: 12px; padding: 10px 6px; }
+.vault-stat .val { font-size: 18px; font-weight: 800; color: var(--gold-light); }
+.vault-stat .lbl { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+
+/* LEVEL */
+.level-section {
+  margin: 0 16px 16px; padding: 16px;
+  background: var(--bg-card); border-radius: 16px; border: 1px solid rgba(255,215,0,0.15);
+}
+.level-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.level-badge { display: flex; align-items: center; gap: 8px; }
+.level-badge .icon { font-size: 30px; }
+.level-badge .info .lvl { font-size: 16px; font-weight: 800; color: var(--gold); }
+.level-badge .info .title { font-size: 12px; color: var(--text-dim); }
+.level-xp-text { font-size: 12px; color: var(--text-dim); text-align: right; }
+.xp-bar { width:100%; height:10px; background: rgba(255,255,255,0.1); border-radius: 5px; overflow: hidden; }
+.xp-fill { height:100%; background: linear-gradient(90deg, var(--gold-dark), var(--gold), #fff59d); border-radius: 5px; transition: width 0.8s ease; }
+
+/* STREAK */
+.streak-bar {
+  margin: 0 16px 16px; padding: 12px 16px;
+  background: linear-gradient(135deg, rgba(255,152,0,0.15), rgba(255,87,34,0.1));
+  border-radius: 14px; display: flex; align-items: center; gap: 10px;
+  border: 1px solid rgba(255,152,0,0.2);
+}
+.streak-bar .streak-icon { font-size: 28px; }
+.streak-bar .streak-text { font-size: 14px; font-weight: 700; }
+.streak-bar .streak-text span { color: var(--orange); }
+
+/* DIFFICULTY */
+.difficulty {
+  margin: 0 16px 16px; padding: 14px;
+  background: var(--bg-card); border-radius: 16px; border: 1px solid rgba(255,255,255,0.08);
+}
+.difficulty h3 { font-size: 14px; margin-bottom: 10px; color: var(--text-dim); text-align: center; }
+.diff-buttons { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+.diff-btn {
+  padding: 12px 8px; border-radius: 12px; border: 2px solid transparent;
+  background: rgba(255,255,255,0.05); color: var(--text);
+  font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 13px;
+  cursor: pointer; text-align: center; transition: all 0.3s;
+}
+.diff-btn .goal-val { font-size: 18px; font-weight: 900; display: block; margin-top: 2px; }
+.diff-btn.easy { border-color: var(--green); }
+.diff-btn.easy.active { background: rgba(0,230,118,0.15); box-shadow: 0 0 15px rgba(0,230,118,0.2); }
+.diff-btn.normal { border-color: var(--orange); }
+.diff-btn.normal.active { background: rgba(255,171,64,0.15); box-shadow: 0 0 15px rgba(255,171,64,0.2); }
+.diff-btn.hard { border-color: var(--red); }
+.diff-btn.hard.active { background: rgba(255,82,82,0.15); box-shadow: 0 0 15px rgba(255,82,82,0.2); }
+
+/* ADD SHIFT */
+.add-shift {
+  margin: 0 16px 16px; padding: 16px;
+  background: var(--bg-card); border-radius: 16px; border: 1px solid rgba(255,215,0,0.15);
+}
+.add-shift h3 { font-size: 15px; margin-bottom: 12px; color: var(--gold); text-align: center; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+.form-group { display: flex; flex-direction: column; }
+.form-group label { font-size: 12px; color: var(--text-dim); margin-bottom: 4px; }
+.form-group input {
+  padding: 10px 12px; background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12); border-radius: 10px;
+  color: var(--text); font-family: 'Nunito', sans-serif; font-size: 15px; font-weight: 600;
+  outline: none; transition: border 0.3s;
+}
+.form-group input:focus { border-color: var(--gold); }
+.btn-add {
+  width: 100%; padding: 14px;
+  background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+  border: none; border-radius: 12px; color: #1a1a2e;
+  font-family: 'Nunito', sans-serif; font-size: 16px; font-weight: 800;
+  cursor: pointer; transition: transform 0.2s, box-shadow 0.3s; margin-top: 6px;
+}
+.btn-add:active { transform: scale(0.97); }
+.btn-add:hover { box-shadow: 0 0 25px rgba(255,215,0,0.3); }
+.btn-add:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ACHIEVEMENTS */
+.achievements {
+  margin: 16px; padding: 14px;
+  background: var(--bg-card); border-radius: 16px; border: 1px solid rgba(187,134,252,0.2);
+}
+.achievements h3 { font-size: 14px; color: var(--purple); margin-bottom: 10px; text-align: center; }
+.ach-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.ach-item {
+  text-align: center; padding: 8px 4px; border-radius: 10px;
+  background: rgba(255,255,255,0.03); transition: all 0.3s;
+}
+.ach-item.unlocked { background: rgba(187,134,252,0.1); border: 1px solid rgba(187,134,252,0.3); }
+.ach-item.locked { opacity: 0.35; filter: grayscale(1); }
+.ach-item .ach-icon { font-size: 26px; }
+.ach-item .ach-name { font-size: 9px; color: var(--text-dim); margin-top: 3px; line-height: 1.2; }
+
+/* HISTORY */
+.history { margin: 0 16px; }
+.history h3 { font-size: 15px; color: var(--text-dim); margin-bottom: 10px; padding-left: 4px; }
+.shift-card {
+  background: var(--bg-card2); border-radius: 14px; padding: 14px 16px; margin-bottom: 8px;
+  display: flex; justify-content: space-between; align-items: center;
+  border-left: 4px solid var(--gold); transition: all 0.3s; position: relative;
+}
+.shift-card.goal-hit { border-left-color: var(--green); }
+.shift-card.goal-miss { border-left-color: var(--red); }
+.shift-card.goal-close { border-left-color: var(--orange); }
+.shift-left .shift-date { font-size: 14px; font-weight: 700; }
+.shift-left .shift-hours { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+.shift-right { text-align: right; }
+.shift-right .shift-earned { font-size: 18px; font-weight: 800; color: var(--gold); }
+.shift-right .shift-rate { font-size: 12px; margin-top: 2px; }
+.shift-right .shift-rate.good { color: var(--green); }
+.shift-right .shift-rate.ok { color: var(--orange); }
+.shift-right .shift-rate.bad { color: var(--red); }
+.shift-note { font-size: 11px; color: var(--text-dim); margin-top: 4px; font-style: italic; }
+.shift-delete {
+  position: absolute; top: 8px; right: 8px;
+  background: none; border: none; color: var(--text-dim);
+  font-size: 14px; cursor: pointer; opacity: 0.4; padding: 4px;
+}
+.shift-delete:hover { opacity: 1; color: var(--red); }
+
+.empty-state { text-align: center; padding: 30px 20px; color: var(--text-dim); }
+.empty-state .emoji { font-size: 50px; margin-bottom: 10px; }
+.empty-state p { font-size: 14px; }
+
+@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.slide-up { animation: slideUp 0.4s ease; }
+@keyframes shake { 25%{transform:translateX(-5px)} 50%{transform:translateX(5px)} 75%{transform:translateX(-3px)} 100%{transform:translateX(0)} }
+
+/* SYNC STATUS */
+.sync-status {
+  position: fixed; bottom: 12px; right: 12px;
+  padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 700;
+  background: rgba(0,0,0,0.7); z-index: 100;
+  transition: all 0.3s;
+}
+.sync-status.ok { color: var(--green); }
+.sync-status.error { color: var(--red); }
+.sync-status.syncing { color: var(--orange); }
+
+/* TOAST */
+.toast {
+  position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px);
+  padding: 10px 20px; border-radius: 12px; font-size: 13px; font-weight: 700;
+  z-index: 10000; transition: transform 0.4s ease; white-space: nowrap;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+.toast.success { background: rgba(0,230,118,0.9); color: #1a1a2e; }
+.toast.error { background: rgba(255,82,82,0.9); color: #fff; }
+.toast.warn { background: rgba(255,171,64,0.9); color: #1a1a2e; }
+</style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-spinner">🪙</div>
+  <div style="color: var(--gold); font-weight: 700;" id="loadingText">Загрузка хранилища...</div>
+</div>
+
+<div class="coin-rain" id="coinRain"></div>
+
+<div class="header">
+  <h1>💰 OZON GRIND TRACKER</h1>
+  <div class="subtitle">Копим как Скрудж МакДак 🦆</div>
+</div>
+
+<div class="vault" id="vault">
+  <div class="vault-total">
+    <span id="totalEarned">0</span> <span class="currency">₽</span>
+  </div>
+  <div class="vault-stats">
+    <div class="vault-stat"><div class="val" id="totalShifts">0</div><div class="lbl">смен</div></div>
+    <div class="vault-stat"><div class="val" id="totalHours">0</div><div class="lbl">часов</div></div>
+    <div class="vault-stat"><div class="val" id="avgRate">0</div><div class="lbl">₽/час сред.</div></div>
+  </div>
+</div>
+
+<div class="streak-bar" id="streakBar" style="display:none;">
+  <div class="streak-icon">🔥</div>
+  <div class="streak-text"><span id="streakCount">0</span> дней подряд в цели!</div>
+</div>
+
+<div class="level-section">
+  <div class="level-header">
+    <div class="level-badge">
+      <div class="icon" id="levelIcon">🐣</div>
+      <div class="info">
+        <div class="lvl" id="levelName">LVL 1 — Новичок</div>
+        <div class="title" id="levelTitle">Начало пути</div>
+      </div>
+    </div>
+    <div class="level-xp-text" id="xpText">0 / 50 000 XP</div>
+  </div>
+  <div class="xp-bar"><div class="xp-fill" id="xpFill" style="width:0%"></div></div>
+</div>
+
+<div class="difficulty">
+  <h3>🎯 ЦЕЛЬ ₽/ЧАС</h3>
+  <div class="diff-buttons">
+    <button class="diff-btn easy" onclick="setDifficulty('easy')" data-diff="easy">😎 ЛАЙТ<span class="goal-val">800₽</span></button>
+    <button class="diff-btn normal active" onclick="setDifficulty('normal')" data-diff="normal">💪 НОРМАЛ<span class="goal-val">850₽</span></button>
+    <button class="diff-btn hard" onclick="setDifficulty('hard')" data-diff="hard">🔥 ХАРД<span class="goal-val">900₽</span></button>
+  </div>
+</div>
+
+<div class="add-shift">
+  <h3>➕ ДОБАВИТЬ СМЕНУ</h3>
+  <div class="form-row">
+    <div class="form-group"><label>📅 Дата</label><input type="date" id="inputDate"></div>
+    <div class="form-group"><label>⏱ Часы</label><input type="number" id="inputHours" placeholder="9.5" step="0.5" min="0.5" max="24"></div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label>💵 Заработок ₽</label><input type="number" id="inputEarned" placeholder="8600" min="0"></div>
+    <div class="form-group"><label>📝 Заметка</label><input type="text" id="inputNote" placeholder="дневная смена..."></div>
+  </div>
+  <button class="btn-add" id="btnAdd" onclick="addShift()">🪙 ДОБАВИТЬ</button>
+</div>
+
+<div class="achievements">
+  <h3>🏆 ДОСТИЖЕНИЯ</h3>
+  <div class="ach-grid" id="achGrid"></div>
+</div>
+
+<div class="history">
+  <h3>📋 История смен</h3>
+  <div id="shiftList"></div>
+</div>
+
+<div class="sync-status ok" id="syncStatus">☁️ Облако</div>
+
+<script>
+// ====== SUPABASE INIT ======
+let sb = null;
+try {
+  sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+} catch (e) {
+  console.error('Supabase init failed:', e);
+}
+
+// ====== DATA ======
+const LEVELS = [
+  { lvl:1, name:'Новичок',        icon:'🐣', title:'Начало пути',         xp:0 },
+  { lvl:2, name:'Кладовщик',      icon:'📦', title:'Освоился на складе',   xp:50000 },
+  { lvl:3, name:'Грузчик PRO',    icon:'💪', title:'Уже не новичок',       xp:150000 },
+  { lvl:4, name:'Бригадир',       icon:'👷', title:'Опытный работяга',     xp:350000 },
+  { lvl:5, name:'Золотые руки',   icon:'🤲', title:'Мастер своего дела',   xp:600000 },
+  { lvl:6, name:'Менеджер склада',icon:'🏭', title:'Управляешь процессом', xp:1000000 },
+  { lvl:7, name:'Бизнесмен',      icon:'💼', title:'Думаешь масштабно',    xp:1500000 },
+  { lvl:8, name:'Миллионер',      icon:'🎩', title:'Первый миллион!',      xp:2000000 },
+  { lvl:9, name:'Магнат',         icon:'🏰', title:'Империя растёт',       xp:3500000 },
+  { lvl:10,name:'Скрудж МакДак',  icon:'🦆', title:'Купаешься в монетах!', xp:5000000 },
+];
+
+const DIFFICULTIES = { easy:{goal:800}, normal:{goal:850}, hard:{goal:900} };
+
+const ACHIEVEMENTS = [
+  { id:'first',   icon:'⭐',  name:'Первая смена',   check:d=>d.shifts.length>=1 },
+  { id:'five',    icon:'🖐️', name:'5 смен',         check:d=>d.shifts.length>=5 },
+  { id:'ten',     icon:'🔟',  name:'10 смен',        check:d=>d.shifts.length>=10 },
+  { id:'thirty',  icon:'📅',  name:'30 смен',        check:d=>d.shifts.length>=30 },
+  { id:'earn10k', icon:'💵',  name:'10К за смену',   check:d=>d.shifts.some(s=>s.earned>=10000) },
+  { id:'earn50k', icon:'💰',  name:'50К всего',      check:d=>d.totalEarned>=50000 },
+  { id:'earn100k',icon:'🤑',  name:'100К всего',     check:d=>d.totalEarned>=100000 },
+  { id:'earn500k',icon:'🏆',  name:'500К всего',     check:d=>d.totalEarned>=500000 },
+  { id:'rate900', icon:'🚀',  name:'900₽/час',       check:d=>d.shifts.some(s=>s.rate>=900) },
+  { id:'rate1000',icon:'👑',  name:'1000₽/час',      check:d=>d.shifts.some(s=>s.rate>=1000) },
+  { id:'streak3', icon:'🔥',  name:'3 дня страйк',  check:d=>d.streak>=3 },
+  { id:'streak7', icon:'⚡',  name:'7 дней страйк', check:d=>d.streak>=7 },
+];
+
+// ====== STATE ======
+let shifts = [];
+let difficulty = localStorage.getItem('ozon_difficulty') || 'normal';
+
+// ====== TOAST NOTIFICATIONS ======
+function showToast(msg, type = 'success') {
+  const existing = document.querySelector('.toast');
+  if (existing) existing.remove();
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => toast.classList.add('show'));
+  });
+  setTimeout(() => {
+    toast.classList.remove('show');
+    setTimeout(() => toast.remove(), 400);
+  }, 2500);
+}
+
+// ====== HELPER: compute rate ======
+function enrichShift(s) {
+  s.hours = parseFloat(s.hours) || 0;
+  s.earned = parseFloat(s.earned) || 0;
+  s.rate = s.hours > 0 ? Math.round(s.earned / s.hours) : 0;
+  return s;
+}
+
+// ====== SUPABASE OPS ======
+async function loadShifts() {
+  setSyncStatus('syncing', '⏳ Загрузка...');
+
+  // Try Supabase first
+  if (sb) {
+    try {
+      const { data, error } = await sb.from('shifts').select('*').order('date', { ascending: false });
+      if (error) throw error;
+      shifts = data.map(enrichShift);
+      // Backup to localStorage on successful load
+      backupToLocal();
+      setSyncStatus('ok', '☁️ Синхронизировано');
+      return;
+    } catch (e) {
+      console.error('Supabase load error:', e);
+      setSyncStatus('error', '❌ Облако недоступно');
+    }
+  }
+
+  // Fallback to localStorage
+  try {
+    const local = JSON.parse(localStorage.getItem('ozon_tracker'));
+    if (local && Array.isArray(local.shifts)) {
+      shifts = local.shifts.map(enrichShift);
+      setSyncStatus('warn', '📱 Локальные данные');
+      showToast('Загружены локальные данные', 'warn');
+    }
+  } catch(e2) {
+    console.error('Local load error:', e2);
+  }
+}
+
+async function insertShift(shift) {
+  setSyncStatus('syncing', '⏳ Сохранение...');
+
+  if (!sb) {
+    setSyncStatus('error', '❌ Нет соединения');
+    showToast('Supabase недоступен', 'error');
+    return false;
+  }
+
+  try {
+    const { data, error } = await sb.from('shifts').insert([{
+      date: shift.date,
+      hours: shift.hours,
+      earned: shift.earned,
+      note: shift.note || '',
+      difficulty: difficulty
+    }]).select();
+    if (error) throw error;
+
+    const s = enrichShift(data[0]);
+    shifts.unshift(s);
+    shifts.sort((a, b) => b.date.localeCompare(a.date));
+    backupToLocal();
+    setSyncStatus('ok', '☁️ Сохранено ✓');
+    showToast(`+${s.earned.toLocaleString('ru-RU')} ₽ 💰`, 'success');
+    return true;
+  } catch (e) {
+    console.error('Insert error:', e);
+    setSyncStatus('error', '❌ Ошибка сохранения');
+    showToast('Ошибка сохранения — попробуй ещё', 'error');
+    return false;
+  }
+}
+
+async function removeShift(id) {
+  if (!confirm('Удалить эту смену?')) return;
+  setSyncStatus('syncing', '⏳ Удаление...');
+
+  if (!sb) {
+    setSyncStatus('error', '❌ Нет соединения');
+    return;
+  }
+
+  try {
+    const { error } = await sb.from('shifts').delete().eq('id', id);
+    if (error) throw error;
+    shifts = shifts.filter(s => s.id !== id);
+    backupToLocal();
+    setSyncStatus('ok', '☁️ Удалено ✓');
+    showToast('Смена удалена', 'success');
+    render();
+  } catch (e) {
+    console.error('Delete error:', e);
+    setSyncStatus('error', '❌ Ошибка удаления');
+    showToast('Ошибка удаления', 'error');
+  }
+}
+
+function backupToLocal() {
+  try {
+    localStorage.setItem('ozon_tracker', JSON.stringify({ shifts, difficulty }));
+  } catch (e) { /* localStorage full or unavailable */ }
+}
+
+function setSyncStatus(type, text) {
+  const el = document.getElementById('syncStatus');
+  if (!el) return;
+  el.className = 'sync-status ' + type;
+  el.textContent = text;
+}
+
+// ====== HIDE LOADING (always) ======
+function hideLoading() {
+  const overlay = document.getElementById('loadingOverlay');
+  if (overlay) {
+    overlay.classList.add('hidden');
+    setTimeout(() => overlay.style.display = 'none', 500);
+  }
+}
+
+// ====== INIT ======
+async function init() {
+  // Set today's date (local timezone safe)
+  const now = new Date();
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
+  const dd = String(now.getDate()).padStart(2, '0');
+  document.getElementById('inputDate').value = `${yyyy}-${mm}-${dd}`;
+
+  setDifficulty(difficulty, false);
+
+  try {
+    await loadShifts();
+  } catch (e) {
+    console.error('Init load error:', e);
+    setSyncStatus('error', '❌ Ошибка загрузки');
+  }
+
+  render();
+  hideLoading(); // ALWAYS hide, even on error
+}
+
+// ====== DIFFICULTY ======
+function setDifficulty(diff, doRender = true) {
+  difficulty = diff;
+  localStorage.setItem('ozon_difficulty', diff);
+  document.querySelectorAll('.diff-btn').forEach(b => b.classList.toggle('active', b.dataset.diff === diff));
+  if (doRender) render();
+}
+
+// ====== ADD SHIFT ======
+async function addShift() {
+  const date = document.getElementById('inputDate').value;
+  const hours = parseFloat(document.getElementById('inputHours').value);
+  const earned = parseFloat(document.getElementById('inputEarned').value);
+  const note = document.getElementById('inputNote').value.trim();
+
+  if (!date || !hours || !earned || hours <= 0 || earned <= 0) {
+    const btn = document.querySelector('.btn-add');
+    btn.style.animation = 'shake 0.4s ease';
+    setTimeout(() => btn.style.animation = '', 400);
+    showToast('Заполни дату, часы и заработок', 'error');
+    return;
+  }
+
+  // Check for duplicate date
+  if (shifts.some(s => s.date === date)) {
+    if (!confirm(`Смена на ${date} уже есть. Добавить ещё одну?`)) return;
+  }
+
+  const btn = document.getElementById('btnAdd');
+  btn.disabled = true;
+  btn.textContent = '⏳ Сохраняю...';
+
+  const ok = await insertShift({ date, hours, earned, note });
+
+  btn.disabled = false;
+  btn.textContent = '🪙 ДОБАВИТЬ';
+
+  if (ok) {
+    document.getElementById('inputHours').value = '';
+    document.getElementById('inputEarned').value = '';
+    document.getElementById('inputNote').value = '';
+    rainCoins(Math.min(Math.floor(earned / 500), 30));
+    render();
+  }
+}
+
+// ====== COIN RAIN ======
+function rainCoins(count) {
+  const container = document.getElementById('coinRain');
+  const coins = ['🪙', '💰', '💵', '✨'];
+  for (let i = 0; i < count; i++) {
+    setTimeout(() => {
+      const coin = document.createElement('div');
+      coin.className = 'coin';
+      coin.textContent = coins[Math.floor(Math.random() * coins.length)];
+      coin.style.left = Math.random() * 100 + '%';
+      coin.style.animationDuration = (1 + Math.random() * 1.5) + 's';
+      coin.style.fontSize = (20 + Math.random() * 20) + 'px';
+      container.appendChild(coin);
+      setTimeout(() => coin.remove(), 3000);
+    }, i * 80);
+  }
+}
+
+// ====== RENDER ======
+function render() {
+  const goal = DIFFICULTIES[difficulty].goal;
+  const totalEarned = shifts.reduce((s, x) => s + x.earned, 0);
+  const totalHours = shifts.reduce((s, x) => s + x.hours, 0);
+  const avgRate = totalHours > 0 ? Math.round(totalEarned / totalHours) : 0;
+
+  document.getElementById('totalEarned').textContent = totalEarned.toLocaleString('ru-RU');
+  document.getElementById('totalShifts').textContent = shifts.length;
+  document.getElementById('totalHours').textContent = totalHours.toFixed(1);
+  document.getElementById('avgRate').textContent = avgRate.toLocaleString('ru-RU');
+
+  // Level
+  const xp = totalEarned;
+  let currentLevel = LEVELS[0], nextLevel = LEVELS[1];
+  for (let i = LEVELS.length - 1; i >= 0; i--) {
+    if (xp >= LEVELS[i].xp) { currentLevel = LEVELS[i]; nextLevel = LEVELS[i + 1] || null; break; }
+  }
+  document.getElementById('levelIcon').textContent = currentLevel.icon;
+  document.getElementById('levelName').textContent = `LVL ${currentLevel.lvl} — ${currentLevel.name}`;
+  document.getElementById('levelTitle').textContent = currentLevel.title;
+  if (nextLevel) {
+    const progress = ((xp - currentLevel.xp) / (nextLevel.xp - currentLevel.xp)) * 100;
+    document.getElementById('xpFill').style.width = Math.min(progress, 100) + '%';
+    document.getElementById('xpText').textContent = `${xp.toLocaleString('ru-RU')} / ${nextLevel.xp.toLocaleString('ru-RU')} XP`;
+  } else {
+    document.getElementById('xpFill').style.width = '100%';
+    document.getElementById('xpText').textContent = 'MAX LEVEL! 🦆';
+  }
+
+  // Streak — properly checks consecutive calendar days
+  const streak = calcStreak(goal);
+  const streakBar = document.getElementById('streakBar');
+  if (streak > 0) { streakBar.style.display = 'flex'; document.getElementById('streakCount').textContent = streak; }
+  else { streakBar.style.display = 'none'; }
+
+  // Achievements
+  const achData = { shifts, totalEarned, streak };
+  document.getElementById('achGrid').innerHTML = ACHIEVEMENTS.map(a => {
+    const u = a.check(achData);
+    return `<div class="ach-item ${u?'unlocked':'locked'}"><div class="ach-icon">${a.icon}</div><div class="ach-name">${a.name}</div></div>`;
+  }).join('');
+
+  // History
+  const shiftList = document.getElementById('shiftList');
+  if (shifts.length === 0) {
+    shiftList.innerHTML = `<div class="empty-state"><div class="emoji">🦆</div><p>Пока пусто — добавь первую смену!</p></div>`;
+  } else {
+    shiftList.innerHTML = shifts.map(s => {
+      const cls = s.rate >= goal ? 'goal-hit' : (s.rate >= goal * 0.9 ? 'goal-close' : 'goal-miss');
+      const rateCls = s.rate >= goal ? 'good' : (s.rate >= goal * 0.9 ? 'ok' : 'bad');
+      const icon = s.rate >= goal ? '✅' : (s.rate >= goal * 0.9 ? '🔸' : '❌');
+      const d = new Date(s.date + 'T00:00:00');
+      const dateStr = d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+      const noteHtml = s.note ? `<div class="shift-note">${escapeHtml(s.note)}</div>` : '';
+      return `<div class="shift-card ${cls} slide-up">
+        <button class="shift-delete" onclick="removeShift(${s.id})">✕</button>
+        <div class="shift-left">
+          <div class="shift-date">${dateStr}</div>
+          <div class="shift-hours">${s.hours} ч</div>
+          ${noteHtml}
+        </div>
+        <div class="shift-right">
+          <div class="shift-earned">${s.earned.toLocaleString('ru-RU')} ₽</div>
+          <div class="shift-rate ${rateCls}">${icon} ${s.rate} ₽/час</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+}
+
+// ====== STREAK: consecutive calendar days where rate >= goal ======
+function calcStreak(goal) {
+  // Get unique dates with their best rate, sorted newest first
+  const dateMap = {};
+  for (const s of shifts) {
+    if (!dateMap[s.date] || s.rate > dateMap[s.date]) {
+      dateMap[s.date] = s.rate;
+    }
+  }
+
+  const dates = Object.keys(dateMap).sort((a, b) => b.localeCompare(a));
+  if (dates.length === 0) return 0;
+
+  let streak = 0;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  for (let i = 0; i < dates.length; i++) {
+    const shiftDate = new Date(dates[i] + 'T00:00:00');
+
+    // First iteration: check if most recent shift is today or yesterday
+    if (i === 0) {
+      const daysDiff = Math.floor((today - shiftDate) / 86400000);
+      if (daysDiff > 1) return 0; // Last shift was more than 1 day ago
+    }
+
+    // Check consecutive: each date should be exactly 1 day after the next one in sorted order
+    if (i > 0) {
+      const prevDate = new Date(dates[i - 1] + 'T00:00:00');
+      const gap = Math.floor((prevDate - shiftDate) / 86400000);
+      if (gap !== 1) break; // Gap found, streak broken
+    }
+
+    if (dateMap[dates[i]] >= goal) {
+      streak++;
+    } else {
+      break; // Missed goal, streak broken
+    }
+  }
+
+  return streak;
+}
+
+// ====== XSS protection for notes ======
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// ====== START ======
+init();
+</script>
+</body>
+</html>
