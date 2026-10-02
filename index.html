@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>💰 OZON Grind Tracker</title>
+<title>🐴 💰 OZON Grind Tracker</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="config.js"></script>
 <style>
@@ -222,13 +222,24 @@ body {
 .sync-status.ok { color: var(--green); }
 .sync-status.error { color: var(--red); }
 .sync-status.syncing { color: var(--orange); }
+
+/* TOAST */
+.toast {
+  position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px);
+  padding: 10px 20px; border-radius: 12px; font-size: 13px; font-weight: 700;
+  z-index: 10000; transition: transform 0.4s ease; white-space: nowrap;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+.toast.success { background: rgba(0,230,118,0.9); color: #1a1a2e; }
+.toast.error { background: rgba(255,82,82,0.9); color: #fff; }
+.toast.warn { background: rgba(255,171,64,0.9); color: #1a1a2e; }
 </style>
 </head>
 <body>
 
 <div class="loading-overlay" id="loadingOverlay">
   <div class="loading-spinner">🪙</div>
-  <div style="color: var(--gold); font-weight: 700;">Загрузка хранилища...</div>
+  <div style="color: var(--gold); font-weight: 700;" id="loadingText">Загрузка хранилища...</div>
 </div>
 
 <div class="coin-rain" id="coinRain"></div>
@@ -304,7 +315,12 @@ body {
 
 <script>
 // ====== SUPABASE INIT ======
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let sb = null;
+try {
+  sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+} catch (e) {
+  console.error('Supabase init failed:', e);
+}
 
 // ====== DATA ======
 const LEVELS = [
@@ -341,31 +357,73 @@ const ACHIEVEMENTS = [
 let shifts = [];
 let difficulty = localStorage.getItem('ozon_difficulty') || 'normal';
 
+// ====== TOAST NOTIFICATIONS ======
+function showToast(msg, type = 'success') {
+  const existing = document.querySelector('.toast');
+  if (existing) existing.remove();
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => toast.classList.add('show'));
+  });
+  setTimeout(() => {
+    toast.classList.remove('show');
+    setTimeout(() => toast.remove(), 400);
+  }, 2500);
+}
+
+// ====== HELPER: compute rate ======
+function enrichShift(s) {
+  s.hours = parseFloat(s.hours) || 0;
+  s.earned = parseFloat(s.earned) || 0;
+  s.rate = s.hours > 0 ? Math.round(s.earned / s.hours) : 0;
+  return s;
+}
+
 // ====== SUPABASE OPS ======
 async function loadShifts() {
   setSyncStatus('syncing', '⏳ Загрузка...');
-  try {
-    const { data, error } = await sb.from('shifts').select('*').order('date', { ascending: false });
-    if (error) throw error;
-    shifts = data.map(s => ({
-      ...s,
-      hours: parseFloat(s.hours),
-      rate: parseFloat(s.hours) > 0 ? Math.round(s.earned / parseFloat(s.hours)) : 0
-    }));
-    setSyncStatus('ok', '☁️ Синхронизировано');
-  } catch (e) {
-    console.error('Load error:', e);
-    setSyncStatus('error', '❌ Ошибка загрузки');
-    // Fallback to localStorage
+
+  // Try Supabase first
+  if (sb) {
     try {
-      const local = JSON.parse(localStorage.getItem('ozon_tracker'));
-      if (local && local.shifts) shifts = local.shifts;
-    } catch(e2) {}
+      const { data, error } = await sb.from('shifts').select('*').order('date', { ascending: false });
+      if (error) throw error;
+      shifts = data.map(enrichShift);
+      // Backup to localStorage on successful load
+      backupToLocal();
+      setSyncStatus('ok', '☁️ Синхронизировано');
+      return;
+    } catch (e) {
+      console.error('Supabase load error:', e);
+      setSyncStatus('error', '❌ Облако недоступно');
+    }
+  }
+
+  // Fallback to localStorage
+  try {
+    const local = JSON.parse(localStorage.getItem('ozon_tracker'));
+    if (local && Array.isArray(local.shifts)) {
+      shifts = local.shifts.map(enrichShift);
+      setSyncStatus('warn', '📱 Локальные данные');
+      showToast('Загружены локальные данные', 'warn');
+    }
+  } catch(e2) {
+    console.error('Local load error:', e2);
   }
 }
 
 async function insertShift(shift) {
   setSyncStatus('syncing', '⏳ Сохранение...');
+
+  if (!sb) {
+    setSyncStatus('error', '❌ Нет соединения');
+    showToast('Supabase недоступен', 'error');
+    return false;
+  }
+
   try {
     const { data, error } = await sb.from('shifts').insert([{
       date: shift.date,
@@ -375,18 +433,18 @@ async function insertShift(shift) {
       difficulty: difficulty
     }]).select();
     if (error) throw error;
-    const s = data[0];
-    s.hours = parseFloat(s.hours);
-    s.rate = s.hours > 0 ? Math.round(s.earned / s.hours) : 0;
+
+    const s = enrichShift(data[0]);
     shifts.unshift(s);
     shifts.sort((a, b) => b.date.localeCompare(a.date));
-    // Backup to localStorage
-    localStorage.setItem('ozon_tracker', JSON.stringify({ shifts, difficulty }));
+    backupToLocal();
     setSyncStatus('ok', '☁️ Сохранено ✓');
+    showToast(`+${s.earned.toLocaleString('ru-RU')} ₽ 💰`, 'success');
     return true;
   } catch (e) {
     console.error('Insert error:', e);
     setSyncStatus('error', '❌ Ошибка сохранения');
+    showToast('Ошибка сохранения — попробуй ещё', 'error');
     return false;
   }
 }
@@ -394,33 +452,69 @@ async function insertShift(shift) {
 async function removeShift(id) {
   if (!confirm('Удалить эту смену?')) return;
   setSyncStatus('syncing', '⏳ Удаление...');
+
+  if (!sb) {
+    setSyncStatus('error', '❌ Нет соединения');
+    return;
+  }
+
   try {
     const { error } = await sb.from('shifts').delete().eq('id', id);
     if (error) throw error;
     shifts = shifts.filter(s => s.id !== id);
-    localStorage.setItem('ozon_tracker', JSON.stringify({ shifts, difficulty }));
+    backupToLocal();
     setSyncStatus('ok', '☁️ Удалено ✓');
+    showToast('Смена удалена', 'success');
     render();
   } catch (e) {
     console.error('Delete error:', e);
     setSyncStatus('error', '❌ Ошибка удаления');
+    showToast('Ошибка удаления', 'error');
   }
+}
+
+function backupToLocal() {
+  try {
+    localStorage.setItem('ozon_tracker', JSON.stringify({ shifts, difficulty }));
+  } catch (e) { /* localStorage full or unavailable */ }
 }
 
 function setSyncStatus(type, text) {
   const el = document.getElementById('syncStatus');
+  if (!el) return;
   el.className = 'sync-status ' + type;
   el.textContent = text;
 }
 
+// ====== HIDE LOADING (always) ======
+function hideLoading() {
+  const overlay = document.getElementById('loadingOverlay');
+  if (overlay) {
+    overlay.classList.add('hidden');
+    setTimeout(() => overlay.style.display = 'none', 500);
+  }
+}
+
 // ====== INIT ======
 async function init() {
-  document.getElementById('inputDate').value = new Date().toISOString().split('T')[0];
+  // Set today's date (local timezone safe)
+  const now = new Date();
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
+  const dd = String(now.getDate()).padStart(2, '0');
+  document.getElementById('inputDate').value = `${yyyy}-${mm}-${dd}`;
+
   setDifficulty(difficulty, false);
-  await loadShifts();
+
+  try {
+    await loadShifts();
+  } catch (e) {
+    console.error('Init load error:', e);
+    setSyncStatus('error', '❌ Ошибка загрузки');
+  }
+
   render();
-  document.getElementById('loadingOverlay').classList.add('hidden');
-  setTimeout(() => document.getElementById('loadingOverlay').style.display = 'none', 500);
+  hideLoading(); // ALWAYS hide, even on error
 }
 
 // ====== DIFFICULTY ======
@@ -442,7 +536,13 @@ async function addShift() {
     const btn = document.querySelector('.btn-add');
     btn.style.animation = 'shake 0.4s ease';
     setTimeout(() => btn.style.animation = '', 400);
+    showToast('Заполни дату, часы и заработок', 'error');
     return;
+  }
+
+  // Check for duplicate date
+  if (shifts.some(s => s.date === date)) {
+    if (!confirm(`Смена на ${date} уже есть. Добавить ещё одну?`)) return;
   }
 
   const btn = document.getElementById('btnAdd');
@@ -511,7 +611,7 @@ function render() {
     document.getElementById('xpText').textContent = 'MAX LEVEL! 🦆';
   }
 
-  // Streak
+  // Streak — properly checks consecutive calendar days
   const streak = calcStreak(goal);
   const streakBar = document.getElementById('streakBar');
   if (streak > 0) { streakBar.style.display = 'flex'; document.getElementById('streakCount').textContent = streak; }
@@ -535,12 +635,13 @@ function render() {
       const icon = s.rate >= goal ? '✅' : (s.rate >= goal * 0.9 ? '🔸' : '❌');
       const d = new Date(s.date + 'T00:00:00');
       const dateStr = d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+      const noteHtml = s.note ? `<div class="shift-note">${escapeHtml(s.note)}</div>` : '';
       return `<div class="shift-card ${cls} slide-up">
         <button class="shift-delete" onclick="removeShift(${s.id})">✕</button>
         <div class="shift-left">
           <div class="shift-date">${dateStr}</div>
           <div class="shift-hours">${s.hours} ч</div>
-          ${s.note ? `<div class="shift-note">${s.note}</div>` : ''}
+          ${noteHtml}
         </div>
         <div class="shift-right">
           <div class="shift-earned">${s.earned.toLocaleString('ru-RU')} ₽</div>
@@ -551,13 +652,57 @@ function render() {
   }
 }
 
+// ====== STREAK: consecutive calendar days where rate >= goal ======
 function calcStreak(goal) {
-  const sorted = [...shifts].sort((a, b) => b.date.localeCompare(a.date));
+  // Get unique dates with their best rate, sorted newest first
+  const dateMap = {};
+  for (const s of shifts) {
+    if (!dateMap[s.date] || s.rate > dateMap[s.date]) {
+      dateMap[s.date] = s.rate;
+    }
+  }
+
+  const dates = Object.keys(dateMap).sort((a, b) => b.localeCompare(a));
+  if (dates.length === 0) return 0;
+
   let streak = 0;
-  for (const s of sorted) { if (s.rate >= goal) streak++; else break; }
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  for (let i = 0; i < dates.length; i++) {
+    const shiftDate = new Date(dates[i] + 'T00:00:00');
+
+    // First iteration: check if most recent shift is today or yesterday
+    if (i === 0) {
+      const daysDiff = Math.floor((today - shiftDate) / 86400000);
+      if (daysDiff > 1) return 0; // Last shift was more than 1 day ago
+    }
+
+    // Check consecutive: each date should be exactly 1 day after the next one in sorted order
+    if (i > 0) {
+      const prevDate = new Date(dates[i - 1] + 'T00:00:00');
+      const gap = Math.floor((prevDate - shiftDate) / 86400000);
+      if (gap !== 1) break; // Gap found, streak broken
+    }
+
+    if (dateMap[dates[i]] >= goal) {
+      streak++;
+    } else {
+      break; // Missed goal, streak broken
+    }
+  }
+
   return streak;
 }
 
+// ====== XSS protection for notes ======
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// ====== START ======
 init();
 </script>
 </body>
