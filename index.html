@@ -933,36 +933,86 @@ function renderActiveShift() {
 
 // ====== LIFE QUESTS ======
 const LIFE_QUESTS = [
+  // 🍽 Еда и здоровье
   { id: 'cook_lunch', icon: '🍱', title: 'Приготовить обед с собой', desc: 'Домашняя еда = экономия + здоровье', reward: '💰 -300₽ экономии' },
-  { id: 'water', icon: '💧', title: 'Выпить 2л воды', desc: 'Гидрация — залог энергии на смене', reward: '⚡ +энергия' },
-  { id: 'no_smoke', icon: '🚭', title: 'Не курить на перерыве', desc: 'Лёгкие скажут спасибо', reward: '❤️ +здоровье' },
-  { id: 'stretch', icon: '🧘', title: 'Размяться / потянуться', desc: 'Спина и ноги — наш инструмент', reward: '💪 -усталость' },
-  { id: 'early_bird', icon: '⏰', title: 'Прийти вовремя / раньше', desc: 'Пунктуальность — суперсила', reward: '⭐ +респект' },
-  { id: 'save_money', icon: '🐷', title: 'Не тратить лишнего', desc: 'Скрудж бы одобрил 🦆', reward: '💰 +экономия' },
-  { id: 'mood', icon: '😊', title: 'Позитивный настрой', desc: 'Улыбнись — день станет легче', reward: '🌟 +вайб' },
-  { id: 'learn', icon: '📚', title: 'Узнать что-то новое', desc: 'Один факт в день — прокачка мозга', reward: '🧠 +мозг' },
-  { id: 'clean_space', icon: '🧹', title: 'Убраться на рабочем месте', desc: 'Порядок = продуктивность', reward: '✨ +фокус' },
-  { id: 'talk_nice', icon: '🤝', title: 'Помочь коллеге', desc: 'Карма — штука реальная', reward: '💜 +карма' },
+  { id: 'water', icon: '💧', title: 'Выпить 2л воды', desc: 'Гидрация — залог энергии', reward: '⚡ +энергия' },
   { id: 'snack_healthy', icon: '🍎', title: 'Здоровый перекус', desc: 'Яблоко вместо шоколадки', reward: '🏋️ +здоровье' },
+  { id: 'no_junk', icon: '🚫', title: 'Без фастфуда сегодня', desc: 'Желудок скажет спасибо', reward: '❤️ +здоровье' },
+  { id: 'cook_dinner', icon: '🍳', title: 'Приготовить ужин дома', desc: 'Готовка — тоже скилл', reward: '🧑‍🍳 +скилл' },
+  { id: 'vitamins', icon: '💊', title: 'Выпить витамины', desc: 'Иммунитет на максимум', reward: '🛡 +иммунитет' },
+
+  // 💪 Тело и движение
+  { id: 'stretch', icon: '🧘', title: 'Размяться / потянуться', desc: 'Спина и ноги — наш инструмент', reward: '💪 -усталость' },
   { id: 'walk', icon: '🚶', title: 'Пройти 8000 шагов', desc: 'Движение — жизнь', reward: '🦵 +ноги' },
-  { id: 'no_phone', icon: '📵', title: 'Не залипать в телефон', desc: 'Фокус на работе = больше ₽', reward: '🎯 +фокус' },
-  { id: 'compliment', icon: '💬', title: 'Сказать кому-то приятное', desc: 'Мир лучше с добрыми словами', reward: '💛 +настроение' },
-  { id: 'plan_tomorrow', icon: '📝', title: 'Спланировать завтра', desc: 'Вечером запиши план на завтра', reward: '🗓 +организация' },
+  { id: 'pushups', icon: '🏋️', title: '20 отжиманий', desc: 'Мини-тренировка за 2 минуты', reward: '💪 +сила' },
+  { id: 'cold_shower', icon: '🚿', title: 'Контрастный душ', desc: 'Тонус и бодрость на весь день', reward: '⚡ +бодрость' },
   { id: 'sleep_8h', icon: '😴', title: 'Лечь спать вовремя', desc: 'Сон — лучшее восстановление', reward: '🔋 +энергия' },
+  { id: 'no_smoke', icon: '🚭', title: 'Не курить сегодня', desc: 'Лёгкие скажут спасибо', reward: '❤️ +здоровье' },
+  { id: 'fresh_air', icon: '🌳', title: 'Прогулка на свежем воздухе', desc: '15 минут — и голова ясная', reward: '🧠 +ясность' },
+
+  // 🤝 Социалка и общение
+  { id: 'talk_nice', icon: '🤝', title: 'Помочь кому-то', desc: 'Карма — штука реальная', reward: '💜 +карма' },
+  { id: 'compliment', icon: '💬', title: 'Сделать комплимент', desc: 'Искренне сказать кому-то приятное', reward: '💛 +настроение' },
+  { id: 'call_friend', icon: '📞', title: 'Позвонить другу/родным', desc: 'Не забывай про своих', reward: '❤️ +связь' },
+  { id: 'new_person', icon: '👋', title: 'Познакомиться с кем-то', desc: 'Заговори с новым человеком', reward: '🌐 +нетворк' },
+  { id: 'listen', icon: '👂', title: 'Выслушать кого-то', desc: 'Просто послушай без советов', reward: '🫂 +эмпатия' },
+  { id: 'no_argue', icon: '🕊', title: 'Не ввязываться в споры', desc: 'Спокойствие — сила', reward: '🧘 +дзен' },
+  { id: 'say_thanks', icon: '🙏', title: 'Поблагодарить кого-то', desc: 'Благодарность меняет восприятие', reward: '✨ +позитив' },
+  { id: 'ask_howru', icon: '💭', title: 'Спросить «Как дела?»', desc: 'Покажи интерес к человеку', reward: '🤝 +доверие' },
+  { id: 'share_food', icon: '🍕', title: 'Угостить коллегу', desc: 'Делиться — кайф', reward: '💜 +дружба' },
+  { id: 'joke', icon: '😂', title: 'Рассмешить кого-то', desc: 'Юмор — суперсила в общении', reward: '😄 +вайб' },
+
+  // 🧠 Развитие и мозг
+  { id: 'learn', icon: '📚', title: 'Узнать что-то новое', desc: 'Один факт в день — прокачка мозга', reward: '🧠 +мозг' },
+  { id: 'read_10min', icon: '📖', title: 'Читать 10 минут', desc: 'Книга, статья — что угодно полезное', reward: '📚 +знания' },
+  { id: 'no_phone', icon: '📵', title: 'Час без телефона', desc: 'Детокс от экрана', reward: '🎯 +фокус' },
+  { id: 'podcast', icon: '🎧', title: 'Послушать подкаст', desc: 'Пока идёшь — качай мозг', reward: '🧠 +развитие' },
+  { id: 'journal', icon: '📓', title: 'Записать мысли', desc: 'Даже пару строк — уже рефлексия', reward: '🪞 +осознанность' },
+  { id: 'new_word', icon: '🗣', title: 'Выучить новое слово', desc: 'Английский, сленг, термин — любое', reward: '📝 +словарь' },
+
+  // 💰 Финансы и экономия
+  { id: 'save_money', icon: '🐷', title: 'Не тратить лишнего', desc: 'Скрудж бы одобрил 🦆', reward: '💰 +экономия' },
+  { id: 'track_expense', icon: '🧮', title: 'Записать все траты', desc: 'Знание — первый шаг к контролю', reward: '📊 +контроль' },
+  { id: 'no_impulse', icon: '🛑', title: 'Не покупать импульсивно', desc: 'Подожди 24 часа перед покупкой', reward: '🧊 +хладнокровие' },
+
+  // ⭐ Настроение и вайб
+  { id: 'mood', icon: '😊', title: 'Позитивный настрой', desc: 'Улыбнись — день станет легче', reward: '🌟 +вайб' },
+  { id: 'gratitude', icon: '🌅', title: 'Назвать 3 вещи за которые благодарен', desc: 'Благодарность = счастье', reward: '☀️ +счастье' },
+  { id: 'music', icon: '🎵', title: 'Послушать любимую музыку', desc: 'Заряд настроения', reward: '🎶 +вайб' },
+  { id: 'no_complain', icon: '🤐', title: 'Не жаловаться весь день', desc: 'Фокус на решениях, не на проблемах', reward: '🦾 +ментал' },
+  { id: 'dance', icon: '💃', title: 'Потанцевать / подвигаться', desc: 'Даже 30 секунд — уже буст', reward: '🕺 +энергия' },
+  { id: 'sunset', icon: '🌇', title: 'Посмотреть на закат/небо', desc: 'Остановись и вдохни красоту', reward: '🧘 +покой' },
+
+  // 🏠 Быт и порядок
+  { id: 'clean_space', icon: '🧹', title: 'Убраться дома/на месте', desc: 'Порядок = продуктивность', reward: '✨ +фокус' },
+  { id: 'make_bed', icon: '🛏', title: 'Застелить кровать', desc: 'Первая победа за день', reward: '🏅 +дисциплина' },
+  { id: 'plan_tomorrow', icon: '📝', title: 'Спланировать завтра', desc: 'Вечером запиши план на завтра', reward: '🗓 +организация' },
+  { id: 'early_bird', icon: '⏰', title: 'Встать по будильнику сразу', desc: 'Без «ещё 5 минут»', reward: '⭐ +воля' },
+  { id: 'iron_clothes', icon: '👕', title: 'Подготовить одежду', desc: 'Вечером собери на завтра', reward: '🎒 +организация' },
+
+  // 🎮 Челленджи
+  { id: 'cold_water', icon: '🥶', title: 'Выпить стакан воды утром', desc: 'Первое что делаешь — стакан воды', reward: '💧 +привычка' },
+  { id: 'eye_contact', icon: '👀', title: 'Держать зрительный контакт', desc: 'Уверенность в общении', reward: '🦁 +уверенность' },
+  { id: 'posture', icon: '🧍', title: 'Следить за осанкой', desc: 'Расправь плечи — выгляди как босс', reward: '👑 +уверенность' },
+  { id: 'say_no', icon: '✋', title: 'Отказать в чём-то ненужном', desc: 'Говорить «нет» — это нормально', reward: '🛡 +границы' },
+  { id: 'deep_breath', icon: '🌬', title: '5 глубоких вдохов', desc: 'Когда стресс — просто дыши', reward: '🧘 +спокойствие' },
+  { id: 'mirror', icon: '🪞', title: 'Сказать себе что-то хорошее', desc: 'Аффирмация в зеркале — работает', reward: '💪 +самооценка' },
 ];
 
-// Pick 4 random life quests for today (seeded by date)
+// Pick 7 random life quests for today (seeded by date, from pool of 48)
 function getTodayLifeQuests() {
   const today = new Date().toISOString().slice(0, 10);
-  // Simple hash from date string for consistent daily selection
+  // Better hash from date string for consistent daily selection
   let hash = 0;
   for (let i = 0; i < today.length; i++) { hash = ((hash << 5) - hash) + today.charCodeAt(i); hash |= 0; }
+  // Use full id string for better distribution
   const shuffled = [...LIFE_QUESTS].sort((a, b) => {
-    const ha = ((hash * 31 + a.id.charCodeAt(0)) | 0) % 1000;
-    const hb = ((hash * 31 + b.id.charCodeAt(0)) | 0) % 1000;
-    return ha - hb;
+    let ha = hash, hb = hash;
+    for (let i = 0; i < a.id.length; i++) { ha = ((ha << 5) - ha) + a.id.charCodeAt(i); ha |= 0; }
+    for (let i = 0; i < b.id.length; i++) { hb = ((hb << 5) - hb) + b.id.charCodeAt(i); hb |= 0; }
+    return (ha % 10000) - (hb % 10000);
   });
-  return shuffled.slice(0, 5);
+  return shuffled.slice(0, 7);
 }
 
 function getLifeQuestState() {
