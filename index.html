@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>💰 OZON Grind Tracker v3.1</title>
+<title>💰 OZON Grind Tracker v3.2</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="config.js?v=3"></script>
 <style>
@@ -176,6 +176,46 @@ body {
 .quest-fill.active { background: linear-gradient(90deg, var(--cyan), #80deea); }
 .quest-fill.done { background: var(--green); }
 .quest-text { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
+
+/* LIFE QUESTS */
+.life-quests {
+  margin: 0 16px 16px; padding: 16px;
+  background: var(--bg-card); border-radius: 16px;
+  border: 1px solid rgba(187,134,252,0.2);
+}
+.life-quests h3 { font-size: 14px; color: var(--purple); margin-bottom: 12px; text-align: center; }
+.life-quest-item {
+  display: flex; align-items: center; gap: 10px;
+  background: rgba(255,255,255,0.04); border-radius: 12px; padding: 12px;
+  margin-bottom: 8px; cursor: pointer; transition: all 0.3s;
+  border-left: 3px solid var(--purple); user-select: none;
+}
+.life-quest-item.checked { border-left-color: var(--green); opacity: 0.65; }
+.life-quest-item.checked .lq-title { text-decoration: line-through; }
+.life-quest-check {
+  width: 24px; height: 24px; border-radius: 8px;
+  border: 2px solid var(--purple); background: none;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; flex-shrink: 0; transition: all 0.3s;
+}
+.life-quest-item.checked .life-quest-check {
+  border-color: var(--green); background: rgba(0,230,118,0.2);
+}
+.lq-content { flex: 1; }
+.lq-title { font-size: 13px; font-weight: 700; }
+.lq-desc { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+.lq-reward { font-size: 11px; color: var(--gold); }
+
+/* MOTIVATION TIP */
+.motivation-tip {
+  margin: 0 16px 16px; padding: 14px 16px;
+  background: linear-gradient(135deg, rgba(0,229,255,0.08), rgba(187,134,252,0.08));
+  border-radius: 14px; border: 1px solid rgba(0,229,255,0.15);
+  text-align: center; font-size: 13px; line-height: 1.5;
+}
+.motivation-tip .tip-icon { font-size: 24px; margin-bottom: 6px; }
+.motivation-tip .tip-text { color: var(--text); font-weight: 600; }
+.motivation-tip .tip-author { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
 
 /* LEVEL */
 .level-section {
@@ -441,6 +481,19 @@ body {
 <div class="quests" id="questsPanel">
   <h3>⚔️ КВЕСТЫ ДНЯ</h3>
   <div id="questList"></div>
+</div>
+
+<!-- LIFE QUESTS -->
+<div class="life-quests" id="lifeQuestsPanel">
+  <h3>🎒 ЛАЙФ-КВЕСТЫ</h3>
+  <div id="lifeQuestList"></div>
+</div>
+
+<!-- MOTIVATION TIP -->
+<div class="motivation-tip" id="motivationTip">
+  <div class="tip-icon">💡</div>
+  <div class="tip-text" id="tipText"></div>
+  <div class="tip-author" id="tipAuthor"></div>
 </div>
 
 </div>
@@ -878,6 +931,108 @@ function renderActiveShift() {
   }
 }
 
+// ====== LIFE QUESTS ======
+const LIFE_QUESTS = [
+  { id: 'cook_lunch', icon: '🍱', title: 'Приготовить обед с собой', desc: 'Домашняя еда = экономия + здоровье', reward: '💰 -300₽ экономии' },
+  { id: 'water', icon: '💧', title: 'Выпить 2л воды', desc: 'Гидрация — залог энергии на смене', reward: '⚡ +энергия' },
+  { id: 'no_smoke', icon: '🚭', title: 'Не курить на перерыве', desc: 'Лёгкие скажут спасибо', reward: '❤️ +здоровье' },
+  { id: 'stretch', icon: '🧘', title: 'Размяться / потянуться', desc: 'Спина и ноги — наш инструмент', reward: '💪 -усталость' },
+  { id: 'early_bird', icon: '⏰', title: 'Прийти вовремя / раньше', desc: 'Пунктуальность — суперсила', reward: '⭐ +респект' },
+  { id: 'save_money', icon: '🐷', title: 'Не тратить лишнего', desc: 'Скрудж бы одобрил 🦆', reward: '💰 +экономия' },
+  { id: 'mood', icon: '😊', title: 'Позитивный настрой', desc: 'Улыбнись — день станет легче', reward: '🌟 +вайб' },
+  { id: 'learn', icon: '📚', title: 'Узнать что-то новое', desc: 'Один факт в день — прокачка мозга', reward: '🧠 +мозг' },
+  { id: 'clean_space', icon: '🧹', title: 'Убраться на рабочем месте', desc: 'Порядок = продуктивность', reward: '✨ +фокус' },
+  { id: 'talk_nice', icon: '🤝', title: 'Помочь коллеге', desc: 'Карма — штука реальная', reward: '💜 +карма' },
+  { id: 'snack_healthy', icon: '🍎', title: 'Здоровый перекус', desc: 'Яблоко вместо шоколадки', reward: '🏋️ +здоровье' },
+  { id: 'walk', icon: '🚶', title: 'Пройти 8000 шагов', desc: 'Движение — жизнь', reward: '🦵 +ноги' },
+  { id: 'no_phone', icon: '📵', title: 'Не залипать в телефон', desc: 'Фокус на работе = больше ₽', reward: '🎯 +фокус' },
+  { id: 'compliment', icon: '💬', title: 'Сказать кому-то приятное', desc: 'Мир лучше с добрыми словами', reward: '💛 +настроение' },
+  { id: 'plan_tomorrow', icon: '📝', title: 'Спланировать завтра', desc: 'Вечером запиши план на завтра', reward: '🗓 +организация' },
+  { id: 'sleep_8h', icon: '😴', title: 'Лечь спать вовремя', desc: 'Сон — лучшее восстановление', reward: '🔋 +энергия' },
+];
+
+// Pick 4 random life quests for today (seeded by date)
+function getTodayLifeQuests() {
+  const today = new Date().toISOString().slice(0, 10);
+  // Simple hash from date string for consistent daily selection
+  let hash = 0;
+  for (let i = 0; i < today.length; i++) { hash = ((hash << 5) - hash) + today.charCodeAt(i); hash |= 0; }
+  const shuffled = [...LIFE_QUESTS].sort((a, b) => {
+    const ha = ((hash * 31 + a.id.charCodeAt(0)) | 0) % 1000;
+    const hb = ((hash * 31 + b.id.charCodeAt(0)) | 0) % 1000;
+    return ha - hb;
+  });
+  return shuffled.slice(0, 5);
+}
+
+function getLifeQuestState() {
+  const today = new Date().toISOString().slice(0, 10);
+  try {
+    const saved = JSON.parse(localStorage.getItem('ozon_life_quests') || '{}');
+    if (saved.date === today) return saved.checked || {};
+    return {};
+  } catch(e) { return {}; }
+}
+
+function toggleLifeQuest(id) {
+  const today = new Date().toISOString().slice(0, 10);
+  const checked = getLifeQuestState();
+  checked[id] = !checked[id];
+  localStorage.setItem('ozon_life_quests', JSON.stringify({ date: today, checked }));
+  renderLifeQuests();
+  if (checked[id]) {
+    showToast('✅ Квест выполнен! Красавчик!', 'success');
+    rainCoins(3);
+  }
+}
+
+function renderLifeQuests() {
+  const quests = getTodayLifeQuests();
+  const checked = getLifeQuestState();
+  const container = document.getElementById('lifeQuestList');
+  const doneCount = quests.filter(q => checked[q.id]).length;
+  container.innerHTML = quests.map(q => {
+    const isDone = !!checked[q.id];
+    return `<div class="life-quest-item ${isDone ? 'checked' : ''}" onclick="toggleLifeQuest('${q.id}')">
+      <div class="life-quest-check">${isDone ? '✅' : ''}</div>
+      <div class="lq-content">
+        <div class="lq-title">${q.icon} ${q.title}</div>
+        <div class="lq-desc">${q.desc}</div>
+      </div>
+      <div class="lq-reward">${q.reward}</div>
+    </div>`;
+  }).join('') + (doneCount === quests.length && quests.length > 0
+    ? '<div style="text-align:center;padding:10px;font-size:14px;color:var(--green);font-weight:700">🏆 ВСЕ ЛАЙФ-КВЕСТЫ ВЫПОЛНЕНЫ! 🎉</div>'
+    : `<div style="text-align:center;padding:6px;font-size:11px;color:var(--text-dim)">${doneCount}/${quests.length} выполнено · обновляются каждый день</div>`);
+}
+
+// ====== MOTIVATION TIPS ======
+const TIPS = [
+  { text: 'Дисциплина — это делать то, что нужно, когда не хочется.', author: '🦆 Скрудж МакДак' },
+  { text: 'Маленькие шаги каждый день дают большие результаты.', author: '📈 Закон прогресса' },
+  { text: 'Деньги любят тех, кто их уважает и считает.', author: '💰 Правило богатства' },
+  { text: 'Лучший момент начать — вчера. Второй лучший — сейчас.', author: '⏰ Мудрость' },
+  { text: 'Не сравнивай себя с другими. Сравнивай себя с собой вчерашним.', author: '🪞 Рост' },
+  { text: 'Каждая смена — это кирпич в фундаменте твоего будущего.', author: '🏗 Строитель жизни' },
+  { text: 'Усталость временна, результат — навсегда.', author: '💪 Гринд-философия' },
+  { text: 'Пока другие спят — ты строишь своё будущее.', author: '🌙 Ночная смена' },
+  { text: 'Тело — твой главный инструмент. Заботься о нём.', author: '❤️ Здоровье' },
+  { text: '100 смен — и ты уже другой человек.', author: '🔄 Трансформация' },
+  { text: 'Скрудж стал богатым не потому что ему повезло, а потому что он работал каждый день.', author: '🦆 DuckTales' },
+  { text: 'Перерыв — не слабость, а стратегия.', author: '♟ Тактика' },
+  { text: 'Твой rate сегодня — это твоя цена завтра.', author: '📊 Аналитика' },
+  { text: 'Обед с собой = +300₽ в день = +9000₽ в месяц!', author: '🧮 Математика экономии' },
+  { text: 'Главное — не останавливаться. Страйк не должен прерваться!', author: '🔥 Keep grinding' },
+];
+
+function renderMotivationTip() {
+  const today = new Date();
+  const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / 86400000);
+  const tip = TIPS[dayOfYear % TIPS.length];
+  document.getElementById('tipText').textContent = `«${tip.text}»`;
+  document.getElementById('tipAuthor').textContent = `— ${tip.author}`;
+}
+
 // ====== QUESTS ======
 function generateQuests() {
   const goal = DIFFICULTIES[difficulty].goal;
@@ -1138,6 +1293,8 @@ async function init() {
   }
 
   render();
+  renderLifeQuests();
+  renderMotivationTip();
   hideLoading();
 }
 
