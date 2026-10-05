@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>💰 OZON Grind Tracker v3.2</title>
+<title>💰 OZON Grind Tracker v3.3</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="config.js?v=3"></script>
 <style>
@@ -205,6 +205,17 @@ body {
 .lq-title { font-size: 13px; font-weight: 700; }
 .lq-desc { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
 .lq-reward { font-size: 11px; color: var(--gold); }
+.lq-reroll {
+  background: none; border: 1px solid rgba(187,134,252,0.3); border-radius: 8px;
+  color: var(--purple); font-size: 16px; padding: 4px 8px; cursor: pointer;
+  transition: all 0.3s; flex-shrink: 0;
+}
+.lq-reroll:active { transform: rotate(180deg) scale(0.9); }
+.lq-reroll:disabled { opacity: 0.2; cursor: not-allowed; }
+.lq-reroll-counter {
+  text-align: center; padding: 4px; font-size: 11px; color: var(--text-dim);
+  margin-top: 2px;
+}
 
 /* MOTIVATION TIP */
 .motivation-tip {
@@ -1019,30 +1030,88 @@ function getLifeQuestState() {
   const today = new Date().toISOString().slice(0, 10);
   try {
     const saved = JSON.parse(localStorage.getItem('ozon_life_quests') || '{}');
-    if (saved.date === today) return saved.checked || {};
-    return {};
-  } catch(e) { return {}; }
+    if (saved.date === today) return { checked: saved.checked || {}, rerolls: saved.rerolls || 0, replacements: saved.replacements || {} };
+    return { checked: {}, rerolls: 0, replacements: {} };
+  } catch(e) { return { checked: {}, rerolls: 0, replacements: {} }; }
+}
+
+function saveLifeQuestState(state) {
+  const today = new Date().toISOString().slice(0, 10);
+  localStorage.setItem('ozon_life_quests', JSON.stringify({ date: today, ...state }));
 }
 
 function toggleLifeQuest(id) {
-  const today = new Date().toISOString().slice(0, 10);
-  const checked = getLifeQuestState();
-  checked[id] = !checked[id];
-  localStorage.setItem('ozon_life_quests', JSON.stringify({ date: today, checked }));
+  const state = getLifeQuestState();
+  state.checked[id] = !state.checked[id];
+  saveLifeQuestState(state);
   renderLifeQuests();
-  if (checked[id]) {
+  if (state.checked[id]) {
     showToast('✅ Квест выполнен! Красавчик!', 'success');
     rainCoins(3);
   }
 }
 
+const MAX_REROLLS = 3;
+
+function rerollLifeQuest(oldId, event) {
+  event.stopPropagation();
+  const state = getLifeQuestState();
+  if (state.rerolls >= MAX_REROLLS) {
+    showToast('🎲 Реролы закончились на сегодня!', 'warn');
+    return;
+  }
+
+  // Get current quest list (base + replacements)
+  const baseQuests = getTodayLifeQuests();
+  const currentIds = baseQuests.map(q => state.replacements[q.id] || q.id);
+
+  // Pick a random replacement from the full pool, not already shown
+  const available = LIFE_QUESTS.filter(q => !currentIds.includes(q.id));
+  if (available.length === 0) {
+    showToast('Нет доступных квестов для замены', 'warn');
+    return;
+  }
+
+  const newQuest = available[Math.floor(Math.random() * available.length)];
+
+  // Find which base quest slot this oldId belongs to
+  const baseSlot = baseQuests.find(q => (state.replacements[q.id] || q.id) === oldId);
+  if (baseSlot) {
+    state.replacements[baseSlot.id] = newQuest.id;
+  }
+
+  // Remove checked state for old quest
+  delete state.checked[oldId];
+
+  state.rerolls++;
+  saveLifeQuestState(state);
+  renderLifeQuests();
+  showToast(`🔄 Квест заменён! (${MAX_REROLLS - state.rerolls} реролов осталось)`, 'success');
+}
+
+function getResolvedLifeQuests() {
+  const baseQuests = getTodayLifeQuests();
+  const state = getLifeQuestState();
+  return baseQuests.map(base => {
+    const replacementId = state.replacements[base.id];
+    if (replacementId) {
+      const found = LIFE_QUESTS.find(q => q.id === replacementId);
+      if (found) return found;
+    }
+    return base;
+  });
+}
+
 function renderLifeQuests() {
-  const quests = getTodayLifeQuests();
-  const checked = getLifeQuestState();
+  const quests = getResolvedLifeQuests();
+  const state = getLifeQuestState();
+  const checked = state.checked;
+  const rerollsLeft = MAX_REROLLS - state.rerolls;
   const container = document.getElementById('lifeQuestList');
   const doneCount = quests.filter(q => checked[q.id]).length;
   container.innerHTML = quests.map(q => {
     const isDone = !!checked[q.id];
+    const canReroll = !isDone && rerollsLeft > 0;
     return `<div class="life-quest-item ${isDone ? 'checked' : ''}" onclick="toggleLifeQuest('${q.id}')">
       <div class="life-quest-check">${isDone ? '✅' : ''}</div>
       <div class="lq-content">
@@ -1050,8 +1119,11 @@ function renderLifeQuests() {
         <div class="lq-desc">${q.desc}</div>
       </div>
       <div class="lq-reward">${q.reward}</div>
+      <button class="lq-reroll" onclick="rerollLifeQuest('${q.id}', event)" ${canReroll ? '' : 'disabled'} title="Заменить квест">🔄</button>
     </div>`;
-  }).join('') + (doneCount === quests.length && quests.length > 0
+  }).join('') +
+    `<div class="lq-reroll-counter">🎲 Реролов: ${rerollsLeft}/${MAX_REROLLS}</div>` +
+    (doneCount === quests.length && quests.length > 0
     ? '<div style="text-align:center;padding:10px;font-size:14px;color:var(--green);font-weight:700">🏆 ВСЕ ЛАЙФ-КВЕСТЫ ВЫПОЛНЕНЫ! 🎉</div>'
     : `<div style="text-align:center;padding:6px;font-size:11px;color:var(--text-dim)">${doneCount}/${quests.length} выполнено · обновляются каждый день</div>`);
 }
