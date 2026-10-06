@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>💰 OZON Grind Tracker v3.3</title>
+<title>💰 OZON Grind Tracker v3.4</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="config.js?v=3"></script>
 <style>
@@ -216,6 +216,52 @@ body {
   text-align: center; padding: 4px; font-size: 11px; color: var(--text-dim);
   margin-top: 2px;
 }
+
+/* LIFE QUEST STATS */
+.life-stats-panel { margin-bottom: 14px; }
+.lq-level-header {
+  display: flex; align-items: center; gap: 10px; padding: 10px;
+  background: rgba(187,134,252,0.08); border-radius: 12px; margin-bottom: 10px;
+}
+.lq-level-icon { font-size: 32px; }
+.lq-level-info { flex: 1; }
+.lq-level-name { font-size: 13px; font-weight: 700; color: var(--purple); }
+.lq-xp-bar {
+  height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px;
+  margin-top: 4px; overflow: hidden;
+}
+.lq-xp-fill {
+  height: 100%; background: linear-gradient(90deg, var(--purple), var(--cyan));
+  border-radius: 3px; transition: width 0.5s;
+}
+.lq-xp-text { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
+.lq-total-xp { font-size: 16px; font-weight: 700; color: var(--gold); white-space: nowrap; }
+
+.lq-stats-grid {
+  display: flex; gap: 8px; margin-bottom: 10px;
+}
+.lq-mini-stat {
+  flex: 1; text-align: center; padding: 8px 4px;
+  background: rgba(255,255,255,0.04); border-radius: 10px;
+}
+.lq-ms-val { display: block; font-size: 18px; font-weight: 700; color: var(--text); }
+.lq-ms-lbl { display: block; font-size: 10px; color: var(--text-dim); }
+
+.lq-cat-bars { display: flex; flex-direction: column; gap: 4px; }
+.lq-stat-row {
+  display: flex; align-items: center; gap: 6px; font-size: 12px;
+}
+.lq-stat-icon { font-size: 14px; width: 20px; text-align: center; }
+.lq-stat-name { width: 70px; color: var(--text-dim); font-size: 11px; }
+.lq-stat-bar {
+  flex: 1; height: 8px; background: rgba(255,255,255,0.08);
+  border-radius: 4px; overflow: hidden;
+}
+.lq-stat-fill {
+  height: 100%; border-radius: 4px; transition: width 0.5s;
+  min-width: 2px;
+}
+.lq-stat-val { width: 30px; text-align: right; font-weight: 700; color: var(--text); font-size: 11px; }
 
 /* MOTIVATION TIP */
 .motivation-tip {
@@ -497,6 +543,7 @@ body {
 <!-- LIFE QUESTS -->
 <div class="life-quests" id="lifeQuestsPanel">
   <h3>🎒 ЛАЙФ-КВЕСТЫ</h3>
+  <div id="lifeStatsPanel" class="life-stats-panel"></div>
   <div id="lifeQuestList"></div>
 </div>
 
@@ -945,69 +992,95 @@ function renderActiveShift() {
 // ====== LIFE QUESTS ======
 const LIFE_QUESTS = [
   // 🍽 Еда и здоровье
-  { id: 'cook_lunch', icon: '🍱', title: 'Приготовить обед с собой', desc: 'Домашняя еда = экономия + здоровье', reward: '💰 -300₽ экономии' },
-  { id: 'water', icon: '💧', title: 'Выпить 2л воды', desc: 'Гидрация — залог энергии', reward: '⚡ +энергия' },
-  { id: 'snack_healthy', icon: '🍎', title: 'Здоровый перекус', desc: 'Яблоко вместо шоколадки', reward: '🏋️ +здоровье' },
-  { id: 'no_junk', icon: '🚫', title: 'Без фастфуда сегодня', desc: 'Желудок скажет спасибо', reward: '❤️ +здоровье' },
-  { id: 'cook_dinner', icon: '🍳', title: 'Приготовить ужин дома', desc: 'Готовка — тоже скилл', reward: '🧑‍🍳 +скилл' },
-  { id: 'vitamins', icon: '💊', title: 'Выпить витамины', desc: 'Иммунитет на максимум', reward: '🛡 +иммунитет' },
+  { id: 'cook_lunch', icon: '🍱', title: 'Приготовить обед с собой', desc: 'Домашняя еда = экономия + здоровье', reward: '💰 -300₽', xp: 15, cat: 'health' },
+  { id: 'water', icon: '💧', title: 'Выпить 2л воды', desc: 'Гидрация — залог энергии', reward: '+15 XP', xp: 15, cat: 'health' },
+  { id: 'snack_healthy', icon: '🍎', title: 'Здоровый перекус', desc: 'Яблоко вместо шоколадки', reward: '+10 XP', xp: 10, cat: 'health' },
+  { id: 'no_junk', icon: '🚫', title: 'Без фастфуда сегодня', desc: 'Желудок скажет спасибо', reward: '+20 XP', xp: 20, cat: 'health' },
+  { id: 'cook_dinner', icon: '🍳', title: 'Приготовить ужин дома', desc: 'Готовка — тоже скилл', reward: '+15 XP', xp: 15, cat: 'health' },
+  { id: 'vitamins', icon: '💊', title: 'Выпить витамины', desc: 'Иммунитет на максимум', reward: '+10 XP', xp: 10, cat: 'health' },
 
   // 💪 Тело и движение
-  { id: 'stretch', icon: '🧘', title: 'Размяться / потянуться', desc: 'Спина и ноги — наш инструмент', reward: '💪 -усталость' },
-  { id: 'walk', icon: '🚶', title: 'Пройти 8000 шагов', desc: 'Движение — жизнь', reward: '🦵 +ноги' },
-  { id: 'pushups', icon: '🏋️', title: '20 отжиманий', desc: 'Мини-тренировка за 2 минуты', reward: '💪 +сила' },
-  { id: 'cold_shower', icon: '🚿', title: 'Контрастный душ', desc: 'Тонус и бодрость на весь день', reward: '⚡ +бодрость' },
-  { id: 'sleep_8h', icon: '😴', title: 'Лечь спать вовремя', desc: 'Сон — лучшее восстановление', reward: '🔋 +энергия' },
-  { id: 'no_smoke', icon: '🚭', title: 'Не курить сегодня', desc: 'Лёгкие скажут спасибо', reward: '❤️ +здоровье' },
-  { id: 'fresh_air', icon: '🌳', title: 'Прогулка на свежем воздухе', desc: '15 минут — и голова ясная', reward: '🧠 +ясность' },
+  { id: 'stretch', icon: '🧘', title: 'Размяться / потянуться', desc: 'Спина и ноги — наш инструмент', reward: '+10 XP', xp: 10, cat: 'body' },
+  { id: 'walk', icon: '🚶', title: 'Пройти 8000 шагов', desc: 'Движение — жизнь', reward: '+25 XP', xp: 25, cat: 'body' },
+  { id: 'pushups', icon: '🏋️', title: '20 отжиманий', desc: 'Мини-тренировка за 2 минуты', reward: '+20 XP', xp: 20, cat: 'body' },
+  { id: 'cold_shower', icon: '🚿', title: 'Контрастный душ', desc: 'Тонус и бодрость на весь день', reward: '+25 XP', xp: 25, cat: 'body' },
+  { id: 'sleep_8h', icon: '😴', title: 'Лечь спать вовремя', desc: 'Сон — лучшее восстановление', reward: '+20 XP', xp: 20, cat: 'body' },
+  { id: 'no_smoke', icon: '🚭', title: 'Не курить сегодня', desc: 'Лёгкие скажут спасибо', reward: '+30 XP', xp: 30, cat: 'body' },
+  { id: 'fresh_air', icon: '🌳', title: 'Прогулка на свежем воздухе', desc: '15 минут — и голова ясная', reward: '+15 XP', xp: 15, cat: 'body' },
 
   // 🤝 Социалка и общение
-  { id: 'talk_nice', icon: '🤝', title: 'Помочь кому-то', desc: 'Карма — штука реальная', reward: '💜 +карма' },
-  { id: 'compliment', icon: '💬', title: 'Сделать комплимент', desc: 'Искренне сказать кому-то приятное', reward: '💛 +настроение' },
-  { id: 'call_friend', icon: '📞', title: 'Позвонить другу/родным', desc: 'Не забывай про своих', reward: '❤️ +связь' },
-  { id: 'new_person', icon: '👋', title: 'Познакомиться с кем-то', desc: 'Заговори с новым человеком', reward: '🌐 +нетворк' },
-  { id: 'listen', icon: '👂', title: 'Выслушать кого-то', desc: 'Просто послушай без советов', reward: '🫂 +эмпатия' },
-  { id: 'no_argue', icon: '🕊', title: 'Не ввязываться в споры', desc: 'Спокойствие — сила', reward: '🧘 +дзен' },
-  { id: 'say_thanks', icon: '🙏', title: 'Поблагодарить кого-то', desc: 'Благодарность меняет восприятие', reward: '✨ +позитив' },
-  { id: 'ask_howru', icon: '💭', title: 'Спросить «Как дела?»', desc: 'Покажи интерес к человеку', reward: '🤝 +доверие' },
-  { id: 'share_food', icon: '🍕', title: 'Угостить коллегу', desc: 'Делиться — кайф', reward: '💜 +дружба' },
-  { id: 'joke', icon: '😂', title: 'Рассмешить кого-то', desc: 'Юмор — суперсила в общении', reward: '😄 +вайб' },
+  { id: 'talk_nice', icon: '🤝', title: 'Помочь кому-то', desc: 'Карма — штука реальная', reward: '+20 XP', xp: 20, cat: 'social' },
+  { id: 'compliment', icon: '💬', title: 'Сделать комплимент', desc: 'Искренне сказать кому-то приятное', reward: '+10 XP', xp: 10, cat: 'social' },
+  { id: 'call_friend', icon: '📞', title: 'Позвонить другу/родным', desc: 'Не забывай про своих', reward: '+15 XP', xp: 15, cat: 'social' },
+  { id: 'new_person', icon: '👋', title: 'Познакомиться с кем-то', desc: 'Заговори с новым человеком', reward: '+25 XP', xp: 25, cat: 'social' },
+  { id: 'listen', icon: '👂', title: 'Выслушать кого-то', desc: 'Просто послушай без советов', reward: '+15 XP', xp: 15, cat: 'social' },
+  { id: 'no_argue', icon: '🕊', title: 'Не ввязываться в споры', desc: 'Спокойствие — сила', reward: '+20 XP', xp: 20, cat: 'social' },
+  { id: 'say_thanks', icon: '🙏', title: 'Поблагодарить кого-то', desc: 'Благодарность меняет восприятие', reward: '+10 XP', xp: 10, cat: 'social' },
+  { id: 'ask_howru', icon: '💭', title: 'Спросить «Как дела?»', desc: 'Покажи интерес к человеку', reward: '+10 XP', xp: 10, cat: 'social' },
+  { id: 'share_food', icon: '🍕', title: 'Угостить коллегу', desc: 'Делиться — кайф', reward: '+15 XP', xp: 15, cat: 'social' },
+  { id: 'joke', icon: '😂', title: 'Рассмешить кого-то', desc: 'Юмор — суперсила в общении', reward: '+10 XP', xp: 10, cat: 'social' },
 
   // 🧠 Развитие и мозг
-  { id: 'learn', icon: '📚', title: 'Узнать что-то новое', desc: 'Один факт в день — прокачка мозга', reward: '🧠 +мозг' },
-  { id: 'read_10min', icon: '📖', title: 'Читать 10 минут', desc: 'Книга, статья — что угодно полезное', reward: '📚 +знания' },
-  { id: 'no_phone', icon: '📵', title: 'Час без телефона', desc: 'Детокс от экрана', reward: '🎯 +фокус' },
-  { id: 'podcast', icon: '🎧', title: 'Послушать подкаст', desc: 'Пока идёшь — качай мозг', reward: '🧠 +развитие' },
-  { id: 'journal', icon: '📓', title: 'Записать мысли', desc: 'Даже пару строк — уже рефлексия', reward: '🪞 +осознанность' },
-  { id: 'new_word', icon: '🗣', title: 'Выучить новое слово', desc: 'Английский, сленг, термин — любое', reward: '📝 +словарь' },
+  { id: 'learn', icon: '📚', title: 'Узнать что-то новое', desc: 'Один факт в день — прокачка мозга', reward: '+15 XP', xp: 15, cat: 'mind' },
+  { id: 'read_10min', icon: '📖', title: 'Читать 10 минут', desc: 'Книга, статья — что угодно полезное', reward: '+20 XP', xp: 20, cat: 'mind' },
+  { id: 'no_phone', icon: '📵', title: 'Час без телефона', desc: 'Детокс от экрана', reward: '+25 XP', xp: 25, cat: 'mind' },
+  { id: 'podcast', icon: '🎧', title: 'Послушать подкаст', desc: 'Пока идёшь — качай мозг', reward: '+15 XP', xp: 15, cat: 'mind' },
+  { id: 'journal', icon: '📓', title: 'Записать мысли', desc: 'Даже пару строк — уже рефлексия', reward: '+20 XP', xp: 20, cat: 'mind' },
+  { id: 'new_word', icon: '🗣', title: 'Выучить новое слово', desc: 'Английский, сленг, термин — любое', reward: '+10 XP', xp: 10, cat: 'mind' },
 
   // 💰 Финансы и экономия
-  { id: 'save_money', icon: '🐷', title: 'Не тратить лишнего', desc: 'Скрудж бы одобрил 🦆', reward: '💰 +экономия' },
-  { id: 'track_expense', icon: '🧮', title: 'Записать все траты', desc: 'Знание — первый шаг к контролю', reward: '📊 +контроль' },
-  { id: 'no_impulse', icon: '🛑', title: 'Не покупать импульсивно', desc: 'Подожди 24 часа перед покупкой', reward: '🧊 +хладнокровие' },
+  { id: 'save_money', icon: '🐷', title: 'Не тратить лишнего', desc: 'Скрудж бы одобрил 🦆', reward: '+20 XP', xp: 20, cat: 'finance' },
+  { id: 'track_expense', icon: '🧮', title: 'Записать все траты', desc: 'Знание — первый шаг к контролю', reward: '+15 XP', xp: 15, cat: 'finance' },
+  { id: 'no_impulse', icon: '🛑', title: 'Не покупать импульсивно', desc: 'Подожди 24 часа перед покупкой', reward: '+25 XP', xp: 25, cat: 'finance' },
 
   // ⭐ Настроение и вайб
-  { id: 'mood', icon: '😊', title: 'Позитивный настрой', desc: 'Улыбнись — день станет легче', reward: '🌟 +вайб' },
-  { id: 'gratitude', icon: '🌅', title: 'Назвать 3 вещи за которые благодарен', desc: 'Благодарность = счастье', reward: '☀️ +счастье' },
-  { id: 'music', icon: '🎵', title: 'Послушать любимую музыку', desc: 'Заряд настроения', reward: '🎶 +вайб' },
-  { id: 'no_complain', icon: '🤐', title: 'Не жаловаться весь день', desc: 'Фокус на решениях, не на проблемах', reward: '🦾 +ментал' },
-  { id: 'dance', icon: '💃', title: 'Потанцевать / подвигаться', desc: 'Даже 30 секунд — уже буст', reward: '🕺 +энергия' },
-  { id: 'sunset', icon: '🌇', title: 'Посмотреть на закат/небо', desc: 'Остановись и вдохни красоту', reward: '🧘 +покой' },
+  { id: 'mood', icon: '😊', title: 'Позитивный настрой', desc: 'Улыбнись — день станет легче', reward: '+10 XP', xp: 10, cat: 'vibe' },
+  { id: 'gratitude', icon: '🌅', title: 'Назвать 3 вещи за которые благодарен', desc: 'Благодарность = счастье', reward: '+15 XP', xp: 15, cat: 'vibe' },
+  { id: 'music', icon: '🎵', title: 'Послушать любимую музыку', desc: 'Заряд настроения', reward: '+10 XP', xp: 10, cat: 'vibe' },
+  { id: 'no_complain', icon: '🤐', title: 'Не жаловаться весь день', desc: 'Фокус на решениях, не на проблемах', reward: '+20 XP', xp: 20, cat: 'vibe' },
+  { id: 'dance', icon: '💃', title: 'Потанцевать / подвигаться', desc: 'Даже 30 секунд — уже буст', reward: '+10 XP', xp: 10, cat: 'vibe' },
+  { id: 'sunset', icon: '🌇', title: 'Посмотреть на закат/небо', desc: 'Остановись и вдохни красоту', reward: '+15 XP', xp: 15, cat: 'vibe' },
 
   // 🏠 Быт и порядок
-  { id: 'clean_space', icon: '🧹', title: 'Убраться дома/на месте', desc: 'Порядок = продуктивность', reward: '✨ +фокус' },
-  { id: 'make_bed', icon: '🛏', title: 'Застелить кровать', desc: 'Первая победа за день', reward: '🏅 +дисциплина' },
-  { id: 'plan_tomorrow', icon: '📝', title: 'Спланировать завтра', desc: 'Вечером запиши план на завтра', reward: '🗓 +организация' },
-  { id: 'early_bird', icon: '⏰', title: 'Встать по будильнику сразу', desc: 'Без «ещё 5 минут»', reward: '⭐ +воля' },
-  { id: 'iron_clothes', icon: '👕', title: 'Подготовить одежду', desc: 'Вечером собери на завтра', reward: '🎒 +организация' },
+  { id: 'clean_space', icon: '🧹', title: 'Убраться дома/на месте', desc: 'Порядок = продуктивность', reward: '+15 XP', xp: 15, cat: 'order' },
+  { id: 'make_bed', icon: '🛏', title: 'Застелить кровать', desc: 'Первая победа за день', reward: '+10 XP', xp: 10, cat: 'order' },
+  { id: 'plan_tomorrow', icon: '📝', title: 'Спланировать завтра', desc: 'Вечером запиши план на завтра', reward: '+15 XP', xp: 15, cat: 'order' },
+  { id: 'early_bird', icon: '⏰', title: 'Встать по будильнику сразу', desc: 'Без «ещё 5 минут»', reward: '+20 XP', xp: 20, cat: 'order' },
+  { id: 'iron_clothes', icon: '👕', title: 'Подготовить одежду', desc: 'Вечером собери на завтра', reward: '+10 XP', xp: 10, cat: 'order' },
 
   // 🎮 Челленджи
-  { id: 'cold_water', icon: '🥶', title: 'Выпить стакан воды утром', desc: 'Первое что делаешь — стакан воды', reward: '💧 +привычка' },
-  { id: 'eye_contact', icon: '👀', title: 'Держать зрительный контакт', desc: 'Уверенность в общении', reward: '🦁 +уверенность' },
-  { id: 'posture', icon: '🧍', title: 'Следить за осанкой', desc: 'Расправь плечи — выгляди как босс', reward: '👑 +уверенность' },
-  { id: 'say_no', icon: '✋', title: 'Отказать в чём-то ненужном', desc: 'Говорить «нет» — это нормально', reward: '🛡 +границы' },
-  { id: 'deep_breath', icon: '🌬', title: '5 глубоких вдохов', desc: 'Когда стресс — просто дыши', reward: '🧘 +спокойствие' },
-  { id: 'mirror', icon: '🪞', title: 'Сказать себе что-то хорошее', desc: 'Аффирмация в зеркале — работает', reward: '💪 +самооценка' },
+  { id: 'cold_water', icon: '🥶', title: 'Выпить стакан воды утром', desc: 'Первое что делаешь — стакан воды', reward: '+10 XP', xp: 10, cat: 'challenge' },
+  { id: 'eye_contact', icon: '👀', title: 'Держать зрительный контакт', desc: 'Уверенность в общении', reward: '+15 XP', xp: 15, cat: 'challenge' },
+  { id: 'posture', icon: '🧍', title: 'Следить за осанкой', desc: 'Расправь плечи — выгляди как босс', reward: '+15 XP', xp: 15, cat: 'challenge' },
+  { id: 'say_no', icon: '✋', title: 'Отказать в чём-то ненужном', desc: 'Говорить «нет» — это нормально', reward: '+20 XP', xp: 20, cat: 'challenge' },
+  { id: 'deep_breath', icon: '🌬', title: '5 глубоких вдохов', desc: 'Когда стресс — просто дыши', reward: '+10 XP', xp: 10, cat: 'challenge' },
+  { id: 'mirror', icon: '🪞', title: 'Сказать себе что-то хорошее', desc: 'Аффирмация в зеркале — работает', reward: '+15 XP', xp: 15, cat: 'challenge' },
+];
+
+// Life quest categories
+const LQ_CATEGORIES = {
+  health:    { name: 'Здоровье',  icon: '❤️', color: '#ef5350' },
+  body:      { name: 'Тело',      icon: '💪', color: '#42a5f5' },
+  social:    { name: 'Социалка',  icon: '🤝', color: '#ab47bc' },
+  mind:      { name: 'Разум',     icon: '🧠', color: '#66bb6a' },
+  finance:   { name: 'Финансы',   icon: '💰', color: '#ffa726' },
+  vibe:      { name: 'Вайб',      icon: '⭐', color: '#ffee58' },
+  order:     { name: 'Порядок',   icon: '🏠', color: '#26c6da' },
+  challenge: { name: 'Челлендж',  icon: '🎮', color: '#ec407a' },
+};
+
+// Life XP levels
+const LQ_LEVELS = [
+  { lvl: 1,  xp: 0,    name: 'Новичок',       icon: '🌱' },
+  { lvl: 2,  xp: 100,  name: 'Практикант',     icon: '🌿' },
+  { lvl: 3,  xp: 300,  name: 'Стабильный',     icon: '🌳' },
+  { lvl: 4,  xp: 600,  name: 'Дисциплина',     icon: '⚡' },
+  { lvl: 5,  xp: 1000, name: 'Привычка',       icon: '🔥' },
+  { lvl: 6,  xp: 1500, name: 'Мастер рутины',  icon: '🏆' },
+  { lvl: 7,  xp: 2200, name: 'Лайф-грайндер',  icon: '💎' },
+  { lvl: 8,  xp: 3000, name: 'Сверхчеловек',   icon: '🦸' },
+  { lvl: 9,  xp: 4000, name: 'Легенда',        icon: '👑' },
+  { lvl: 10, xp: 5500, name: 'БОГ ЛАЙФА',      icon: '🌟' },
 ];
 
 // Pick 7 random life quests for today (seeded by date, from pool of 48)
@@ -1026,6 +1099,115 @@ function getTodayLifeQuests() {
   return shuffled.slice(0, 7);
 }
 
+// ====== LIFE QUEST XP SYSTEM ======
+function getLifeXP() {
+  try {
+    return JSON.parse(localStorage.getItem('ozon_life_xp') || '{"total":0,"cats":{},"history":[],"questsDone":0,"daysDone":0,"lastDay":""}');
+  } catch(e) { return { total: 0, cats: {}, history: [], questsDone: 0, daysDone: 0, lastDay: '' }; }
+}
+
+function saveLifeXP(data) {
+  localStorage.setItem('ozon_life_xp', JSON.stringify(data));
+}
+
+function addLifeXP(questId, xpAmount, category) {
+  const data = getLifeXP();
+  const today = new Date().toISOString().slice(0, 10);
+
+  // Prevent double-counting same quest same day
+  const todayKey = `${today}_${questId}`;
+  if (!data.history) data.history = [];
+  if (data.history.includes(todayKey)) return data;
+
+  data.total = (data.total || 0) + xpAmount;
+  if (!data.cats) data.cats = {};
+  data.cats[category] = (data.cats[category] || 0) + xpAmount;
+  data.questsDone = (data.questsDone || 0) + 1;
+  data.history.push(todayKey);
+
+  // Track unique days
+  if (data.lastDay !== today) {
+    data.daysDone = (data.daysDone || 0) + 1;
+    data.lastDay = today;
+  }
+
+  // Keep history manageable (last 500 entries)
+  if (data.history.length > 500) data.history = data.history.slice(-500);
+
+  saveLifeXP(data);
+  return data;
+}
+
+function removeLifeXP(questId, xpAmount, category) {
+  const data = getLifeXP();
+  const today = new Date().toISOString().slice(0, 10);
+  const todayKey = `${today}_${questId}`;
+
+  const idx = data.history.indexOf(todayKey);
+  if (idx === -1) return data;
+
+  data.total = Math.max(0, (data.total || 0) - xpAmount);
+  if (data.cats) data.cats[category] = Math.max(0, (data.cats[category] || 0) - xpAmount);
+  data.questsDone = Math.max(0, (data.questsDone || 0) - 1);
+  data.history.splice(idx, 1);
+
+  saveLifeXP(data);
+  return data;
+}
+
+function getLQLevel(xp) {
+  let current = LQ_LEVELS[0], next = LQ_LEVELS[1];
+  for (let i = LQ_LEVELS.length - 1; i >= 0; i--) {
+    if (xp >= LQ_LEVELS[i].xp) { current = LQ_LEVELS[i]; next = LQ_LEVELS[i + 1] || null; break; }
+  }
+  return { current, next };
+}
+
+function renderLifeStats() {
+  const data = getLifeXP();
+  const { current, next } = getLQLevel(data.total);
+  const container = document.getElementById('lifeStatsPanel');
+  if (!container) return;
+
+  let progressPct = 100;
+  let xpText = 'MAX LEVEL! 🌟';
+  if (next) {
+    progressPct = ((data.total - current.xp) / (next.xp - current.xp)) * 100;
+    xpText = `${data.total} / ${next.xp} XP`;
+  }
+
+  // Category bars
+  const maxCatXP = Math.max(...Object.values(data.cats || {}), 1);
+  const catBars = Object.entries(LQ_CATEGORIES).map(([key, cat]) => {
+    const catXP = (data.cats && data.cats[key]) || 0;
+    const pct = (catXP / maxCatXP) * 100;
+    return `<div class="lq-stat-row">
+      <span class="lq-stat-icon">${cat.icon}</span>
+      <span class="lq-stat-name">${cat.name}</span>
+      <div class="lq-stat-bar"><div class="lq-stat-fill" style="width:${pct}%;background:${cat.color}"></div></div>
+      <span class="lq-stat-val">${catXP}</span>
+    </div>`;
+  }).join('');
+
+  container.innerHTML = `
+    <div class="lq-level-header">
+      <span class="lq-level-icon">${current.icon}</span>
+      <div class="lq-level-info">
+        <div class="lq-level-name">LVL ${current.lvl} — ${current.name}</div>
+        <div class="lq-xp-bar"><div class="lq-xp-fill" style="width:${Math.min(progressPct, 100)}%"></div></div>
+        <div class="lq-xp-text">${xpText}</div>
+      </div>
+      <span class="lq-total-xp">✨ ${data.total}</span>
+    </div>
+    <div class="lq-stats-grid">
+      <div class="lq-mini-stat"><span class="lq-ms-val">${data.questsDone || 0}</span><span class="lq-ms-lbl">квестов</span></div>
+      <div class="lq-mini-stat"><span class="lq-ms-val">${data.daysDone || 0}</span><span class="lq-ms-lbl">дней</span></div>
+      <div class="lq-mini-stat"><span class="lq-ms-val">${data.questsDone > 0 ? Math.round(data.total / data.questsDone) : 0}</span><span class="lq-ms-lbl">XP/квест</span></div>
+    </div>
+    <div class="lq-cat-bars">${catBars}</div>
+  `;
+}
+
 function getLifeQuestState() {
   const today = new Date().toISOString().slice(0, 10);
   try {
@@ -1042,13 +1224,20 @@ function saveLifeQuestState(state) {
 
 function toggleLifeQuest(id) {
   const state = getLifeQuestState();
+  const quest = LIFE_QUESTS.find(q => q.id === id);
   state.checked[id] = !state.checked[id];
   saveLifeQuestState(state);
-  renderLifeQuests();
-  if (state.checked[id]) {
-    showToast('✅ Квест выполнен! Красавчик!', 'success');
+
+  if (state.checked[id] && quest) {
+    addLifeXP(id, quest.xp, quest.cat);
+    showToast(`✅ +${quest.xp} XP! Красавчик!`, 'success');
     rainCoins(3);
+  } else if (!state.checked[id] && quest) {
+    removeLifeXP(id, quest.xp, quest.cat);
   }
+
+  renderLifeQuests();
+  renderLifeStats();
 }
 
 const MAX_REROLLS = 3;
@@ -1416,6 +1605,7 @@ async function init() {
 
   render();
   renderLifeQuests();
+  renderLifeStats();
   renderMotivationTip();
   hideLoading();
 }
