@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>💰 OZON Grind Tracker v3.7</title>
+<title>💰 OZON Grind Tracker v3.8</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="config.js?v=3"></script>
 <style>
@@ -16,16 +16,18 @@
   --gold: #FFD700;
   --gold-dark: #DAA520;
   --gold-light: #FFF4CC;
-  --bg-dark: #1a1a2e;
-  --bg-card: #16213e;
-  --bg-card2: #1c2a4a;
+  --bg-dark: #0f0f1a;
+  --bg-card: #161625;
+  --bg-card2: #1c1c30;
   --text: #eee;
-  --text-dim: #8899aa;
+  --text-dim: #7888a0;
   --green: #00e676;
   --red: #ff5252;
   --orange: #ffab40;
   --purple: #bb86fc;
   --cyan: #00e5ff;
+  --glass: rgba(255,255,255,0.04);
+  --glass-border: rgba(255,255,255,0.08);
 }
 
 * { margin:0; padding:0; box-sizing:border-box; }
@@ -37,6 +39,8 @@ body {
   min-height: 100vh;
   overflow-x: hidden;
   padding-bottom: 100px;
+  background-image: radial-gradient(ellipse at 50% 0%, rgba(100,60,180,0.08) 0%, transparent 60%),
+                    radial-gradient(ellipse at 80% 100%, rgba(255,215,0,0.04) 0%, transparent 50%);
 }
 
 /* LOADING */
@@ -61,112 +65,175 @@ body {
 
 /* HEADER */
 .header {
-  background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+  background: linear-gradient(135deg, #0a0a18 0%, #1a1040 50%, #0f0f2a 100%);
   padding: 20px 16px 16px; text-align: center; position: relative; overflow: hidden;
 }
+.header::before {
+  content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+  background: conic-gradient(from 0deg, transparent, rgba(255,215,0,0.03), transparent, rgba(187,134,252,0.03), transparent);
+  animation: headerRotate 20s linear infinite;
+}
+@keyframes headerRotate { to { transform: rotate(360deg); } }
 .header::after {
   content: ''; position: absolute; bottom:0; left:0;
-  width: 100%; height: 4px;
-  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  width: 100%; height: 3px;
+  background: linear-gradient(90deg, transparent, var(--gold), var(--purple), var(--cyan), transparent);
 }
 .header h1 {
-  font-size: 22px; font-weight: 900;
+  font-size: 22px; font-weight: 900; position: relative;
   background: linear-gradient(135deg, var(--gold), #fff, var(--gold));
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
 }
-.header .subtitle { font-size: 13px; color: var(--text-dim); margin-top: 2px; }
+.header .subtitle { font-size: 13px; color: var(--text-dim); margin-top: 2px; position: relative; }
 
 /* TAB NAV */
 .tab-nav {
-  display: flex; margin: 12px 16px 0; border-radius: 14px; overflow: hidden;
-  background: var(--bg-card); border: 1px solid rgba(255,255,255,0.08);
+  display: flex; margin: 12px 12px 0; border-radius: 16px; overflow: hidden;
+  background: var(--bg-card); border: 1px solid var(--glass-border);
+  backdrop-filter: blur(10px);
 }
 .tab-btn {
-  flex: 1; padding: 12px 8px; border: none; background: none;
+  flex: 1; padding: 11px 4px; border: none; background: none;
   color: var(--text-dim); font-family: 'Nunito', sans-serif;
-  font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.3s;
-  text-align: center;
+  font-size: 11px; font-weight: 700; cursor: pointer; transition: all 0.3s;
+  text-align: center; position: relative;
 }
-.tab-btn.active { background: rgba(255,215,0,0.15); color: var(--gold); }
-.tab-btn:first-child { border-radius: 14px 0 0 14px; }
-.tab-btn:last-child { border-radius: 0 14px 14px 0; }
+.tab-btn.active {
+  background: linear-gradient(135deg, rgba(255,215,0,0.12), rgba(255,215,0,0.06));
+  color: var(--gold);
+}
+.tab-btn.active::after {
+  content: ''; position: absolute; bottom: 0; left: 20%; right: 20%; height: 2px;
+  background: var(--gold); border-radius: 2px;
+}
+.tab-btn:first-child { border-radius: 16px 0 0 16px; }
+.tab-btn:last-child { border-radius: 0 16px 16px 0; }
 
 /* CALENDAR */
 .cal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
 .cal-header h3 { font-size:16px; color:var(--gold); }
 .cal-nav { display:flex; gap:8px; }
-.cal-nav-btn { background:rgba(255,255,255,0.08); border:none; color:var(--text); font-size:18px; width:36px; height:36px; border-radius:10px; cursor:pointer; transition:all 0.2s; }
-.cal-nav-btn:hover { background:rgba(255,215,0,0.2); color:var(--gold); }
-.cal-month-title { font-size:15px; font-weight:700; color:var(--text); text-transform:capitalize; }
+.cal-nav-btn { background:rgba(255,255,255,0.06); border:none; color:var(--text); font-size:18px; width:36px; height:36px; border-radius:12px; cursor:pointer; transition:all 0.2s; backdrop-filter:blur(4px); }
+.cal-nav-btn:hover { background:rgba(255,215,0,0.15); color:var(--gold); }
+.cal-month-title { font-size:15px; font-weight:700; color:var(--text); text-transform:capitalize; text-align:center; }
 .cal-weekdays { display:grid; grid-template-columns:repeat(7,1fr); text-align:center; margin-bottom:6px; }
 .cal-weekday { font-size:11px; font-weight:700; color:var(--text-dim); padding:6px 0; }
-.cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; }
-.cal-day { position:relative; aspect-ratio:1; display:flex; flex-direction:column; align-items:center; justify-content:center; border-radius:12px; background:rgba(255,255,255,0.03); border:2px solid transparent; cursor:pointer; transition:all 0.2s; font-size:13px; font-weight:700; color:var(--text-dim); min-height:48px; }
-.cal-day:hover { background:rgba(255,255,255,0.08); }
+.cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; }
+.cal-day { position:relative; aspect-ratio:1; display:flex; flex-direction:column; align-items:center; justify-content:center; border-radius:12px; background:rgba(255,255,255,0.02); border:2px solid transparent; cursor:pointer; transition:all 0.2s; font-size:13px; font-weight:700; color:var(--text-dim); min-height:44px; }
+.cal-day:hover { background:rgba(255,255,255,0.06); }
 .cal-day.empty { background:none; cursor:default; }
-.cal-day.today { border-color:var(--gold); color:var(--gold); background:rgba(255,215,0,0.08); }
-.cal-day.has-shift { background:rgba(0,230,118,0.12); border-color:rgba(0,230,118,0.3); color:var(--green); }
-.cal-day.is-dayoff { background:rgba(187,134,252,0.12); border-color:rgba(187,134,252,0.3); color:var(--purple); }
-.cal-day.is-planned { background:rgba(255,171,64,0.12); border-color:rgba(255,171,64,0.3); color:var(--orange); }
-.cal-day-num { font-size:14px; line-height:1; }
-.cal-day-icon { font-size:12px; line-height:1; margin-top:2px; }
-.cal-day-earned { font-size:8px; line-height:1; margin-top:1px; color:var(--green); font-weight:600; }
-.cal-legend { display:flex; flex-wrap:wrap; gap:12px; margin-top:12px; justify-content:center; }
+.cal-day.today { border-color:var(--gold); color:var(--gold); background:rgba(255,215,0,0.06); box-shadow:0 0 12px rgba(255,215,0,0.1); }
+.cal-day.has-shift { background:rgba(0,230,118,0.1); border-color:rgba(0,230,118,0.25); color:var(--green); }
+.cal-day.is-dayoff { background:rgba(187,134,252,0.1); border-color:rgba(187,134,252,0.25); color:var(--purple); }
+.cal-day.is-planned { background:rgba(255,171,64,0.1); border-color:rgba(255,171,64,0.25); color:var(--orange); }
+.cal-day.selected { box-shadow:0 0 0 2px var(--gold), 0 0 16px rgba(255,215,0,0.2); }
+.cal-day-num { font-size:13px; line-height:1; }
+.cal-day-icon { font-size:10px; line-height:1; margin-top:1px; }
+.cal-day-earned { font-size:7px; line-height:1; margin-top:1px; color:var(--green); font-weight:700; }
+.cal-legend { display:flex; flex-wrap:wrap; gap:10px; margin-top:12px; justify-content:center; }
 .cal-legend-item { display:flex; align-items:center; gap:4px; font-size:11px; color:var(--text-dim); }
 .cal-legend-dot { width:10px; height:10px; border-radius:50%; }
-.cal-summary { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:12px; }
-.cal-sum-card { background:rgba(255,255,255,0.05); border-radius:10px; padding:10px; text-align:center; }
+.cal-summary { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin-top:12px; }
+.cal-sum-card { background:rgba(255,255,255,0.04); border-radius:10px; padding:10px; text-align:center; border:1px solid var(--glass-border); }
 .cal-sum-val { font-size:18px; font-weight:800; color:var(--gold); }
 .cal-sum-lbl { font-size:10px; color:var(--text-dim); margin-top:2px; }
 .cal-actions { display:flex; gap:8px; margin-top:12px; }
 .cal-action-btn { flex:1; padding:10px; border:none; border-radius:10px; font-family:'Nunito',sans-serif; font-size:13px; font-weight:700; cursor:pointer; transition:all 0.2s; }
-.cal-action-btn.dayoff { background:rgba(187,134,252,0.2); color:var(--purple); }
-.cal-action-btn.planned { background:rgba(255,171,64,0.2); color:var(--orange); }
-.cal-action-btn.clear { background:rgba(255,82,82,0.15); color:var(--red); }
+.cal-action-btn.dayoff { background:rgba(187,134,252,0.15); color:var(--purple); }
+.cal-action-btn.planned { background:rgba(255,171,64,0.15); color:var(--orange); }
+.cal-action-btn.clear { background:rgba(255,82,82,0.12); color:var(--red); }
 .cal-action-btn:hover { filter:brightness(1.2); transform:scale(1.02); }
-.cal-selected-info { text-align:center; font-size:12px; color:var(--text-dim); margin-top:8px; padding:8px; background:rgba(255,255,255,0.03); border-radius:8px; }
+.cal-selected-info { text-align:center; font-size:12px; color:var(--text-dim); margin-top:8px; padding:10px; background:rgba(255,255,255,0.03); border-radius:10px; border:1px solid var(--glass-border); }
 
 .tab-content { display: none; }
 .tab-content.active { display: block; }
 
-/* VAULT */
-.vault {
-  margin: 16px; padding: 20px;
-  background: linear-gradient(145deg, #1e2a45, #162040);
-  border-radius: 20px; border: 2px solid var(--gold-dark);
-  position: relative; overflow: hidden;
+/* WALLET (redesigned vault) */
+.wallet {
+  margin: 16px 12px; padding: 0; border-radius: 20px; overflow: hidden;
+  background: linear-gradient(145deg, #1a1a35, #12122a);
+  border: 1px solid rgba(255,215,0,0.15);
+  position: relative;
 }
-.vault::before { content: '🪙'; position: absolute; right: 12px; top: 10px; font-size: 50px; opacity: 0.15; }
-.vault-total { font-size: 36px; font-weight: 900; color: var(--gold); text-shadow: 0 0 20px rgba(255,215,0,0.3); }
-.vault-total .currency { font-size: 20px; color: var(--gold-dark); }
-.vault-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 14px; }
-.vault-stat { text-align: center; background: rgba(255,255,255,0.05); border-radius: 12px; padding: 10px 6px; }
-.vault-stat .val { font-size: 18px; font-weight: 800; color: var(--gold-light); }
-.vault-stat .lbl { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+.wallet::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 100%;
+  background: linear-gradient(135deg, rgba(255,215,0,0.06) 0%, transparent 40%, rgba(187,134,252,0.04) 100%);
+  pointer-events: none;
+}
+.wallet-top {
+  padding: 20px 20px 16px; position: relative;
+  display: flex; align-items: flex-start; justify-content: space-between;
+}
+.wallet-balance { position: relative; }
+.wallet-label { font-size: 11px; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+.wallet-total {
+  font-size: 34px; font-weight: 900; color: var(--gold);
+  text-shadow: 0 0 30px rgba(255,215,0,0.2);
+  font-variant-numeric: tabular-nums;
+  display: flex; align-items: baseline; gap: 4px;
+}
+.wallet-total .currency { font-size: 18px; color: var(--gold-dark); font-weight: 700; }
+.wallet-badge {
+  background: rgba(255,215,0,0.1); border: 1px solid rgba(255,215,0,0.2);
+  border-radius: 12px; padding: 6px 10px; text-align: center;
+}
+.wallet-badge .wb-icon { font-size: 24px; }
+.wallet-badge .wb-text { font-size: 9px; color: var(--gold); font-weight: 700; margin-top: 2px; }
+.wallet-stats {
+  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1px;
+  background: rgba(255,255,255,0.04);
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+.wallet-stat {
+  text-align: center; padding: 12px 6px;
+  background: linear-gradient(180deg, rgba(20,20,40,0.9), rgba(15,15,30,0.9));
+}
+.wallet-stat .ws-icon { font-size: 16px; display: block; margin-bottom: 2px; }
+.wallet-stat .ws-val { font-size: 17px; font-weight: 800; color: var(--text); }
+.wallet-stat .ws-lbl { font-size: 10px; color: var(--text-dim); }
+.wallet-trend {
+  padding: 0 20px 14px; position: relative;
+  display: flex; align-items: center; gap: 8px;
+}
+.wallet-trend-tag {
+  font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 6px;
+}
+.wallet-trend-tag.up { background: rgba(0,230,118,0.12); color: var(--green); }
+.wallet-trend-tag.down { background: rgba(255,82,82,0.12); color: var(--red); }
+.wallet-trend-tag.neutral { background: rgba(255,255,255,0.06); color: var(--text-dim); }
+.wallet-trend-text { font-size: 11px; color: var(--text-dim); }
 
 /* ACTIVE SHIFT */
 .active-shift {
-  margin: 16px; padding: 20px;
-  background: linear-gradient(145deg, #1a3a2a, #0f2a1a);
-  border-radius: 20px; border: 2px solid var(--green);
+  margin: 12px; padding: 20px;
+  background: linear-gradient(145deg, #122a1a, #0f2218);
+  border-radius: 20px; border: 1px solid rgba(0,230,118,0.25);
   position: relative; overflow: hidden;
+  backdrop-filter: blur(4px);
 }
-.active-shift.inactive { border-color: rgba(255,255,255,0.1); background: var(--bg-card); }
-.active-shift h3 { font-size: 15px; margin-bottom: 14px; text-align: center; }
+.active-shift::before {
+  content: ''; position: absolute; top: 0; right: 0; width: 120px; height: 120px;
+  background: radial-gradient(circle, rgba(0,230,118,0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+.active-shift.inactive { border-color: var(--glass-border); background: var(--bg-card); }
+.active-shift.inactive::before { display: none; }
+.active-shift h3 { font-size: 14px; margin-bottom: 14px; text-align: center; letter-spacing: 1px; }
 .active-shift h3.live { color: var(--green); }
 .active-shift h3.off { color: var(--text-dim); }
 
 .shift-timer { text-align: center; margin-bottom: 16px; }
 .timer-display {
-  font-size: 48px; font-weight: 900; color: var(--green);
+  font-size: 44px; font-weight: 900; color: var(--green);
   font-variant-numeric: tabular-nums; letter-spacing: 2px;
+  text-shadow: 0 0 20px rgba(0,230,118,0.15);
 }
-.timer-sub { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
+.timer-sub { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
 
 .shift-controls { display: flex; gap: 8px; margin-bottom: 12px; }
 .shift-ctrl-btn {
-  flex: 1; padding: 14px 8px; border-radius: 14px; border: none;
-  font-family: 'Nunito', sans-serif; font-size: 14px; font-weight: 800;
+  flex: 1; padding: 13px 8px; border-radius: 14px; border: none;
+  font-family: 'Nunito', sans-serif; font-size: 13px; font-weight: 800;
   cursor: pointer; transition: all 0.3s;
 }
 .btn-start { background: linear-gradient(135deg, #00c853, #00e676); color: #1a1a2e; }
@@ -183,7 +250,7 @@ body {
 .break-log h4 { font-size: 12px; color: var(--text-dim); margin-bottom: 6px; }
 .break-item {
   display: flex; justify-content: space-between; align-items: center;
-  font-size: 12px; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+  font-size: 12px; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
 }
 .break-item:last-child { border: none; }
 .break-item .b-type { color: var(--orange); }
@@ -192,13 +259,13 @@ body {
 
 /* QUESTS */
 .quests {
-  margin: 0 16px 16px; padding: 16px;
+  margin: 0 12px 12px; padding: 16px;
   background: var(--bg-card); border-radius: 16px;
-  border: 1px solid rgba(0,229,255,0.2);
+  border: 1px solid rgba(0,229,255,0.15);
 }
 .quests h3 { font-size: 14px; color: var(--cyan); margin-bottom: 12px; text-align: center; }
 .quest-item {
-  background: rgba(255,255,255,0.04); border-radius: 12px; padding: 12px;
+  background: rgba(255,255,255,0.03); border-radius: 12px; padding: 12px;
   margin-bottom: 8px; border-left: 3px solid var(--cyan);
   transition: all 0.3s;
 }
@@ -206,7 +273,7 @@ body {
 .quest-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
 .quest-title { font-size: 13px; font-weight: 700; }
 .quest-reward { font-size: 12px; color: var(--gold); }
-.quest-progress { width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; }
+.quest-progress { width: 100%; height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden; }
 .quest-fill { height: 100%; border-radius: 3px; transition: width 0.5s; }
 .quest-fill.active { background: linear-gradient(90deg, var(--cyan), #80deea); }
 .quest-fill.done { background: var(--green); }
@@ -214,14 +281,14 @@ body {
 
 /* LIFE QUESTS */
 .life-quests {
-  margin: 0 16px 16px; padding: 16px;
+  margin: 0 12px 12px; padding: 16px;
   background: var(--bg-card); border-radius: 16px;
-  border: 1px solid rgba(187,134,252,0.2);
+  border: 1px solid rgba(187,134,252,0.15);
 }
 .life-quests h3 { font-size: 14px; color: var(--purple); margin-bottom: 12px; text-align: center; }
 .life-quest-item {
   display: flex; align-items: center; gap: 10px;
-  background: rgba(255,255,255,0.04); border-radius: 12px; padding: 12px;
+  background: rgba(255,255,255,0.03); border-radius: 12px; padding: 12px;
   margin-bottom: 8px; cursor: pointer; transition: all 0.3s;
   border-left: 3px solid var(--purple); user-select: none;
 }
@@ -258,13 +325,14 @@ body {
 .life-stats-panel { margin-bottom: 14px; }
 .lq-level-header {
   display: flex; align-items: center; gap: 10px; padding: 10px;
-  background: rgba(187,134,252,0.08); border-radius: 12px; margin-bottom: 10px;
+  background: rgba(187,134,252,0.06); border-radius: 12px; margin-bottom: 10px;
+  border: 1px solid rgba(187,134,252,0.1);
 }
 .lq-level-icon { font-size: 32px; }
 .lq-level-info { flex: 1; }
 .lq-level-name { font-size: 13px; font-weight: 700; color: var(--purple); }
 .lq-xp-bar {
-  height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px;
+  height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px;
   margin-top: 4px; overflow: hidden;
 }
 .lq-xp-fill {
@@ -279,7 +347,8 @@ body {
 }
 .lq-mini-stat {
   flex: 1; text-align: center; padding: 8px 4px;
-  background: rgba(255,255,255,0.04); border-radius: 10px;
+  background: rgba(255,255,255,0.03); border-radius: 10px;
+  border: 1px solid var(--glass-border);
 }
 .lq-ms-val { display: block; font-size: 18px; font-weight: 700; color: var(--text); }
 .lq-ms-lbl { display: block; font-size: 10px; color: var(--text-dim); }
@@ -291,7 +360,7 @@ body {
 .lq-stat-icon { font-size: 14px; width: 20px; text-align: center; }
 .lq-stat-name { width: 70px; color: var(--text-dim); font-size: 11px; }
 .lq-stat-bar {
-  flex: 1; height: 8px; background: rgba(255,255,255,0.08);
+  flex: 1; height: 8px; background: rgba(255,255,255,0.06);
   border-radius: 4px; overflow: hidden;
 }
 .lq-stat-fill {
@@ -302,9 +371,9 @@ body {
 
 /* MOTIVATION TIP */
 .motivation-tip {
-  margin: 0 16px 16px; padding: 14px 16px;
-  background: linear-gradient(135deg, rgba(0,229,255,0.08), rgba(187,134,252,0.08));
-  border-radius: 14px; border: 1px solid rgba(0,229,255,0.15);
+  margin: 0 12px 12px; padding: 14px 16px;
+  background: linear-gradient(135deg, rgba(0,229,255,0.05), rgba(187,134,252,0.05));
+  border-radius: 14px; border: 1px solid rgba(0,229,255,0.1);
   text-align: center; font-size: 13px; line-height: 1.5;
 }
 .motivation-tip .tip-icon { font-size: 24px; margin-bottom: 6px; }
@@ -313,8 +382,8 @@ body {
 
 /* LEVEL */
 .level-section {
-  margin: 0 16px 16px; padding: 16px;
-  background: var(--bg-card); border-radius: 16px; border: 1px solid rgba(255,215,0,0.15);
+  margin: 0 12px 12px; padding: 16px;
+  background: var(--bg-card); border-radius: 16px; border: 1px solid rgba(255,215,0,0.1);
 }
 .level-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
 .level-badge { display: flex; align-items: center; gap: 8px; }
@@ -322,15 +391,15 @@ body {
 .level-badge .info .lvl { font-size: 16px; font-weight: 800; color: var(--gold); }
 .level-badge .info .title { font-size: 12px; color: var(--text-dim); }
 .level-xp-text { font-size: 12px; color: var(--text-dim); text-align: right; }
-.xp-bar { width:100%; height:10px; background: rgba(255,255,255,0.1); border-radius: 5px; overflow: hidden; }
+.xp-bar { width:100%; height:10px; background: rgba(255,255,255,0.08); border-radius: 5px; overflow: hidden; }
 .xp-fill { height:100%; background: linear-gradient(90deg, var(--gold-dark), var(--gold), #fff59d); border-radius: 5px; transition: width 0.8s ease; }
 
 /* STREAK */
 .streak-bar {
-  margin: 0 16px 16px; padding: 12px 16px;
-  background: linear-gradient(135deg, rgba(255,152,0,0.15), rgba(255,87,34,0.1));
+  margin: 0 12px 12px; padding: 12px 16px;
+  background: linear-gradient(135deg, rgba(255,152,0,0.1), rgba(255,87,34,0.06));
   border-radius: 14px; display: flex; align-items: center; gap: 10px;
-  border: 1px solid rgba(255,152,0,0.2);
+  border: 1px solid rgba(255,152,0,0.15);
 }
 .streak-bar .streak-icon { font-size: 28px; }
 .streak-bar .streak-text { font-size: 14px; font-weight: 700; }
@@ -338,37 +407,37 @@ body {
 
 /* DIFFICULTY */
 .difficulty {
-  margin: 0 16px 16px; padding: 14px;
-  background: var(--bg-card); border-radius: 16px; border: 1px solid rgba(255,255,255,0.08);
+  margin: 0 12px 12px; padding: 14px;
+  background: var(--bg-card); border-radius: 16px; border: 1px solid var(--glass-border);
 }
 .difficulty h3 { font-size: 14px; margin-bottom: 10px; color: var(--text-dim); text-align: center; }
 .diff-buttons { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
 .diff-btn {
   padding: 12px 8px; border-radius: 12px; border: 2px solid transparent;
-  background: rgba(255,255,255,0.05); color: var(--text);
+  background: rgba(255,255,255,0.04); color: var(--text);
   font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 13px;
   cursor: pointer; text-align: center; transition: all 0.3s;
 }
 .diff-btn .goal-val { font-size: 18px; font-weight: 900; display: block; margin-top: 2px; }
 .diff-btn.easy { border-color: var(--green); }
-.diff-btn.easy.active { background: rgba(0,230,118,0.15); box-shadow: 0 0 15px rgba(0,230,118,0.2); }
+.diff-btn.easy.active { background: rgba(0,230,118,0.12); box-shadow: 0 0 15px rgba(0,230,118,0.15); }
 .diff-btn.normal { border-color: var(--orange); }
-.diff-btn.normal.active { background: rgba(255,171,64,0.15); box-shadow: 0 0 15px rgba(255,171,64,0.2); }
+.diff-btn.normal.active { background: rgba(255,171,64,0.12); box-shadow: 0 0 15px rgba(255,171,64,0.15); }
 .diff-btn.hard { border-color: var(--red); }
-.diff-btn.hard.active { background: rgba(255,82,82,0.15); box-shadow: 0 0 15px rgba(255,82,82,0.2); }
+.diff-btn.hard.active { background: rgba(255,82,82,0.12); box-shadow: 0 0 15px rgba(255,82,82,0.15); }
 
 /* ADD SHIFT */
 .add-shift {
-  margin: 0 16px 16px; padding: 16px;
-  background: var(--bg-card); border-radius: 16px; border: 1px solid rgba(255,215,0,0.15);
+  margin: 0 12px 12px; padding: 16px;
+  background: var(--bg-card); border-radius: 16px; border: 1px solid rgba(255,215,0,0.1);
 }
 .add-shift h3 { font-size: 15px; margin-bottom: 12px; color: var(--gold); text-align: center; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
 .form-group { display: flex; flex-direction: column; }
 .form-group label { font-size: 12px; color: var(--text-dim); margin-bottom: 4px; }
 .form-group input, .form-group select {
-  padding: 10px 12px; background: rgba(255,255,255,0.08);
-  border: 1px solid rgba(255,255,255,0.12); border-radius: 10px;
+  padding: 10px 12px; background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1); border-radius: 10px;
   color: var(--text); font-family: 'Nunito', sans-serif; font-size: 15px; font-weight: 600;
   outline: none; transition: border 0.3s;
 }
@@ -382,27 +451,73 @@ body {
   cursor: pointer; transition: transform 0.2s, box-shadow 0.3s; margin-top: 6px;
 }
 .btn-add:active { transform: scale(0.97); }
-.btn-add:hover { box-shadow: 0 0 25px rgba(255,215,0,0.3); }
+.btn-add:hover { box-shadow: 0 0 25px rgba(255,215,0,0.2); }
 .btn-add:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* SHOP */
+.shop-section {
+  margin: 12px;
+}
+.shop-header {
+  text-align: center; padding: 16px;
+  background: linear-gradient(145deg, #1a1535, #12102a);
+  border-radius: 16px; margin-bottom: 12px;
+  border: 1px solid rgba(187,134,252,0.15);
+  position: relative; overflow: hidden;
+}
+.shop-header::before {
+  content: ''; position: absolute; top: -50%; right: -30%; width: 150px; height: 150px;
+  background: radial-gradient(circle, rgba(187,134,252,0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+.shop-balance { position: relative; }
+.shop-balance-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; }
+.shop-balance-val { font-size: 28px; font-weight: 900; color: var(--purple); margin-top: 2px; }
+.shop-balance-val .xp-unit { font-size: 14px; color: var(--text-dim); font-weight: 700; }
+.shop-grid { display: flex; flex-direction: column; gap: 8px; }
+.shop-item {
+  background: var(--bg-card); border-radius: 14px; padding: 14px;
+  border: 1px solid var(--glass-border); transition: all 0.3s;
+  display: flex; align-items: center; gap: 12px;
+}
+.shop-item.owned { border-color: rgba(0,230,118,0.2); opacity: 0.7; }
+.shop-item.locked { opacity: 0.5; }
+.shop-item-icon { font-size: 28px; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.04); border-radius: 12px; flex-shrink: 0; }
+.shop-item-info { flex: 1; }
+.shop-item-name { font-size: 13px; font-weight: 700; color: var(--text); }
+.shop-item-desc { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+.shop-item-price {
+  font-size: 12px; font-weight: 800; padding: 6px 12px; border-radius: 8px;
+  cursor: pointer; border: none; font-family: 'Nunito', sans-serif;
+  transition: all 0.2s; flex-shrink: 0;
+}
+.shop-item-price.buy { background: linear-gradient(135deg, rgba(187,134,252,0.2), rgba(187,134,252,0.1)); color: var(--purple); }
+.shop-item-price.buy:hover { background: rgba(187,134,252,0.3); }
+.shop-item-price.bought { background: rgba(0,230,118,0.1); color: var(--green); cursor: default; }
+.shop-item-price.expensive { background: rgba(255,255,255,0.04); color: var(--text-dim); cursor: not-allowed; }
+.shop-category-title {
+  font-size: 12px; font-weight: 700; color: var(--text-dim);
+  padding: 8px 4px 4px; text-transform: uppercase; letter-spacing: 1px;
+}
 
 /* ACHIEVEMENTS */
 .achievements {
-  margin: 16px; padding: 14px;
-  background: var(--bg-card); border-radius: 16px; border: 1px solid rgba(187,134,252,0.2);
+  margin: 12px; padding: 14px;
+  background: var(--bg-card); border-radius: 16px; border: 1px solid rgba(187,134,252,0.15);
 }
 .achievements h3 { font-size: 14px; color: var(--purple); margin-bottom: 10px; text-align: center; }
 .ach-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
 .ach-item {
   text-align: center; padding: 8px 4px; border-radius: 10px;
-  background: rgba(255,255,255,0.03); transition: all 0.3s;
+  background: rgba(255,255,255,0.02); transition: all 0.3s;
 }
-.ach-item.unlocked { background: rgba(187,134,252,0.1); border: 1px solid rgba(187,134,252,0.3); }
+.ach-item.unlocked { background: rgba(187,134,252,0.08); border: 1px solid rgba(187,134,252,0.2); }
 .ach-item.locked { opacity: 0.35; filter: grayscale(1); }
 .ach-item .ach-icon { font-size: 26px; }
 .ach-item .ach-name { font-size: 9px; color: var(--text-dim); margin-top: 3px; line-height: 1.2; }
 
 /* HISTORY */
-.history { margin: 0 16px; }
+.history { margin: 0 12px; }
 .history h3 { font-size: 15px; color: var(--text-dim); margin-bottom: 10px; padding-left: 4px; }
 .shift-card {
   background: var(--bg-card2); border-radius: 14px; padding: 14px 16px; margin-bottom: 8px;
@@ -443,18 +558,22 @@ body {
 @keyframes shake { 25%{transform:translateX(-5px)} 50%{transform:translateX(5px)} 75%{transform:translateX(-3px)} 100%{transform:translateX(0)} }
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
 .pulse { animation: pulse 2s ease infinite; }
+@keyframes glow { 0%,100%{box-shadow:0 0 5px rgba(255,215,0,0.1)} 50%{box-shadow:0 0 20px rgba(255,215,0,0.2)} }
+@keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+.fade-in { animation: fadeIn 0.3s ease; }
 
 /* MODAL */
 .modal-overlay {
   position: fixed; top:0; left:0; width:100%; height:100%;
-  background: rgba(0,0,0,0.75); z-index: 5000;
+  background: rgba(0,0,0,0.8); z-index: 5000;
   display: flex; align-items: center; justify-content: center;
   padding: 20px; opacity: 0; pointer-events: none; transition: opacity 0.3s;
+  backdrop-filter: blur(4px);
 }
 .modal-overlay.show { opacity: 1; pointer-events: auto; }
 .modal {
   background: var(--bg-card); border-radius: 20px; padding: 24px;
-  width: 100%; max-width: 380px; border: 2px solid var(--gold-dark);
+  width: 100%; max-width: 380px; border: 1px solid rgba(255,215,0,0.15);
   transform: translateY(30px); transition: transform 0.3s;
 }
 .modal-overlay.show .modal { transform: translateY(0); }
@@ -462,8 +581,8 @@ body {
 .modal .form-group { margin-bottom: 12px; }
 .modal .form-group label { font-size: 13px; color: var(--text-dim); margin-bottom: 4px; display: block; }
 .modal .form-group input {
-  width: 100%; padding: 12px; background: rgba(255,255,255,0.08);
-  border: 1px solid rgba(255,255,255,0.15); border-radius: 10px;
+  width: 100%; padding: 12px; background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1); border-radius: 10px;
   color: var(--text); font-family: 'Nunito', sans-serif; font-size: 16px; font-weight: 700;
   outline: none;
 }
@@ -477,7 +596,7 @@ body {
 }
 .modal-btn:active { transform: scale(0.95); }
 .modal-btn.primary { background: linear-gradient(135deg, var(--gold-dark), var(--gold)); color: #1a1a2e; }
-.modal-btn.secondary { background: rgba(255,255,255,0.1); color: var(--text); }
+.modal-btn.secondary { background: rgba(255,255,255,0.08); color: var(--text); }
 .modal-btn.danger { background: linear-gradient(135deg, #c62828, #ff5252); color: #fff; }
 .modal-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
@@ -485,7 +604,8 @@ body {
 .sync-status {
   position: fixed; bottom: 12px; right: 12px;
   padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 700;
-  background: rgba(0,0,0,0.7); z-index: 100; transition: all 0.3s;
+  background: rgba(0,0,0,0.75); z-index: 100; transition: all 0.3s;
+  backdrop-filter: blur(6px);
 }
 .sync-status.ok { color: var(--green); }
 .sync-status.error { color: var(--red); }
@@ -497,6 +617,7 @@ body {
   position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px);
   padding: 10px 20px; border-radius: 12px; font-size: 13px; font-weight: 700;
   z-index: 10000; transition: transform 0.4s ease; white-space: nowrap;
+  backdrop-filter: blur(8px);
 }
 .toast.show { transform: translateX(-50%) translateY(0); }
 .toast.success { background: rgba(0,230,118,0.9); color: #1a1a2e; }
@@ -523,20 +644,32 @@ body {
   <button class="tab-btn active" onclick="switchTab('live')" id="tabLive">⚡ СМЕНА</button>
   <button class="tab-btn" onclick="switchTab('add')" id="tabAdd">➕ ДОБАВИТЬ</button>
   <button class="tab-btn" onclick="switchTab('calendar')" id="tabCalendar">📅 МЕСЯЦ</button>
+  <button class="tab-btn" onclick="switchTab('shop')" id="tabShop">🛒 МАГАЗИН</button>
   <button class="tab-btn" onclick="switchTab('stats')" id="tabStats">📊 СТАТА</button>
 </div>
 
 <!-- ============ TAB: LIVE SHIFT ============ -->
 <div class="tab-content active" id="contentLive">
 
-<div class="vault" id="vault">
-  <div class="vault-total">
-    <span id="totalEarned">0</span> <span class="currency">₽</span>
+<!-- WALLET (redesigned) -->
+<div class="wallet" id="wallet">
+  <div class="wallet-top">
+    <div class="wallet-balance">
+      <div class="wallet-label">Общий заработок</div>
+      <div class="wallet-total">
+        <span id="totalEarned">0</span> <span class="currency">₽</span>
+      </div>
+    </div>
+    <div class="wallet-badge">
+      <div class="wb-icon" id="walletBadgeIcon">🐣</div>
+      <div class="wb-text" id="walletBadgeText">LVL 1</div>
+    </div>
   </div>
-  <div class="vault-stats">
-    <div class="vault-stat"><div class="val" id="totalShifts">0</div><div class="lbl">смен</div></div>
-    <div class="vault-stat"><div class="val" id="totalHours">0</div><div class="lbl">часов</div></div>
-    <div class="vault-stat"><div class="val" id="avgRate">0</div><div class="lbl">₽/час сред.</div></div>
+  <div class="wallet-trend" id="walletTrend"></div>
+  <div class="wallet-stats">
+    <div class="wallet-stat"><span class="ws-icon">📋</span><span class="ws-val" id="totalShifts">0</span><span class="ws-lbl">смен</span></div>
+    <div class="wallet-stat"><span class="ws-icon">⏱</span><span class="ws-val" id="totalHours">0</span><span class="ws-lbl">часов</span></div>
+    <div class="wallet-stat"><span class="ws-icon">💎</span><span class="ws-val" id="avgRate">0</span><span class="ws-lbl">₽/час</span></div>
   </div>
 </div>
 
@@ -559,9 +692,9 @@ body {
   <!-- Break type selector (hidden by default) -->
   <div id="breakTypeSelector" style="display:none; margin-bottom: 12px;">
     <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;">
-      <button class="shift-ctrl-btn" style="background:rgba(255,171,64,0.2);color:var(--orange);font-size:12px;padding:10px" onclick="confirmBreak('🍔 Обед')">🍔 Обед</button>
-      <button class="shift-ctrl-btn" style="background:rgba(255,171,64,0.2);color:var(--orange);font-size:12px;padding:10px" onclick="confirmBreak('🚬 Курение')">🚬 Курение</button>
-      <button class="shift-ctrl-btn" style="background:rgba(255,171,64,0.2);color:var(--orange);font-size:12px;padding:10px" onclick="confirmBreak('🚶 Другое')">🚶 Другое</button>
+      <button class="shift-ctrl-btn" style="background:rgba(255,171,64,0.15);color:var(--orange);font-size:12px;padding:10px" onclick="confirmBreak('🍔 Обед')">🍔 Обед</button>
+      <button class="shift-ctrl-btn" style="background:rgba(255,171,64,0.15);color:var(--orange);font-size:12px;padding:10px" onclick="confirmBreak('🚬 Курение')">🚬 Курение</button>
+      <button class="shift-ctrl-btn" style="background:rgba(255,171,64,0.15);color:var(--orange);font-size:12px;padding:10px" onclick="confirmBreak('🚶 Другое')">🚶 Другое</button>
     </div>
   </div>
 
@@ -624,7 +757,7 @@ body {
 <!-- ============ TAB: CALENDAR ============ -->
 <div class="tab-content" id="contentCalendar">
 
-<div style="margin:16px;padding:20px;background:linear-gradient(145deg,#1e2a45,#162040);border-radius:16px;border:1px solid rgba(255,255,255,0.06)">
+<div style="margin:12px;padding:20px;background:linear-gradient(145deg,#161625,#12122a);border-radius:16px;border:1px solid var(--glass-border)">
   <div class="cal-header">
     <button class="cal-nav-btn" onclick="calChangeMonth(-1)">◀</button>
     <div>
@@ -662,6 +795,21 @@ body {
   </div>
 
   <div class="cal-summary" id="calSummary"></div>
+</div>
+
+</div>
+
+<!-- ============ TAB: SHOP ============ -->
+<div class="tab-content" id="contentShop">
+
+<div class="shop-section">
+  <div class="shop-header">
+    <div class="shop-balance">
+      <div class="shop-balance-label">✨ Баланс Life XP</div>
+      <div class="shop-balance-val"><span id="shopXpBalance">0</span> <span class="xp-unit">XP</span></div>
+    </div>
+  </div>
+  <div class="shop-grid" id="shopGrid"></div>
 </div>
 
 </div>
@@ -799,6 +947,24 @@ const ACHIEVEMENTS = [
   { id:'streak7', icon:'⚡',  name:'7 дней страйк', check:d=>d.streak>=7 },
 ];
 
+// ====== SHOP ITEMS ======
+const SHOP_ITEMS = [
+  // Бусты
+  { id:'extra_reroll_1', icon:'🎲', name:'+1 реролл на день', desc:'Добавляет 1 лайф-реролл сегодня', price:40, cat:'boost', consumable:true },
+  { id:'extra_reroll_3', icon:'🎰', name:'+3 реролла на день', desc:'Пак из 3 лайф-реролов на сегодня', price:100, cat:'boost', consumable:true },
+  { id:'double_xp', icon:'⚡', name:'Двойной XP (1 день)', desc:'Все лайф-квесты дают x2 XP сегодня', price:200, cat:'boost', consumable:true },
+  { id:'cat_choice', icon:'🎯', name:'Выбор категории', desc:'Выбери категорию квестов на завтра', price:150, cat:'boost', consumable:true },
+  // Косметика
+  { id:'title_grinder', icon:'💎', name:'Титул: Грайндер', desc:'Отображается в заголовке', price:300, cat:'cosmetic', consumable:false },
+  { id:'title_legend', icon:'👑', name:'Титул: Легенда', desc:'Отображается в заголовке', price:500, cat:'cosmetic', consumable:false },
+  { id:'title_beast', icon:'🦁', name:'Титул: Зверюга', desc:'Отображается в заголовке', price:400, cat:'cosmetic', consumable:false },
+  { id:'title_sigma', icon:'🐺', name:'Титул: Сигма', desc:'Отображается в заголовке', price:600, cat:'cosmetic', consumable:false },
+  // Награды
+  { id:'golden_border', icon:'✨', name:'Золотая рамка кошелька', desc:'Красивое свечение кошелька', price:250, cat:'reward', consumable:false },
+  { id:'rain_upgrade', icon:'🌧️', name:'Усиленный дождь монет', desc:'Больше монет при сохранении смены', price:350, cat:'reward', consumable:false },
+  { id:'custom_tip', icon:'📝', name:'Своя мотивация', desc:'Добавь свой совет в ротацию', price:200, cat:'reward', consumable:false },
+];
+
 // ====== STATE ======
 let shifts = [];
 let difficulty = localStorage.getItem('ozon_difficulty') || 'normal';
@@ -815,6 +981,7 @@ function switchTab(tab) {
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
   document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
   document.getElementById('content' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
+  if (tab === 'shop') renderShop();
 }
 
 // ====== TOAST ======
@@ -994,7 +1161,8 @@ async function saveEndShift() {
     pendingEndShift = null;
 
     renderActiveShift();
-    rainCoins(Math.min(Math.floor(earned / 500), 30));
+    const coinCount = getShopOwned('rain_upgrade') ? Math.min(Math.floor(earned / 300), 50) : Math.min(Math.floor(earned / 500), 30);
+    rainCoins(coinCount);
     render();
     showToast(`✅ Смена сохранена! +${earned.toLocaleString('ru-RU')} ₽`, 'success');
 
@@ -1182,13 +1350,11 @@ const LQ_LEVELS = [
 ];
 
 // Pick 7 random life quests for today (seeded by date, from pool of 48)
-// If a category was chosen (from shift bonus), quests come from that category
 function getTodayLifeQuests() {
   const today = new Date().toISOString().slice(0, 10);
   const chosenCat = getChosenCategory();
 
   if (chosenCat) {
-    // All quests from chosen category + fill remaining from others
     const catQuests = LIFE_QUESTS.filter(q => q.cat === chosenCat);
     let hash = 0;
     for (let i = 0; i < today.length; i++) { hash = ((hash << 5) - hash) + today.charCodeAt(i); hash |= 0; }
@@ -1198,7 +1364,6 @@ function getTodayLifeQuests() {
       for (let i = 0; i < b.id.length; i++) { hb = ((hb << 5) - hb) + b.id.charCodeAt(i); hb |= 0; }
       return (ha % 10000) - (hb % 10000);
     });
-    // Take up to 5 from chosen category, fill rest randomly from others
     const fromCat = shuffledCat.slice(0, 5);
     const otherQuests = LIFE_QUESTS.filter(q => q.cat !== chosenCat);
     const shuffledOther = [...otherQuests].sort((a, b) => {
@@ -1234,28 +1399,38 @@ function saveLifeXP(data) {
   localStorage.setItem('ozon_life_xp', JSON.stringify(data));
 }
 
+function getXpMultiplier() {
+  // Check if double XP is active
+  const today = new Date().toISOString().slice(0, 10);
+  try {
+    const boosts = JSON.parse(localStorage.getItem('ozon_shop_boosts') || '{}');
+    if (boosts.double_xp === today) return 2;
+  } catch(e) {}
+  return 1;
+}
+
 function addLifeXP(questId, xpAmount, category) {
   const data = getLifeXP();
   const today = new Date().toISOString().slice(0, 10);
 
-  // Prevent double-counting same quest same day
   const todayKey = `${today}_${questId}`;
   if (!data.history) data.history = [];
   if (data.history.includes(todayKey)) return data;
 
-  data.total = (data.total || 0) + xpAmount;
+  const multiplier = getXpMultiplier();
+  const finalXP = xpAmount * multiplier;
+
+  data.total = (data.total || 0) + finalXP;
   if (!data.cats) data.cats = {};
-  data.cats[category] = (data.cats[category] || 0) + xpAmount;
+  data.cats[category] = (data.cats[category] || 0) + finalXP;
   data.questsDone = (data.questsDone || 0) + 1;
   data.history.push(todayKey);
 
-  // Track unique days
   if (data.lastDay !== today) {
     data.daysDone = (data.daysDone || 0) + 1;
     data.lastDay = today;
   }
 
-  // Keep history manageable (last 500 entries)
   if (data.history.length > 500) data.history = data.history.slice(-500);
 
   saveLifeXP(data);
@@ -1270,8 +1445,11 @@ function removeLifeXP(questId, xpAmount, category) {
   const idx = data.history.indexOf(todayKey);
   if (idx === -1) return data;
 
-  data.total = Math.max(0, (data.total || 0) - xpAmount);
-  if (data.cats) data.cats[category] = Math.max(0, (data.cats[category] || 0) - xpAmount);
+  const multiplier = getXpMultiplier();
+  const finalXP = xpAmount * multiplier;
+
+  data.total = Math.max(0, (data.total || 0) - finalXP);
+  if (data.cats) data.cats[category] = Math.max(0, (data.cats[category] || 0) - finalXP);
   data.questsDone = Math.max(0, (data.questsDone || 0) - 1);
   data.history.splice(idx, 1);
 
@@ -1300,7 +1478,6 @@ function renderLifeStats() {
     xpText = `${data.total} / ${next.xp} XP`;
   }
 
-  // Category bars
   const maxCatXP = Math.max(...Object.values(data.cats || {}), 1);
   const catBars = Object.entries(LQ_CATEGORIES).map(([key, cat]) => {
     const catXP = (data.cats && data.cats[key]) || 0;
@@ -1313,11 +1490,14 @@ function renderLifeStats() {
     </div>`;
   }).join('');
 
+  const multiplier = getXpMultiplier();
+  const boostBadge = multiplier > 1 ? `<span style="background:rgba(255,215,0,0.15);color:var(--gold);padding:2px 6px;border-radius:6px;font-size:10px;font-weight:700;margin-left:6px">x${multiplier} XP</span>` : '';
+
   container.innerHTML = `
     <div class="lq-level-header">
       <span class="lq-level-icon">${current.icon}</span>
       <div class="lq-level-info">
-        <div class="lq-level-name">LVL ${current.lvl} — ${current.name}</div>
+        <div class="lq-level-name">LVL ${current.lvl} — ${current.name}${boostBadge}</div>
         <div class="lq-xp-bar"><div class="lq-xp-fill" style="width:${Math.min(progressPct, 100)}%"></div></div>
         <div class="lq-xp-text">${xpText}</div>
       </div>
@@ -1353,8 +1533,10 @@ function toggleLifeQuest(id) {
   saveLifeQuestState(state);
 
   if (state.checked[id] && quest) {
+    const mult = getXpMultiplier();
     addLifeXP(id, quest.xp, quest.cat);
-    showToast(`✅ +${quest.xp} XP! Красавчик!`, 'success');
+    const xpGained = quest.xp * mult;
+    showToast(`✅ +${xpGained} XP! ${mult > 1 ? '(x' + mult + '!) ' : ''}Красавчик!`, 'success');
     rainCoins(3);
   } else if (!state.checked[id] && quest) {
     removeLifeXP(id, quest.xp, quest.cat);
@@ -1426,15 +1608,12 @@ function checkAndGrantBonuses() {
 
   saveShiftBonuses(bonuses);
 
-  // Show toast notifications
   for (const msg of messages) {
     showToast(msg, 'success');
   }
 
-  // Refresh life quests to show updated rerolls
   renderLifeQuests();
 
-  // If category choice earned, show category picker
   if (newCategoryChoice) {
     setTimeout(() => openCategoryPicker(), 500);
   }
@@ -1446,13 +1625,12 @@ function openCategoryPicker(isWeeklyFree = false) {
   const container = document.getElementById('categoryPickerList');
   const source = isWeeklyFree ? 'weekly' : 'bonus';
   container.innerHTML = Object.entries(LQ_CATEGORIES).map(([key, cat]) =>
-    `<button class="cat-pick-btn" onclick="pickCategory('${key}', '${source}')" style="background:rgba(255,255,255,0.06);border:2px solid ${cat.color};border-radius:12px;padding:12px 8px;cursor:pointer;text-align:center;transition:all 0.2s;color:var(--text);font-family:inherit">
+    `<button class="cat-pick-btn" onclick="pickCategory('${key}', '${source}')" style="background:rgba(255,255,255,0.04);border:2px solid ${cat.color};border-radius:12px;padding:12px 8px;cursor:pointer;text-align:center;transition:all 0.2s;color:var(--text);font-family:inherit">
       <div style="font-size:24px;margin-bottom:4px">${cat.icon}</div>
       <div style="font-size:12px;font-weight:700;color:${cat.color}">${cat.name}</div>
       <div style="font-size:10px;color:var(--text-dim)">${LIFE_QUESTS.filter(q => q.cat === key).length} квестов</div>
     </button>`
   ).join('');
-  // Update modal title for weekly free
   const modalTitle = document.querySelector('#categoryPickerModal h3');
   if (modalTitle) {
     modalTitle.textContent = isWeeklyFree ? '🎁 БЕСПЛАТНЫЙ ВЫБОР КАТЕГОРИИ' : '🎯 ВЫБЕРИ КАТЕГОРИЮ';
@@ -1465,7 +1643,6 @@ function closeCategoryPicker() {
 }
 
 function pickCategory(cat, source = 'bonus') {
-  // Save for tomorrow
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
   const forDate = tomorrow.toISOString().slice(0, 10);
@@ -1473,7 +1650,6 @@ function pickCategory(cat, source = 'bonus') {
   closeCategoryPicker();
   const catInfo = LQ_CATEGORIES[cat];
 
-  // Mark weekly free as used
   if (source === 'weekly') {
     const wc = getWeeklyCategoryChoice();
     wc.used = true;
@@ -1483,12 +1659,13 @@ function pickCategory(cat, source = 'bonus') {
     showToast(`${catInfo.icon} Завтра квесты из: ${catInfo.name}!`, 'success');
   }
   rainCoins(5);
-  renderLifeQuests(); // refresh to update weekly button
+  renderLifeQuests();
 }
 
 function getTotalRerolls() {
   const bonuses = getShiftBonuses();
-  return MAX_REROLLS + (bonuses.bonusRerolls || 0);
+  const shopExtra = getShopExtraRerolls();
+  return MAX_REROLLS + (bonuses.bonusRerolls || 0) + shopExtra;
 }
 
 // Weekly free category choice — 1 per week (resets Monday)
@@ -1496,7 +1673,6 @@ function getWeeklyCategoryChoice() {
   try {
     const saved = JSON.parse(localStorage.getItem('ozon_weekly_cat') || '{}');
     const now = new Date();
-    // Get current week's Monday
     const monday = new Date(now);
     monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7));
     const weekKey = monday.toISOString().slice(0, 10);
@@ -1515,7 +1691,7 @@ function useWeeklyCategoryChoice() {
     showToast('🎯 Бесплатный выбор уже использован на этой неделе!', 'warn');
     return;
   }
-  openCategoryPicker(true); // true = weekly free
+  openCategoryPicker(true);
 }
 
 function rerollLifeQuest(oldId, event) {
@@ -1527,11 +1703,9 @@ function rerollLifeQuest(oldId, event) {
     return;
   }
 
-  // Get current quest list (base + replacements)
   const baseQuests = getTodayLifeQuests();
   const currentIds = baseQuests.map(q => state.replacements[q.id] || q.id);
 
-  // Pick a random replacement from the full pool, not already shown
   const available = LIFE_QUESTS.filter(q => !currentIds.includes(q.id));
   if (available.length === 0) {
     showToast('Нет доступных квестов для замены', 'warn');
@@ -1540,13 +1714,11 @@ function rerollLifeQuest(oldId, event) {
 
   const newQuest = available[Math.floor(Math.random() * available.length)];
 
-  // Find which base quest slot this oldId belongs to
   const baseSlot = baseQuests.find(q => (state.replacements[q.id] || q.id) === oldId);
   if (baseSlot) {
     state.replacements[baseSlot.id] = newQuest.id;
   }
 
-  // Remove checked state for old quest
   delete state.checked[oldId];
 
   state.rerolls++;
@@ -1575,6 +1747,7 @@ function renderLifeQuests() {
   const totalRerolls = getTotalRerolls();
   const rerollsLeft = totalRerolls - state.rerolls;
   const bonusRerolls = getShiftBonuses().bonusRerolls || 0;
+  const shopExtra = getShopExtraRerolls();
   const chosenCat = getChosenCategory();
   const container = document.getElementById('lifeQuestList');
   const doneCount = quests.filter(q => checked[q.id]).length;
@@ -1582,7 +1755,7 @@ function renderLifeQuests() {
   let headerHtml = '';
   if (chosenCat && LQ_CATEGORIES[chosenCat]) {
     const ci = LQ_CATEGORIES[chosenCat];
-    headerHtml = `<div style="text-align:center;padding:6px 10px;margin-bottom:8px;background:rgba(255,215,0,0.1);border-radius:10px;font-size:12px;color:var(--gold)">
+    headerHtml = `<div style="text-align:center;padding:6px 10px;margin-bottom:8px;background:rgba(255,215,0,0.08);border-radius:10px;font-size:12px;color:var(--gold)">
       🎯 Категория дня: ${ci.icon} <b>${ci.name}</b>
     </div>`;
   }
@@ -1600,11 +1773,11 @@ function renderLifeQuests() {
       <button class="lq-reroll" onclick="rerollLifeQuest('${q.id}', event)" ${canReroll ? '' : 'disabled'} title="Заменить квест">🔄</button>
     </div>`;
   }).join('') +
-    `<div class="lq-reroll-counter">🎲 Реролов: ${rerollsLeft}/${totalRerolls}${bonusRerolls > 0 ? ` <span style="color:var(--gold)">(+${bonusRerolls} бонус)</span>` : ''}</div>` +
+    `<div class="lq-reroll-counter">🎲 Реролов: ${rerollsLeft}/${totalRerolls}${bonusRerolls > 0 ? ` <span style="color:var(--gold)">(+${bonusRerolls} бонус)</span>` : ''}${shopExtra > 0 ? ` <span style="color:var(--purple)">(+${shopExtra} магазин)</span>` : ''}</div>` +
     (() => {
       const wc = getWeeklyCategoryChoice();
       if (!wc.used) {
-        return `<div style="text-align:center;margin:6px 0"><button onclick="useWeeklyCategoryChoice()" style="background:linear-gradient(135deg,rgba(255,215,0,0.15),rgba(255,165,0,0.1));border:1px solid rgba(255,215,0,0.3);border-radius:10px;padding:8px 16px;color:var(--gold);font-weight:700;font-size:12px;cursor:pointer;font-family:inherit">🎁 Бесплатный выбор категории (1/нед)</button></div>`;
+        return `<div style="text-align:center;margin:6px 0"><button onclick="useWeeklyCategoryChoice()" style="background:linear-gradient(135deg,rgba(255,215,0,0.1),rgba(255,165,0,0.06));border:1px solid rgba(255,215,0,0.2);border-radius:10px;padding:8px 16px;color:var(--gold);font-weight:700;font-size:12px;cursor:pointer;font-family:inherit">🎁 Бесплатный выбор категории (1/нед)</button></div>`;
       }
       return `<div style="text-align:center;margin:4px 0;font-size:10px;color:var(--text-dim)">🎁 Бесплатный выбор категории использован до понедельника</div>`;
     })() +
@@ -1641,7 +1814,6 @@ function renderMotivationTip() {
 }
 
 // ====== QUESTS ======
-// Full pool of ~20 shift quests — 6 random ones picked daily
 const SHIFT_QUEST_POOL = [
   // === ВРЕМЯ / ЧАСЫ ===
   {
@@ -1767,7 +1939,6 @@ const SHIFT_QUEST_POOL = [
     id: 'early_bird', icon: '🌅', title: 'Ранняя пташка',
     desc: 'Начни смену до 9:00',
     calc: (ctx) => {
-      const hour = new Date().getHours();
       const startedEarly = ctx.isOnShift && activeShift && new Date(activeShift.startTime).getHours() < 9;
       const hadEarly = ctx.todayShifts.some(s => s.note && s.note.includes('Начало:') && parseInt(s.note.split('Начало:')[1]) < 9);
       return { progress: (startedEarly || hadEarly) ? 1 : 0, target: 1 };
@@ -1796,7 +1967,6 @@ const SHIFT_QUEST_POOL = [
   },
 ];
 
-// Pick 6 random shift quests per day (seeded by date)
 function generateQuests() {
   const goal = DIFFICULTIES[difficulty].goal;
   const today = new Date().toISOString().slice(0, 10);
@@ -1812,7 +1982,6 @@ function generateQuests() {
 
   const ctx = { isOnShift, todayShifts, todayEarned, todayHours, todayRate, totalHours, goal, workHours };
 
-  // Seeded shuffle — same quests all day
   let hash = 0;
   for (let i = 0; i < today.length; i++) { hash = ((hash << 5) - hash) + today.charCodeAt(i); hash |= 0; }
   const shuffled = [...SHIFT_QUEST_POOL].sort((a, b) => {
@@ -1822,7 +1991,6 @@ function generateQuests() {
     return (ha % 10000) - (hb % 10000);
   });
 
-  // Always include "start_shift" + 5 random others
   const startQuest = SHIFT_QUEST_POOL.find(q => q.id === 'start_shift');
   const others = shuffled.filter(q => q.id !== 'start_shift').slice(0, 5);
   const selectedPool = [startQuest, ...others];
@@ -1868,6 +2036,132 @@ function renderQuests() {
       <div class="quest-text">${q.desc} — ${progressText}</div>
     </div>`;
   }).join('');
+}
+
+// ====== SHOP SYSTEM ======
+function getShopPurchases() {
+  try { return JSON.parse(localStorage.getItem('ozon_shop_purchases') || '{}'); } catch(e) { return {}; }
+}
+function saveShopPurchases(data) {
+  localStorage.setItem('ozon_shop_purchases', JSON.stringify(data));
+}
+
+function getShopOwned(itemId) {
+  const p = getShopPurchases();
+  return !!p[itemId];
+}
+
+function getShopExtraRerolls() {
+  const today = new Date().toISOString().slice(0, 10);
+  try {
+    const boosts = JSON.parse(localStorage.getItem('ozon_shop_boosts') || '{}');
+    if (boosts.extra_reroll_date === today) return boosts.extra_reroll_count || 0;
+  } catch(e) {}
+  return 0;
+}
+
+function shopBuyItem(itemId) {
+  const item = SHOP_ITEMS.find(i => i.id === itemId);
+  if (!item) return;
+
+  const xpData = getLifeXP();
+  if (xpData.total < item.price) {
+    showToast('❌ Недостаточно XP!', 'error');
+    return;
+  }
+
+  // Non-consumable: check if already owned
+  if (!item.consumable) {
+    const purchases = getShopPurchases();
+    if (purchases[itemId]) {
+      showToast('Уже куплено!', 'warn');
+      return;
+    }
+    purchases[itemId] = true;
+    saveShopPurchases(purchases);
+  }
+
+  // Deduct XP
+  xpData.total -= item.price;
+  saveLifeXP(xpData);
+
+  // Apply consumable effects
+  if (item.consumable) {
+    const today = new Date().toISOString().slice(0, 10);
+    const boosts = JSON.parse(localStorage.getItem('ozon_shop_boosts') || '{}');
+
+    if (item.id === 'extra_reroll_1' || item.id === 'extra_reroll_3') {
+      const amount = item.id === 'extra_reroll_1' ? 1 : 3;
+      if (boosts.extra_reroll_date !== today) {
+        boosts.extra_reroll_date = today;
+        boosts.extra_reroll_count = 0;
+      }
+      boosts.extra_reroll_count = (boosts.extra_reroll_count || 0) + amount;
+      showToast(`🎲 +${amount} реролл! Используй сегодня`, 'success');
+    } else if (item.id === 'double_xp') {
+      boosts.double_xp = today;
+      showToast('⚡ Двойной XP активирован на сегодня!', 'success');
+    } else if (item.id === 'cat_choice') {
+      openCategoryPicker(false);
+    }
+
+    localStorage.setItem('ozon_shop_boosts', JSON.stringify(boosts));
+  } else {
+    showToast(`✅ ${item.icon} ${item.name} куплено!`, 'success');
+  }
+
+  rainCoins(5);
+  renderShop();
+  renderLifeStats();
+  renderLifeQuests();
+  // Update wallet badge if title purchased
+  render();
+}
+
+function getActiveTitle() {
+  const purchases = getShopPurchases();
+  if (purchases.title_sigma) return '🐺 Сигма';
+  if (purchases.title_legend) return '👑 Легенда';
+  if (purchases.title_beast) return '🦁 Зверюга';
+  if (purchases.title_grinder) return '💎 Грайндер';
+  return null;
+}
+
+function renderShop() {
+  const xpData = getLifeXP();
+  const balance = xpData.total;
+  const purchases = getShopPurchases();
+
+  document.getElementById('shopXpBalance').textContent = balance;
+
+  const container = document.getElementById('shopGrid');
+  const categories = { boost: '⚡ Бусты', cosmetic: '🎨 Титулы', reward: '🎁 Награды' };
+  let html = '';
+
+  for (const [catKey, catName] of Object.entries(categories)) {
+    const items = SHOP_ITEMS.filter(i => i.cat === catKey);
+    html += `<div class="shop-category-title">${catName}</div>`;
+
+    for (const item of items) {
+      const owned = !item.consumable && purchases[item.id];
+      const canAfford = balance >= item.price;
+      const itemClass = owned ? 'owned' : (!canAfford ? 'locked' : '');
+      const btnClass = owned ? 'bought' : (canAfford ? 'buy' : 'expensive');
+      const btnText = owned ? '✅' : `${item.price} XP`;
+      const btnDisabled = owned || !canAfford ? 'pointer-events:none' : '';
+
+      html += `<div class="shop-item ${itemClass}">
+        <div class="shop-item-icon">${item.icon}</div>
+        <div class="shop-item-info">
+          <div class="shop-item-name">${item.name}</div>
+          <div class="shop-item-desc">${item.desc}</div>
+        </div>
+        <button class="shop-item-price ${btnClass}" onclick="shopBuyItem('${item.id}')" style="${btnDisabled}">${btnText}</button>
+      </div>`;
+    }
+  }
+
+  container.innerHTML = html;
 }
 
 // ====== SUPABASE OPS ======
@@ -2087,14 +2381,16 @@ function renderCalendar() {
   titleEl.textContent = `${MONTH_NAMES_RU[calMonth]} ${calYear}`;
 
   const plan = getCalendarPlan();
-  const today = new Date();
-  const todayStr = today.toISOString().slice(0, 10);
+
+  // FIX: Use local date for today comparison to avoid timezone issues
+  const now = new Date();
+  const todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
 
   // Build shift map for this month
   const monthPrefix = `${calYear}-${String(calMonth + 1).padStart(2, '0')}`;
   const monthShifts = {};
   for (const s of shifts) {
-    if (s.date.startsWith(monthPrefix)) {
+    if (s.date && s.date.startsWith(monthPrefix)) {
       if (!monthShifts[s.date]) monthShifts[s.date] = { earned: 0, hours: 0, count: 0 };
       monthShifts[s.date].earned += s.earned;
       monthShifts[s.date].hours += s.hours;
@@ -2118,7 +2414,7 @@ function renderCalendar() {
     const dateStr = `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
     const isToday = dateStr === todayStr;
     const hasShift = !!monthShifts[dateStr];
-    const planType = plan[dateStr]; // 'dayoff' | 'planned' | undefined
+    const planType = plan[dateStr];
     const isSelected = dateStr === calSelectedDate;
 
     let classes = 'cal-day';
@@ -2126,6 +2422,7 @@ function renderCalendar() {
     if (hasShift) classes += ' has-shift';
     else if (planType === 'dayoff') classes += ' is-dayoff';
     else if (planType === 'planned') classes += ' is-planned';
+    if (isSelected) classes += ' selected';
 
     let icon = '';
     if (hasShift) icon = '💰';
@@ -2138,9 +2435,7 @@ function renderCalendar() {
       earnedLabel = `<div class="cal-day-earned">${k}K</div>`;
     }
 
-    const selStyle = isSelected ? 'box-shadow:0 0 0 2px var(--gold);' : '';
-
-    html += `<div class="${classes}" onclick="calSelectDay('${dateStr}')" style="${selStyle}">
+    html += `<div class="${classes}" onclick="calSelectDay('${dateStr}')">
       <div class="cal-day-num">${d}</div>
       ${icon ? `<div class="cal-day-icon">${icon}</div>` : ''}
       ${earnedLabel}
@@ -2154,8 +2449,12 @@ function renderCalendar() {
     infoEl.style.display = '';
     const sd = monthShifts[calSelectedDate];
     const sp = plan[calSelectedDate];
-    const dateObj = new Date(calSelectedDate + 'T00:00:00');
+
+    // FIX: Parse date parts manually to avoid timezone shift
+    const parts = calSelectedDate.split('-');
+    const dateObj = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
     const dateLabel = dateObj.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', weekday: 'short' });
+
     if (sd) {
       const rate = sd.hours > 0 ? Math.round(sd.earned / sd.hours) : 0;
       infoEl.innerHTML = `<b>${dateLabel}</b><br>💰 ${sd.earned.toLocaleString('ru-RU')} ₽ · ${sd.hours} ч · ${rate} ₽/час`;
@@ -2212,7 +2511,7 @@ async function init() {
   renderLifeStats();
   renderMotivationTip();
   calInit();
-  checkAndGrantBonuses(); // Check if any shift quests already completed
+  checkAndGrantBonuses();
   hideLoading();
 }
 
@@ -2255,10 +2554,10 @@ async function addShift() {
     document.getElementById('inputHours').value = '';
     document.getElementById('inputEarned').value = '';
     document.getElementById('inputNote').value = '';
-    rainCoins(Math.min(Math.floor(earned / 500), 30));
+    const coinCount = getShopOwned('rain_upgrade') ? Math.min(Math.floor(earned / 300), 50) : Math.min(Math.floor(earned / 500), 30);
+    rainCoins(coinCount);
     render();
     switchTab('live');
-    // Check for bonus rewards from shift quests
     setTimeout(() => checkAndGrantBonuses(), 800);
   }
 }
@@ -2293,12 +2592,49 @@ function render() {
   document.getElementById('totalHours').textContent = totalHours.toFixed(1);
   document.getElementById('avgRate').textContent = avgRate.toLocaleString('ru-RU');
 
-  // Level
+  // Wallet badge
   const xp = totalEarned;
   let currentLevel = LEVELS[0], nextLevel = LEVELS[1];
   for (let i = LEVELS.length - 1; i >= 0; i--) {
     if (xp >= LEVELS[i].xp) { currentLevel = LEVELS[i]; nextLevel = LEVELS[i + 1] || null; break; }
   }
+
+  const walletBadgeIcon = document.getElementById('walletBadgeIcon');
+  const walletBadgeText = document.getElementById('walletBadgeText');
+  if (walletBadgeIcon) walletBadgeIcon.textContent = currentLevel.icon;
+  if (walletBadgeText) walletBadgeText.textContent = `LVL ${currentLevel.lvl}`;
+
+  // Wallet trend
+  const trendEl = document.getElementById('walletTrend');
+  if (trendEl && shifts.length >= 2) {
+    const lastShift = shifts[0];
+    const prevShift = shifts[1];
+    const diff = lastShift.rate - prevShift.rate;
+    const trendClass = diff > 0 ? 'up' : (diff < 0 ? 'down' : 'neutral');
+    const trendSymbol = diff > 0 ? '↑' : (diff < 0 ? '↓' : '→');
+    trendEl.innerHTML = `
+      <span class="wallet-trend-tag ${trendClass}">${trendSymbol} ${Math.abs(diff)} ₽/час</span>
+      <span class="wallet-trend-text">vs прошлая смена</span>
+    `;
+  } else if (trendEl) {
+    trendEl.innerHTML = '';
+  }
+
+  // Golden border effect
+  const walletEl = document.getElementById('wallet');
+  if (walletEl && getShopOwned('golden_border')) {
+    walletEl.style.borderColor = 'rgba(255,215,0,0.4)';
+    walletEl.style.boxShadow = '0 0 25px rgba(255,215,0,0.1)';
+  }
+
+  // Title
+  const activeTitle = getActiveTitle();
+  const subtitleEl = document.querySelector('.header .subtitle');
+  if (subtitleEl && activeTitle) {
+    subtitleEl.textContent = `${activeTitle} · Копим как Скрудж МакДак 🦆`;
+  }
+
+  // Level
   document.getElementById('levelIcon').textContent = currentLevel.icon;
   document.getElementById('levelName').textContent = `LVL ${currentLevel.lvl} — ${currentLevel.name}`;
   document.getElementById('levelTitle').textContent = currentLevel.title;
@@ -2333,7 +2669,9 @@ function render() {
       const cls = s.rate >= goal ? 'goal-hit' : (s.rate >= goal * 0.9 ? 'goal-close' : 'goal-miss');
       const rateCls = s.rate >= goal ? 'good' : (s.rate >= goal * 0.9 ? 'ok' : 'bad');
       const icon = s.rate >= goal ? '✅' : (s.rate >= goal * 0.9 ? '🔸' : '❌');
-      const d = new Date(s.date + 'T00:00:00');
+      // FIX: Parse date without timezone issues
+      const dp = s.date.split('-');
+      const d = new Date(parseInt(dp[0]), parseInt(dp[1]) - 1, parseInt(dp[2]));
       const dateStr = d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
       const noteHtml = s.note ? `<div class="shift-note">${escapeHtml(s.note)}</div>` : '';
       return `<div class="shift-card ${cls} slide-up">
@@ -2364,9 +2702,14 @@ function calcStreak(goal) {
   let streak = 0;
   const today = new Date(); today.setHours(0, 0, 0, 0);
   for (let i = 0; i < dates.length; i++) {
-    const shiftDate = new Date(dates[i] + 'T00:00:00');
+    const parts = dates[i].split('-');
+    const shiftDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
     if (i === 0) { if (Math.floor((today - shiftDate) / 86400000) > 1) return 0; }
-    if (i > 0) { if (Math.floor((new Date(dates[i-1]+'T00:00:00') - shiftDate) / 86400000) !== 1) break; }
+    if (i > 0) {
+      const prevParts = dates[i-1].split('-');
+      const prevDate = new Date(parseInt(prevParts[0]), parseInt(prevParts[1]) - 1, parseInt(prevParts[2]));
+      if (Math.floor((prevDate - shiftDate) / 86400000) !== 1) break;
+    }
     if (dateMap[dates[i]] >= goal) streak++; else break;
   }
   return streak;
