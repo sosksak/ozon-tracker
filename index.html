@@ -1442,15 +1442,21 @@ function checkAndGrantBonuses() {
   return { newRerolls, newCategoryChoice, messages };
 }
 
-function openCategoryPicker() {
+function openCategoryPicker(isWeeklyFree = false) {
   const container = document.getElementById('categoryPickerList');
+  const source = isWeeklyFree ? 'weekly' : 'bonus';
   container.innerHTML = Object.entries(LQ_CATEGORIES).map(([key, cat]) =>
-    `<button class="cat-pick-btn" onclick="pickCategory('${key}')" style="background:rgba(255,255,255,0.06);border:2px solid ${cat.color};border-radius:12px;padding:12px 8px;cursor:pointer;text-align:center;transition:all 0.2s;color:var(--text);font-family:inherit">
+    `<button class="cat-pick-btn" onclick="pickCategory('${key}', '${source}')" style="background:rgba(255,255,255,0.06);border:2px solid ${cat.color};border-radius:12px;padding:12px 8px;cursor:pointer;text-align:center;transition:all 0.2s;color:var(--text);font-family:inherit">
       <div style="font-size:24px;margin-bottom:4px">${cat.icon}</div>
       <div style="font-size:12px;font-weight:700;color:${cat.color}">${cat.name}</div>
       <div style="font-size:10px;color:var(--text-dim)">${LIFE_QUESTS.filter(q => q.cat === key).length} квестов</div>
     </button>`
   ).join('');
+  // Update modal title for weekly free
+  const modalTitle = document.querySelector('#categoryPickerModal h3');
+  if (modalTitle) {
+    modalTitle.textContent = isWeeklyFree ? '🎁 БЕСПЛАТНЫЙ ВЫБОР КАТЕГОРИИ' : '🎯 ВЫБЕРИ КАТЕГОРИЮ';
+  }
   document.getElementById('categoryPickerModal').classList.add('show');
 }
 
@@ -1458,7 +1464,7 @@ function closeCategoryPicker() {
   document.getElementById('categoryPickerModal').classList.remove('show');
 }
 
-function pickCategory(cat) {
+function pickCategory(cat, source = 'bonus') {
   // Save for tomorrow
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
@@ -1466,13 +1472,50 @@ function pickCategory(cat) {
   saveChosenCategory(cat, forDate);
   closeCategoryPicker();
   const catInfo = LQ_CATEGORIES[cat];
-  showToast(`${catInfo.icon} Завтра квесты из: ${catInfo.name}!`, 'success');
+
+  // Mark weekly free as used
+  if (source === 'weekly') {
+    const wc = getWeeklyCategoryChoice();
+    wc.used = true;
+    saveWeeklyCategoryChoice(wc);
+    showToast(`🎁 ${catInfo.icon} Завтра квесты из: ${catInfo.name}! (бесплатно)`, 'success');
+  } else {
+    showToast(`${catInfo.icon} Завтра квесты из: ${catInfo.name}!`, 'success');
+  }
   rainCoins(5);
+  renderLifeQuests(); // refresh to update weekly button
 }
 
 function getTotalRerolls() {
   const bonuses = getShiftBonuses();
   return MAX_REROLLS + (bonuses.bonusRerolls || 0);
+}
+
+// Weekly free category choice — 1 per week (resets Monday)
+function getWeeklyCategoryChoice() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('ozon_weekly_cat') || '{}');
+    const now = new Date();
+    // Get current week's Monday
+    const monday = new Date(now);
+    monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7));
+    const weekKey = monday.toISOString().slice(0, 10);
+    if (saved.week === weekKey) return saved;
+    return { week: weekKey, used: false };
+  } catch(e) { return { week: '', used: false }; }
+}
+
+function saveWeeklyCategoryChoice(data) {
+  localStorage.setItem('ozon_weekly_cat', JSON.stringify(data));
+}
+
+function useWeeklyCategoryChoice() {
+  const wc = getWeeklyCategoryChoice();
+  if (wc.used) {
+    showToast('🎯 Бесплатный выбор уже использован на этой неделе!', 'warn');
+    return;
+  }
+  openCategoryPicker(true); // true = weekly free
 }
 
 function rerollLifeQuest(oldId, event) {
@@ -1558,6 +1601,13 @@ function renderLifeQuests() {
     </div>`;
   }).join('') +
     `<div class="lq-reroll-counter">🎲 Реролов: ${rerollsLeft}/${totalRerolls}${bonusRerolls > 0 ? ` <span style="color:var(--gold)">(+${bonusRerolls} бонус)</span>` : ''}</div>` +
+    (() => {
+      const wc = getWeeklyCategoryChoice();
+      if (!wc.used) {
+        return `<div style="text-align:center;margin:6px 0"><button onclick="useWeeklyCategoryChoice()" style="background:linear-gradient(135deg,rgba(255,215,0,0.15),rgba(255,165,0,0.1));border:1px solid rgba(255,215,0,0.3);border-radius:10px;padding:8px 16px;color:var(--gold);font-weight:700;font-size:12px;cursor:pointer;font-family:inherit">🎁 Бесплатный выбор категории (1/нед)</button></div>`;
+      }
+      return `<div style="text-align:center;margin:4px 0;font-size:10px;color:var(--text-dim)">🎁 Бесплатный выбор категории использован до понедельника</div>`;
+    })() +
     (doneCount === quests.length && quests.length > 0
     ? '<div style="text-align:center;padding:10px;font-size:14px;color:var(--green);font-weight:700">🏆 ВСЕ ЛАЙФ-КВЕСТЫ ВЫПОЛНЕНЫ! 🎉</div>'
     : `<div style="text-align:center;padding:6px;font-size:11px;color:var(--text-dim)">${doneCount}/${quests.length} выполнено · обновляются каждый день</div>`);
