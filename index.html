@@ -642,7 +642,6 @@ body {
 <!-- TAB NAVIGATION -->
 <div class="tab-nav">
   <button class="tab-btn active" onclick="switchTab('live')" id="tabLive">⚡ СМЕНА</button>
-  <button class="tab-btn" onclick="switchTab('add')" id="tabAdd">➕ ДОБАВИТЬ</button>
   <button class="tab-btn" onclick="switchTab('calendar')" id="tabCalendar">📅 МЕСЯЦ</button>
   <button class="tab-btn" onclick="switchTab('shop')" id="tabShop">🛒 МАГАЗИН</button>
   <button class="tab-btn" onclick="switchTab('stats')" id="tabStats">📊 СТАТА</button>
@@ -727,31 +726,33 @@ body {
 
 </div>
 
-<!-- ============ TAB: ADD SHIFT ============ -->
-<div class="tab-content" id="contentAdd">
+<!-- ============ MODAL: MANUAL ADD SHIFT ============ -->
+<div class="modal-overlay" id="manualAddModal">
+  <div class="modal" style="max-width:420px">
+    <h3>➕ ДОБАВИТЬ СМЕНУ</h3>
 
-<div class="difficulty">
-  <h3>🎯 ЦЕЛЬ ₽/ЧАС</h3>
-  <div class="diff-buttons">
-    <button class="diff-btn easy" onclick="setDifficulty('easy')" data-diff="easy">😎 ЛАЙТ<span class="goal-val">800₽</span></button>
-    <button class="diff-btn normal active" onclick="setDifficulty('normal')" data-diff="normal">💪 НОРМАЛ<span class="goal-val">850₽</span></button>
-    <button class="diff-btn hard" onclick="setDifficulty('hard')" data-diff="hard">🔥 ХАРД<span class="goal-val">900₽</span></button>
-  </div>
-</div>
+    <div class="difficulty" style="margin:0 0 12px;padding:14px;border:none">
+      <h3 style="font-size:13px;margin-bottom:8px">🎯 ЦЕЛЬ ₽/ЧАС</h3>
+      <div class="diff-buttons">
+        <button class="diff-btn easy" onclick="setDifficulty('easy')" data-diff="easy">😎 ЛАЙТ<span class="goal-val">800₽</span></button>
+        <button class="diff-btn normal active" onclick="setDifficulty('normal')" data-diff="normal">💪 НОРМАЛ<span class="goal-val">850₽</span></button>
+        <button class="diff-btn hard" onclick="setDifficulty('hard')" data-diff="hard">🔥 ХАРД<span class="goal-val">900₽</span></button>
+      </div>
+    </div>
 
-<div class="add-shift">
-  <h3>➕ ДОБАВИТЬ СМЕНУ ВРУЧНУЮ</h3>
-  <div class="form-row">
-    <div class="form-group"><label>📅 Дата</label><input type="date" id="inputDate"></div>
-    <div class="form-group"><label>⏱ Чистые часы</label><input type="number" id="inputHours" placeholder="9" step="0.5" min="0.5" max="24"></div>
+    <div class="form-row">
+      <div class="form-group"><label>📅 Дата</label><input type="date" id="inputDate"></div>
+      <div class="form-group"><label>⏱ Чистые часы</label><input type="number" id="inputHours" placeholder="9" step="0.5" min="0.5" max="24"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>💵 Заработок ₽</label><input type="number" id="inputEarned" placeholder="8600" min="0"></div>
+      <div class="form-group"><label>📝 Заметка</label><input type="text" id="inputNote" placeholder="541 операция..."></div>
+    </div>
+    <button class="btn-add" id="btnAdd" onclick="addShift()" style="margin-top:6px">🪙 ДОБАВИТЬ</button>
+    <div style="margin-top:10px">
+      <button class="modal-btn secondary" onclick="closeManualAdd()" style="width:100%">✕ Закрыть</button>
+    </div>
   </div>
-  <div class="form-row">
-    <div class="form-group"><label>💵 Заработок ₽</label><input type="number" id="inputEarned" placeholder="8600" min="0"></div>
-    <div class="form-group"><label>📝 Заметка</label><input type="text" id="inputNote" placeholder="541 операция..."></div>
-  </div>
-  <button class="btn-add" id="btnAdd" onclick="addShift()">🪙 ДОБАВИТЬ</button>
-</div>
-
 </div>
 
 <!-- ============ TAB: CALENDAR ============ -->
@@ -816,6 +817,10 @@ body {
 
 <!-- ============ TAB: STATS ============ -->
 <div class="tab-content" id="contentStats">
+
+<div style="display:flex;justify-content:flex-end;padding:6px 12px 0">
+  <button onclick="openManualAdd()" style="background:none;border:1px solid var(--glass-border);border-radius:10px;color:var(--gold);padding:6px 12px;font-size:14px;cursor:pointer;display:flex;align-items:center;gap:4px">⚙️ Добавить вручную</button>
+</div>
 
 <div class="streak-bar" id="streakBar" style="display:none;">
   <div class="streak-icon">🔥</div>
@@ -963,6 +968,17 @@ const SHOP_ITEMS = [
   { id:'golden_border', icon:'✨', name:'Золотая рамка кошелька', desc:'Красивое свечение кошелька', price:250, cat:'reward', consumable:false },
   { id:'rain_upgrade', icon:'🌧️', name:'Усиленный дождь монет', desc:'Больше монет при сохранении смены', price:350, cat:'reward', consumable:false },
   { id:'custom_tip', icon:'📝', name:'Своя мотивация', desc:'Добавь свой совет в ротацию', price:200, cat:'reward', consumable:false },
+  // Темы
+  { id:'theme_neon', icon:'🌈', name:'Тема: Неон', desc:'Яркие неоновые акценты', price:150, cat:'theme', consumable:false },
+  { id:'theme_ocean', icon:'🌊', name:'Тема: Океан', desc:'Глубокий синий с бирюзой', price:150, cat:'theme', consumable:false },
+  { id:'theme_fire', icon:'🔥', name:'Тема: Пламя', desc:'Красно-оранжевые тона', price:150, cat:'theme', consumable:false },
+  { id:'theme_forest', icon:'🌲', name:'Тема: Лес', desc:'Зелёные природные оттенки', price:150, cat:'theme', consumable:false },
+  { id:'theme_sakura', icon:'🌸', name:'Тема: Сакура', desc:'Розовые тона и нежность', price:200, cat:'theme', consumable:false },
+  { id:'theme_cyber', icon:'🤖', name:'Тема: Кибер', desc:'Матрица и кислотный зелёный', price:200, cat:'theme', consumable:false },
+  { id:'theme_royal', icon:'👸', name:'Тема: Королевская', desc:'Фиолетово-золотая роскошь', price:250, cat:'theme', consumable:false },
+  { id:'theme_midnight', icon:'🌙', name:'Тема: Полночь', desc:'Глубокий индиго с серебром', price:200, cat:'theme', consumable:false },
+  { id:'theme_sunset', icon:'🌅', name:'Тема: Закат', desc:'От оранжевого к фиолетовому', price:200, cat:'theme', consumable:false },
+  { id:'theme_hacker', icon:'💚', name:'Тема: Хакер', desc:'Зелёный терминал на чёрном', price:300, cat:'theme', consumable:false },
 ];
 
 // ====== STATE ======
@@ -982,6 +998,18 @@ function switchTab(tab) {
   document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
   document.getElementById('content' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
   if (tab === 'shop') renderShop();
+}
+
+function openManualAdd() {
+  const now = new Date();
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
+  const dd = String(now.getDate()).padStart(2, '0');
+  document.getElementById('inputDate').value = `${yyyy}-${mm}-${dd}`;
+  document.getElementById('manualAddModal').classList.add('active');
+}
+function closeManualAdd() {
+  document.getElementById('manualAddModal').classList.remove('active');
 }
 
 // ====== TOAST ======
@@ -2079,6 +2107,11 @@ function shopBuyItem(itemId) {
     }
     purchases[itemId] = true;
     saveShopPurchases(purchases);
+    // Apply theme if purchased
+    if (item.cat === 'theme') {
+      applyTheme(itemId);
+      localStorage.setItem('ozon_active_theme', itemId);
+    }
   }
 
   // Deduct XP
@@ -2127,6 +2160,45 @@ function getActiveTitle() {
   return null;
 }
 
+// ====== THEME SYSTEM ======
+function applyTheme(themeId) {
+  const themes = {
+    theme_neon: { gold:'#ff00ff', purple:'#00ffff', cyan:'#ff00ff', bgDark:'#0a0014', goldDark:'#cc00cc' },
+    theme_ocean: { gold:'#00bcd4', purple:'#0288d1', cyan:'#4dd0e1', bgDark:'#0a1628', goldDark:'#00838f' },
+    theme_fire: { gold:'#ff6d00', purple:'#ff3d00', cyan:'#ffab40', bgDark:'#1a0a00', goldDark:'#e65100' },
+    theme_forest: { gold:'#66bb6a', purple:'#2e7d32', cyan:'#81c784', bgDark:'#0a1a0a', goldDark:'#388e3c' },
+    theme_sakura: { gold:'#f48fb1', purple:'#ec407a', cyan:'#f8bbd0', bgDark:'#1a0a14', goldDark:'#c2185b' },
+    theme_cyber: { gold:'#76ff03', purple:'#00e676', cyan:'#69f0ae', bgDark:'#001a00', goldDark:'#64dd17' },
+    theme_royal: { gold:'#ce93d8', purple:'#9c27b0', cyan:'#e1bee7', bgDark:'#140a1a', goldDark:'#7b1fa2' },
+    theme_midnight: { gold:'#90caf9', purple:'#5c6bc0', cyan:'#b3e5fc', bgDark:'#060818', goldDark:'#1565c0' },
+    theme_sunset: { gold:'#ffab40', purple:'#ff7043', cyan:'#ffcc02', bgDark:'#1a0f05', goldDark:'#ef6c00' },
+    theme_hacker: { gold:'#00ff41', purple:'#00cc33', cyan:'#33ff77', bgDark:'#000a00', goldDark:'#00b330' },
+  };
+  const t = themes[themeId];
+  if (!t) return;
+  const r = document.documentElement.style;
+  r.setProperty('--gold', t.gold);
+  r.setProperty('--gold-dark', t.goldDark);
+  r.setProperty('--purple', t.purple);
+  r.setProperty('--cyan', t.cyan);
+  r.setProperty('--bg-dark', t.bgDark);
+  document.body.style.background = t.bgDark;
+}
+
+function resetTheme() {
+  const r = document.documentElement.style;
+  r.removeProperty('--gold'); r.removeProperty('--gold-dark');
+  r.removeProperty('--purple'); r.removeProperty('--cyan');
+  r.removeProperty('--bg-dark');
+  document.body.style.background = '';
+  localStorage.removeItem('ozon_active_theme');
+}
+
+function loadSavedTheme() {
+  const saved = localStorage.getItem('ozon_active_theme');
+  if (saved) applyTheme(saved);
+}
+
 function renderShop() {
   const xpData = getLifeXP();
   const balance = xpData.total;
@@ -2135,7 +2207,7 @@ function renderShop() {
   document.getElementById('shopXpBalance').textContent = balance;
 
   const container = document.getElementById('shopGrid');
-  const categories = { boost: '⚡ Бусты', cosmetic: '🎨 Титулы', reward: '🎁 Награды' };
+  const categories = { boost: '⚡ Бусты', cosmetic: '🎨 Титулы', reward: '🎁 Награды', theme: '🎨 Темы' };
   let html = '';
 
   for (const [catKey, catName] of Object.entries(categories)) {
@@ -2145,10 +2217,23 @@ function renderShop() {
     for (const item of items) {
       const owned = !item.consumable && purchases[item.id];
       const canAfford = balance >= item.price;
+      const activeTheme = localStorage.getItem('ozon_active_theme');
+      const isActiveTheme = item.cat === 'theme' && activeTheme === item.id;
       const itemClass = owned ? 'owned' : (!canAfford ? 'locked' : '');
-      const btnClass = owned ? 'bought' : (canAfford ? 'buy' : 'expensive');
-      const btnText = owned ? '✅' : `${item.price} XP`;
-      const btnDisabled = owned || !canAfford ? 'pointer-events:none' : '';
+
+      let btnHtml;
+      if (item.cat === 'theme' && owned) {
+        if (isActiveTheme) {
+          btnHtml = `<button class="shop-item-price bought" onclick="resetTheme();renderShop()" style="font-size:11px">🔄 Сброс</button>`;
+        } else {
+          btnHtml = `<button class="shop-item-price buy" onclick="applyTheme('${item.id}');localStorage.setItem('ozon_active_theme','${item.id}');renderShop()" style="font-size:11px">🎨 Надеть</button>`;
+        }
+      } else {
+        const btnClass = owned ? 'bought' : (canAfford ? 'buy' : 'expensive');
+        const btnText = owned ? '✅' : `${item.price} XP`;
+        const btnDisabled = owned || !canAfford ? 'pointer-events:none' : '';
+        btnHtml = `<button class="shop-item-price ${btnClass}" onclick="shopBuyItem('${item.id}')" style="${btnDisabled}">${btnText}</button>`;
+      }
 
       html += `<div class="shop-item ${itemClass}">
         <div class="shop-item-icon">${item.icon}</div>
@@ -2156,7 +2241,7 @@ function renderShop() {
           <div class="shop-item-name">${item.name}</div>
           <div class="shop-item-desc">${item.desc}</div>
         </div>
-        <button class="shop-item-price ${btnClass}" onclick="shopBuyItem('${item.id}')" style="${btnDisabled}">${btnText}</button>
+        ${btnHtml}
       </div>`;
     }
   }
@@ -2512,6 +2597,7 @@ async function init() {
   renderMotivationTip();
   calInit();
   checkAndGrantBonuses();
+  loadSavedTheme();
   hideLoading();
 }
 
@@ -2557,6 +2643,7 @@ async function addShift() {
     const coinCount = getShopOwned('rain_upgrade') ? Math.min(Math.floor(earned / 300), 50) : Math.min(Math.floor(earned / 500), 30);
     rainCoins(coinCount);
     render();
+    closeManualAdd();
     switchTab('live');
     setTimeout(() => checkAndGrantBonuses(), 800);
   }
