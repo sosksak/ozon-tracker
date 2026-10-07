@@ -1006,10 +1006,10 @@ function openManualAdd() {
   const mm = String(now.getMonth() + 1).padStart(2, '0');
   const dd = String(now.getDate()).padStart(2, '0');
   document.getElementById('inputDate').value = `${yyyy}-${mm}-${dd}`;
-  document.getElementById('manualAddModal').classList.add('active');
+  document.getElementById('manualAddModal').classList.add('show');
 }
 function closeManualAdd() {
-  document.getElementById('manualAddModal').classList.remove('active');
+  document.getElementById('manualAddModal').classList.remove('show');
 }
 
 // ====== TOAST ======
