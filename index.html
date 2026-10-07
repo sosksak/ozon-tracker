@@ -991,82 +991,82 @@ function renderActiveShift() {
 
 // ====== LIFE QUESTS ======
 const LIFE_QUESTS = [
-  // 🍽 Еда и здоровье
-  { id: 'cook_lunch', icon: '🍱', title: 'Приготовить обед с собой', desc: 'Домашняя еда = экономия + здоровье', reward: '💰 -300₽', xp: 15, cat: 'health' },
-  { id: 'water', icon: '💧', title: 'Выпить 2л воды', desc: 'Гидрация — залог энергии', reward: '+15 XP', xp: 15, cat: 'health' },
-  { id: 'snack_healthy', icon: '🍎', title: 'Здоровый перекус', desc: 'Яблоко вместо шоколадки', reward: '+10 XP', xp: 10, cat: 'health' },
-  { id: 'no_junk', icon: '🚫', title: 'Без фастфуда сегодня', desc: 'Желудок скажет спасибо', reward: '+20 XP', xp: 20, cat: 'health' },
-  { id: 'cook_dinner', icon: '🍳', title: 'Приготовить ужин дома', desc: 'Готовка — тоже скилл', reward: '+15 XP', xp: 15, cat: 'health' },
-  { id: 'vitamins', icon: '💊', title: 'Выпить витамины', desc: 'Иммунитет на максимум', reward: '+10 XP', xp: 10, cat: 'health' },
+  // 💬 Знакомства и первый контакт
+  { id: 'say_hi', icon: '👋', title: 'Поздороваться с незнакомкой', desc: 'Просто «привет» — уже победа', reward: '+15 XP', xp: 15, cat: 'social' },
+  { id: 'ask_name', icon: '💫', title: 'Узнать чьё-то имя', desc: 'Спроси и запомни', reward: '+20 XP', xp: 20, cat: 'social' },
+  { id: 'start_convo', icon: '🗣', title: 'Завести разговор первым', desc: 'В очереди, в кафе, где угодно', reward: '+20 XP', xp: 20, cat: 'social' },
+  { id: 'cold_approach', icon: '🔥', title: 'Подойти к незнакомой девушке', desc: 'Страшно? Значит нужно. Просто подойди', reward: '+30 XP', xp: 30, cat: 'approach' },
+  { id: 'get_contact', icon: '📱', title: 'Взять номер / соцсеть', desc: 'Не бойся попросить контакт', reward: '+30 XP', xp: 30, cat: 'approach' },
+  { id: 'invite_out', icon: '☕', title: 'Пригласить на кофе/прогулку', desc: 'Не откладывай — предложи встречу', reward: '+25 XP', xp: 25, cat: 'approach' },
 
-  // 💪 Тело и движение
-  { id: 'stretch', icon: '🧘', title: 'Размяться / потянуться', desc: 'Спина и ноги — наш инструмент', reward: '+10 XP', xp: 10, cat: 'body' },
-  { id: 'walk', icon: '🚶', title: 'Пройти 8000 шагов', desc: 'Движение — жизнь', reward: '+25 XP', xp: 25, cat: 'body' },
-  { id: 'pushups', icon: '🏋️', title: '20 отжиманий', desc: 'Мини-тренировка за 2 минуты', reward: '+20 XP', xp: 20, cat: 'body' },
-  { id: 'cold_shower', icon: '🚿', title: 'Контрастный душ', desc: 'Тонус и бодрость на весь день', reward: '+25 XP', xp: 25, cat: 'body' },
-  { id: 'sleep_8h', icon: '😴', title: 'Лечь спать вовремя', desc: 'Сон — лучшее восстановление', reward: '+20 XP', xp: 20, cat: 'body' },
-  { id: 'no_smoke', icon: '🚭', title: 'Не курить сегодня', desc: 'Лёгкие скажут спасибо', reward: '+30 XP', xp: 30, cat: 'body' },
-  { id: 'fresh_air', icon: '🌳', title: 'Прогулка на свежем воздухе', desc: '15 минут — и голова ясная', reward: '+15 XP', xp: 15, cat: 'body' },
+  // 😎 Уверенность и харизма
+  { id: 'eye_contact_girl', icon: '👀', title: 'Держать зрительный контакт 3 сек', desc: 'Смотри уверенно, не отводи первым', reward: '+15 XP', xp: 15, cat: 'confidence' },
+  { id: 'smile_strangers', icon: '😊', title: 'Улыбнуться 5 незнакомым людям', desc: 'Улыбка открывает двери', reward: '+10 XP', xp: 10, cat: 'confidence' },
+  { id: 'posture_day', icon: '🧍', title: 'Держать осанку весь день', desc: 'Расправь плечи — выгляди как босс', reward: '+15 XP', xp: 15, cat: 'confidence' },
+  { id: 'loud_voice', icon: '📢', title: 'Говорить громко и чётко', desc: 'Тихий голос = неуверенность', reward: '+15 XP', xp: 15, cat: 'confidence' },
+  { id: 'no_phone_social', icon: '📵', title: 'Убрать телефон при общении', desc: 'Полное внимание = уважение', reward: '+10 XP', xp: 10, cat: 'confidence' },
+  { id: 'mirror_hype', icon: '🪞', title: 'Сказать себе «я красавчик»', desc: 'Аффирмация перед зеркалом', reward: '+10 XP', xp: 10, cat: 'confidence' },
 
-  // 🤝 Социалка и общение
-  { id: 'talk_nice', icon: '🤝', title: 'Помочь кому-то', desc: 'Карма — штука реальная', reward: '+20 XP', xp: 20, cat: 'social' },
-  { id: 'compliment', icon: '💬', title: 'Сделать комплимент', desc: 'Искренне сказать кому-то приятное', reward: '+10 XP', xp: 10, cat: 'social' },
-  { id: 'call_friend', icon: '📞', title: 'Позвонить другу/родным', desc: 'Не забывай про своих', reward: '+15 XP', xp: 15, cat: 'social' },
-  { id: 'new_person', icon: '👋', title: 'Познакомиться с кем-то', desc: 'Заговори с новым человеком', reward: '+25 XP', xp: 25, cat: 'social' },
-  { id: 'listen', icon: '👂', title: 'Выслушать кого-то', desc: 'Просто послушай без советов', reward: '+15 XP', xp: 15, cat: 'social' },
-  { id: 'no_argue', icon: '🕊', title: 'Не ввязываться в споры', desc: 'Спокойствие — сила', reward: '+20 XP', xp: 20, cat: 'social' },
-  { id: 'say_thanks', icon: '🙏', title: 'Поблагодарить кого-то', desc: 'Благодарность меняет восприятие', reward: '+10 XP', xp: 10, cat: 'social' },
-  { id: 'ask_howru', icon: '💭', title: 'Спросить «Как дела?»', desc: 'Покажи интерес к человеку', reward: '+10 XP', xp: 10, cat: 'social' },
-  { id: 'share_food', icon: '🍕', title: 'Угостить коллегу', desc: 'Делиться — кайф', reward: '+15 XP', xp: 15, cat: 'social' },
-  { id: 'joke', icon: '😂', title: 'Рассмешить кого-то', desc: 'Юмор — суперсила в общении', reward: '+10 XP', xp: 10, cat: 'social' },
+  // 💬 Навыки общения
+  { id: 'compliment_girl', icon: '💐', title: 'Сделать комплимент девушке', desc: 'Искренний, не шаблонный', reward: '+20 XP', xp: 20, cat: 'skills' },
+  { id: 'make_laugh', icon: '😂', title: 'Рассмешить девушку', desc: 'Юмор — лучшее оружие', reward: '+20 XP', xp: 20, cat: 'skills' },
+  { id: 'listen_deep', icon: '👂', title: 'Внимательно выслушать', desc: 'Без перебиваний, с вопросами', reward: '+15 XP', xp: 15, cat: 'skills' },
+  { id: 'ask_deep_q', icon: '🤔', title: 'Задать интересный вопрос', desc: 'Не «как дела», а что-то цепляющее', reward: '+15 XP', xp: 15, cat: 'skills' },
+  { id: 'storytell', icon: '📖', title: 'Рассказать историю из жизни', desc: 'Интересная история = внимание', reward: '+15 XP', xp: 15, cat: 'skills' },
+  { id: 'tease_playful', icon: '😏', title: 'Легко подшутить / подразнить', desc: 'Игривый юмор, без обид', reward: '+20 XP', xp: 20, cat: 'skills' },
 
-  // 🧠 Развитие и мозг
-  { id: 'learn', icon: '📚', title: 'Узнать что-то новое', desc: 'Один факт в день — прокачка мозга', reward: '+15 XP', xp: 15, cat: 'mind' },
-  { id: 'read_10min', icon: '📖', title: 'Читать 10 минут', desc: 'Книга, статья — что угодно полезное', reward: '+20 XP', xp: 20, cat: 'mind' },
-  { id: 'no_phone', icon: '📵', title: 'Час без телефона', desc: 'Детокс от экрана', reward: '+25 XP', xp: 25, cat: 'mind' },
-  { id: 'podcast', icon: '🎧', title: 'Послушать подкаст', desc: 'Пока идёшь — качай мозг', reward: '+15 XP', xp: 15, cat: 'mind' },
-  { id: 'journal', icon: '📓', title: 'Записать мысли', desc: 'Даже пару строк — уже рефлексия', reward: '+20 XP', xp: 20, cat: 'mind' },
-  { id: 'new_word', icon: '🗣', title: 'Выучить новое слово', desc: 'Английский, сленг, термин — любое', reward: '+10 XP', xp: 10, cat: 'mind' },
+  // 📲 Переписка и соцсети
+  { id: 'text_first', icon: '✉️', title: 'Написать первым', desc: 'Не жди — пиши сам', reward: '+15 XP', xp: 15, cat: 'digital' },
+  { id: 'voice_msg', icon: '🎤', title: 'Отправить голосовое', desc: 'Голос создаёт связь сильнее текста', reward: '+10 XP', xp: 10, cat: 'digital' },
+  { id: 'funny_meme', icon: '🖼', title: 'Отправить смешной мем', desc: 'Общий юмор сближает', reward: '+10 XP', xp: 10, cat: 'digital' },
+  { id: 'react_story', icon: '📸', title: 'Ответить на сторис', desc: 'Естественный повод начать общение', reward: '+15 XP', xp: 15, cat: 'digital' },
+  { id: 'plan_date', icon: '📅', title: 'Договориться о встрече', desc: 'Из переписки — в реал', reward: '+25 XP', xp: 25, cat: 'digital' },
+  { id: 'call_not_text', icon: '📞', title: 'Позвонить вместо текста', desc: 'Звонок > 100 сообщений', reward: '+20 XP', xp: 20, cat: 'digital' },
 
-  // 💰 Финансы и экономия
-  { id: 'save_money', icon: '🐷', title: 'Не тратить лишнего', desc: 'Скрудж бы одобрил 🦆', reward: '+20 XP', xp: 20, cat: 'finance' },
-  { id: 'track_expense', icon: '🧮', title: 'Записать все траты', desc: 'Знание — первый шаг к контролю', reward: '+15 XP', xp: 15, cat: 'finance' },
-  { id: 'no_impulse', icon: '🛑', title: 'Не покупать импульсивно', desc: 'Подожди 24 часа перед покупкой', reward: '+25 XP', xp: 25, cat: 'finance' },
+  // 🌟 Внешность и стиль
+  { id: 'dress_nice', icon: '👔', title: 'Одеться стильно', desc: 'Первое впечатление — одежда', reward: '+15 XP', xp: 15, cat: 'style' },
+  { id: 'smell_good', icon: '✨', title: 'Парфюм / ухоженность', desc: 'Запах — мощный триггер', reward: '+10 XP', xp: 10, cat: 'style' },
+  { id: 'haircut', icon: '💇', title: 'Привести причёску в порядок', desc: 'Аккуратность = привлекательность', reward: '+10 XP', xp: 10, cat: 'style' },
+  { id: 'workout', icon: '🏋️', title: 'Потренироваться', desc: 'Тело — твоя визитка', reward: '+20 XP', xp: 20, cat: 'style' },
+  { id: 'skincare', icon: '🧴', title: 'Уход за кожей', desc: 'Чистое лицо = уверенность', reward: '+10 XP', xp: 10, cat: 'style' },
+  { id: 'new_look', icon: '🎨', title: 'Попробовать новый стиль', desc: 'Выйди из зоны комфорта во внешности', reward: '+15 XP', xp: 15, cat: 'style' },
 
-  // ⭐ Настроение и вайб
-  { id: 'mood', icon: '😊', title: 'Позитивный настрой', desc: 'Улыбнись — день станет легче', reward: '+10 XP', xp: 10, cat: 'vibe' },
-  { id: 'gratitude', icon: '🌅', title: 'Назвать 3 вещи за которые благодарен', desc: 'Благодарность = счастье', reward: '+15 XP', xp: 15, cat: 'vibe' },
-  { id: 'music', icon: '🎵', title: 'Послушать любимую музыку', desc: 'Заряд настроения', reward: '+10 XP', xp: 10, cat: 'vibe' },
-  { id: 'no_complain', icon: '🤐', title: 'Не жаловаться весь день', desc: 'Фокус на решениях, не на проблемах', reward: '+20 XP', xp: 20, cat: 'vibe' },
-  { id: 'dance', icon: '💃', title: 'Потанцевать / подвигаться', desc: 'Даже 30 секунд — уже буст', reward: '+10 XP', xp: 10, cat: 'vibe' },
-  { id: 'sunset', icon: '🌇', title: 'Посмотреть на закат/небо', desc: 'Остановись и вдохни красоту', reward: '+15 XP', xp: 15, cat: 'vibe' },
+  // 🎯 Челленджи и вызовы
+  { id: 'reject_proof', icon: '🛡', title: 'Получить отказ и не расстроиться', desc: 'Каждый отказ = +1 к опыту', reward: '+25 XP', xp: 25, cat: 'challenge' },
+  { id: 'talk_3girls', icon: '🎲', title: 'Поговорить с 3 девушками за день', desc: 'Количество → качество', reward: '+30 XP', xp: 30, cat: 'challenge' },
+  { id: 'no_excuses', icon: '🚫', title: 'Не придумывать отговорки', desc: 'Увидел возможность — действуй', reward: '+20 XP', xp: 20, cat: 'challenge' },
+  { id: 'comfort_zone', icon: '🌊', title: 'Выйти из зоны комфорта', desc: 'Сделай то, что обычно не делаешь', reward: '+25 XP', xp: 25, cat: 'challenge' },
+  { id: 'ask_opinion', icon: '💭', title: 'Спросить мнение у девушки', desc: 'О чём угодно — заход в разговор', reward: '+15 XP', xp: 15, cat: 'challenge' },
+  { id: 'dance_public', icon: '💃', title: 'Потанцевать / подвигаться на людях', desc: 'Не бойся быть заметным', reward: '+20 XP', xp: 20, cat: 'challenge' },
 
-  // 🏠 Быт и порядок
-  { id: 'clean_space', icon: '🧹', title: 'Убраться дома/на месте', desc: 'Порядок = продуктивность', reward: '+15 XP', xp: 15, cat: 'order' },
-  { id: 'make_bed', icon: '🛏', title: 'Застелить кровать', desc: 'Первая победа за день', reward: '+10 XP', xp: 10, cat: 'order' },
-  { id: 'plan_tomorrow', icon: '📝', title: 'Спланировать завтра', desc: 'Вечером запиши план на завтра', reward: '+15 XP', xp: 15, cat: 'order' },
-  { id: 'early_bird', icon: '⏰', title: 'Встать по будильнику сразу', desc: 'Без «ещё 5 минут»', reward: '+20 XP', xp: 20, cat: 'order' },
-  { id: 'iron_clothes', icon: '👕', title: 'Подготовить одежду', desc: 'Вечером собери на завтра', reward: '+10 XP', xp: 10, cat: 'order' },
+  // 💜 Отношения и забота
+  { id: 'remember_detail', icon: '🧠', title: 'Запомнить деталь о человеке', desc: 'Имя кота, любимый цвет — это важно', reward: '+15 XP', xp: 15, cat: 'care' },
+  { id: 'surprise_small', icon: '🎁', title: 'Сделать маленький сюрприз', desc: 'Кофе, шоколадка, записка', reward: '+20 XP', xp: 20, cat: 'care' },
+  { id: 'be_gentleman', icon: '🚪', title: 'Придержать дверь / помочь', desc: 'Маленькие жесты = большое впечатление', reward: '+10 XP', xp: 10, cat: 'care' },
+  { id: 'share_food_girl', icon: '🍕', title: 'Угостить чем-то вкусным', desc: 'Еда = путь к сердцу', reward: '+15 XP', xp: 15, cat: 'care' },
+  { id: 'morning_msg', icon: '🌅', title: 'Написать «доброе утро»', desc: 'Первая мысль дня — о ней', reward: '+10 XP', xp: 10, cat: 'care' },
+  { id: 'be_honest', icon: '💎', title: 'Быть честным и открытым', desc: 'Искренность > идеальный образ', reward: '+15 XP', xp: 15, cat: 'care' },
 
-  // 🎮 Челленджи
-  { id: 'cold_water', icon: '🥶', title: 'Выпить стакан воды утром', desc: 'Первое что делаешь — стакан воды', reward: '+10 XP', xp: 10, cat: 'challenge' },
-  { id: 'eye_contact', icon: '👀', title: 'Держать зрительный контакт', desc: 'Уверенность в общении', reward: '+15 XP', xp: 15, cat: 'challenge' },
-  { id: 'posture', icon: '🧍', title: 'Следить за осанкой', desc: 'Расправь плечи — выгляди как босс', reward: '+15 XP', xp: 15, cat: 'challenge' },
-  { id: 'say_no', icon: '✋', title: 'Отказать в чём-то ненужном', desc: 'Говорить «нет» — это нормально', reward: '+20 XP', xp: 20, cat: 'challenge' },
-  { id: 'deep_breath', icon: '🌬', title: '5 глубоких вдохов', desc: 'Когда стресс — просто дыши', reward: '+10 XP', xp: 10, cat: 'challenge' },
-  { id: 'mirror', icon: '🪞', title: 'Сказать себе что-то хорошее', desc: 'Аффирмация в зеркале — работает', reward: '+15 XP', xp: 15, cat: 'challenge' },
+  // 🧘 Внутренняя прокачка
+  { id: 'no_needy', icon: '🧊', title: 'Не быть навязчивым', desc: 'Дай пространство, не дави', reward: '+15 XP', xp: 15, cat: 'mindset' },
+  { id: 'self_worth', icon: '👑', title: 'Напомнить себе свою ценность', desc: 'Ты — приз, а не проситель', reward: '+10 XP', xp: 10, cat: 'mindset' },
+  { id: 'learn_social', icon: '📚', title: 'Изучить что-то про общение', desc: 'Видео, книга, статья про соц. навыки', reward: '+15 XP', xp: 15, cat: 'mindset' },
+  { id: 'visualize', icon: '🎬', title: 'Визуализировать успех', desc: 'Представь идеальный разговор', reward: '+10 XP', xp: 10, cat: 'mindset' },
+  { id: 'gratitude_social', icon: '🙏', title: 'Поблагодарить за общение', desc: 'Скажи спасибо тем, кто рядом', reward: '+10 XP', xp: 10, cat: 'mindset' },
+  { id: 'journal_social', icon: '📓', title: 'Записать что узнал сегодня', desc: 'Рефлексия социального опыта', reward: '+15 XP', xp: 15, cat: 'mindset' },
 ];
 
 // Life quest categories
 const LQ_CATEGORIES = {
-  health:    { name: 'Здоровье',  icon: '❤️', color: '#ef5350' },
-  body:      { name: 'Тело',      icon: '💪', color: '#42a5f5' },
-  social:    { name: 'Социалка',  icon: '🤝', color: '#ab47bc' },
-  mind:      { name: 'Разум',     icon: '🧠', color: '#66bb6a' },
-  finance:   { name: 'Финансы',   icon: '💰', color: '#ffa726' },
-  vibe:      { name: 'Вайб',      icon: '⭐', color: '#ffee58' },
-  order:     { name: 'Порядок',   icon: '🏠', color: '#26c6da' },
-  challenge: { name: 'Челлендж',  icon: '🎮', color: '#ec407a' },
+  social:     { name: 'Знакомства',  icon: '👋', color: '#ab47bc' },
+  approach:   { name: 'Подходы',     icon: '🔥', color: '#ef5350' },
+  confidence: { name: 'Уверенность', icon: '😎', color: '#42a5f5' },
+  skills:     { name: 'Общение',     icon: '💬', color: '#66bb6a' },
+  digital:    { name: 'Переписка',   icon: '📲', color: '#26c6da' },
+  style:      { name: 'Стиль',       icon: '✨', color: '#ffa726' },
+  challenge:  { name: 'Челленджи',   icon: '🎯', color: '#ec407a' },
+  care:       { name: 'Забота',      icon: '💜', color: '#ce93d8' },
+  mindset:    { name: 'Майндсет',    icon: '🧠', color: '#ffee58' },
 };
 
 // Life XP levels
