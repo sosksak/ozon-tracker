@@ -1431,6 +1431,9 @@ function checkAndGrantBonuses() {
     showToast(msg, 'success');
   }
 
+  // Refresh life quests to show updated rerolls
+  renderLifeQuests();
+
   // If category choice earned, show category picker
   if (newCategoryChoice) {
     setTimeout(() => openCategoryPicker(), 500);
