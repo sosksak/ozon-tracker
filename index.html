@@ -251,6 +251,8 @@ body {
   text-align: center; padding: 4px; font-size: 11px; color: var(--text-dim);
   margin-top: 2px;
 }
+.cat-pick-btn:hover { transform: scale(1.05); filter: brightness(1.3); }
+.cat-pick-btn:active { transform: scale(0.95); }
 
 /* LIFE QUEST STATS */
 .life-stats-panel { margin-bottom: 14px; }
@@ -747,6 +749,18 @@ body {
   </div>
 </div>
 
+<!-- ============ MODAL: CATEGORY PICKER ============ -->
+<div class="modal-overlay" id="categoryPickerModal">
+  <div class="modal" style="max-width:380px">
+    <h3>🎯 ВЫБЕРИ КАТЕГОРИЮ</h3>
+    <p style="font-size:12px;color:var(--text-dim);text-align:center;margin-bottom:12px">Завтра лайф-квесты будут из выбранной категории!</p>
+    <div id="categoryPickerList" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"></div>
+    <div class="modal-buttons" style="margin-top:12px">
+      <button class="modal-btn secondary" onclick="closeCategoryPicker()">✕ Пропустить</button>
+    </div>
+  </div>
+</div>
+
 <div class="sync-status ok" id="syncStatus">☁️ Облако</div>
 
 <script>
@@ -983,6 +997,9 @@ async function saveEndShift() {
     rainCoins(Math.min(Math.floor(earned / 500), 30));
     render();
     showToast(`✅ Смена сохранена! +${earned.toLocaleString('ru-RU')} ₽`, 'success');
+
+    // Check for bonus rewards from shift quests
+    setTimeout(() => checkAndGrantBonuses(), 800);
   }
 }
 
@@ -1165,12 +1182,38 @@ const LQ_LEVELS = [
 ];
 
 // Pick 7 random life quests for today (seeded by date, from pool of 48)
+// If a category was chosen (from shift bonus), quests come from that category
 function getTodayLifeQuests() {
   const today = new Date().toISOString().slice(0, 10);
-  // Better hash from date string for consistent daily selection
+  const chosenCat = getChosenCategory();
+
+  if (chosenCat) {
+    // All quests from chosen category + fill remaining from others
+    const catQuests = LIFE_QUESTS.filter(q => q.cat === chosenCat);
+    let hash = 0;
+    for (let i = 0; i < today.length; i++) { hash = ((hash << 5) - hash) + today.charCodeAt(i); hash |= 0; }
+    const shuffledCat = [...catQuests].sort((a, b) => {
+      let ha = hash, hb = hash;
+      for (let i = 0; i < a.id.length; i++) { ha = ((ha << 5) - ha) + a.id.charCodeAt(i); ha |= 0; }
+      for (let i = 0; i < b.id.length; i++) { hb = ((hb << 5) - hb) + b.id.charCodeAt(i); hb |= 0; }
+      return (ha % 10000) - (hb % 10000);
+    });
+    // Take up to 5 from chosen category, fill rest randomly from others
+    const fromCat = shuffledCat.slice(0, 5);
+    const otherQuests = LIFE_QUESTS.filter(q => q.cat !== chosenCat);
+    const shuffledOther = [...otherQuests].sort((a, b) => {
+      let ha = hash + 99, hb = hash + 99;
+      for (let i = 0; i < a.id.length; i++) { ha = ((ha << 5) - ha) + a.id.charCodeAt(i); ha |= 0; }
+      for (let i = 0; i < b.id.length; i++) { hb = ((hb << 5) - hb) + b.id.charCodeAt(i); hb |= 0; }
+      return (ha % 10000) - (hb % 10000);
+    });
+    const fromOther = shuffledOther.slice(0, 7 - fromCat.length);
+    return [...fromCat, ...fromOther];
+  }
+
+  // Default: random from full pool
   let hash = 0;
   for (let i = 0; i < today.length; i++) { hash = ((hash << 5) - hash) + today.charCodeAt(i); hash |= 0; }
-  // Use full id string for better distribution
   const shuffled = [...LIFE_QUESTS].sort((a, b) => {
     let ha = hash, hb = hash;
     for (let i = 0; i < a.id.length; i++) { ha = ((ha << 5) - ha) + a.id.charCodeAt(i); ha |= 0; }
@@ -1323,10 +1366,117 @@ function toggleLifeQuest(id) {
 
 const MAX_REROLLS = 3;
 
+// ====== BONUS SYSTEM ======
+function getShiftBonuses() {
+  const today = new Date().toISOString().slice(0, 10);
+  try {
+    const saved = JSON.parse(localStorage.getItem('ozon_shift_bonuses') || '{}');
+    if (saved.date === today) return saved;
+    return { date: today, bonusRerolls: 0, categoryChoice: false, claimedQuests: [] };
+  } catch(e) { return { date: today, bonusRerolls: 0, categoryChoice: false, claimedQuests: [] }; }
+}
+
+function saveShiftBonuses(data) {
+  localStorage.setItem('ozon_shift_bonuses', JSON.stringify(data));
+}
+
+function getChosenCategory() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('ozon_chosen_category') || '{}');
+    const today = new Date().toISOString().slice(0, 10);
+    if (saved.forDate === today) return saved.category;
+    return null;
+  } catch(e) { return null; }
+}
+
+function saveChosenCategory(cat, forDate) {
+  localStorage.setItem('ozon_chosen_category', JSON.stringify({ category: cat, forDate: forDate }));
+}
+
+function checkAndGrantBonuses() {
+  const quests = generateQuests();
+  const bonuses = getShiftBonuses();
+  let newRerolls = 0;
+  let newCategoryChoice = false;
+  const messages = [];
+
+  for (const q of quests) {
+    if (!q.bonus) continue;
+    const done = (q.progress / q.target) >= 1;
+    if (!done) continue;
+    if (bonuses.claimedQuests.includes(q.id)) continue;
+
+    bonuses.claimedQuests.push(q.id);
+
+    if (q.bonus.type === 'reroll') {
+      newRerolls += q.bonus.amount;
+      messages.push(`🎲 +${q.bonus.amount} реролл за «${q.title}»`);
+    } else if (q.bonus.type === 'category_choice') {
+      newCategoryChoice = true;
+      messages.push(`🎯 Выбор категории за «${q.title}»`);
+    }
+  }
+
+  if (newRerolls > 0) {
+    bonuses.bonusRerolls = (bonuses.bonusRerolls || 0) + newRerolls;
+  }
+  if (newCategoryChoice) {
+    bonuses.categoryChoice = true;
+  }
+
+  saveShiftBonuses(bonuses);
+
+  // Show toast notifications
+  for (const msg of messages) {
+    showToast(msg, 'success');
+  }
+
+  // If category choice earned, show category picker
+  if (newCategoryChoice) {
+    setTimeout(() => openCategoryPicker(), 500);
+  }
+
+  return { newRerolls, newCategoryChoice, messages };
+}
+
+function openCategoryPicker() {
+  const container = document.getElementById('categoryPickerList');
+  container.innerHTML = Object.entries(LQ_CATEGORIES).map(([key, cat]) =>
+    `<button class="cat-pick-btn" onclick="pickCategory('${key}')" style="background:rgba(255,255,255,0.06);border:2px solid ${cat.color};border-radius:12px;padding:12px 8px;cursor:pointer;text-align:center;transition:all 0.2s;color:var(--text);font-family:inherit">
+      <div style="font-size:24px;margin-bottom:4px">${cat.icon}</div>
+      <div style="font-size:12px;font-weight:700;color:${cat.color}">${cat.name}</div>
+      <div style="font-size:10px;color:var(--text-dim)">${LIFE_QUESTS.filter(q => q.cat === key).length} квестов</div>
+    </button>`
+  ).join('');
+  document.getElementById('categoryPickerModal').classList.add('show');
+}
+
+function closeCategoryPicker() {
+  document.getElementById('categoryPickerModal').classList.remove('show');
+}
+
+function pickCategory(cat) {
+  // Save for tomorrow
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const forDate = tomorrow.toISOString().slice(0, 10);
+  saveChosenCategory(cat, forDate);
+  closeCategoryPicker();
+  const catInfo = LQ_CATEGORIES[cat];
+  showToast(`${catInfo.icon} Завтра квесты из: ${catInfo.name}!`, 'success');
+  rainCoins(5);
+}
+
+function getTotalRerolls() {
+  const bonuses = getShiftBonuses();
+  return MAX_REROLLS + (bonuses.bonusRerolls || 0);
+}
+
 function rerollLifeQuest(oldId, event) {
   event.stopPropagation();
   const state = getLifeQuestState();
-  if (state.rerolls >= MAX_REROLLS) {
+  const totalRerolls = getTotalRerolls();
+  if (state.rerolls >= totalRerolls) {
     showToast('🎲 Реролы закончились на сегодня!', 'warn');
     return;
   }
@@ -1356,7 +1506,8 @@ function rerollLifeQuest(oldId, event) {
   state.rerolls++;
   saveLifeQuestState(state);
   renderLifeQuests();
-  showToast(`🔄 Квест заменён! (${MAX_REROLLS - state.rerolls} реролов осталось)`, 'success');
+  const totalRerolls = getTotalRerolls();
+  showToast(`🔄 Квест заменён! (${totalRerolls - state.rerolls} реролов осталось)`, 'success');
 }
 
 function getResolvedLifeQuests() {
@@ -1376,10 +1527,22 @@ function renderLifeQuests() {
   const quests = getResolvedLifeQuests();
   const state = getLifeQuestState();
   const checked = state.checked;
-  const rerollsLeft = MAX_REROLLS - state.rerolls;
+  const totalRerolls = getTotalRerolls();
+  const rerollsLeft = totalRerolls - state.rerolls;
+  const bonusRerolls = getShiftBonuses().bonusRerolls || 0;
+  const chosenCat = getChosenCategory();
   const container = document.getElementById('lifeQuestList');
   const doneCount = quests.filter(q => checked[q.id]).length;
-  container.innerHTML = quests.map(q => {
+
+  let headerHtml = '';
+  if (chosenCat && LQ_CATEGORIES[chosenCat]) {
+    const ci = LQ_CATEGORIES[chosenCat];
+    headerHtml = `<div style="text-align:center;padding:6px 10px;margin-bottom:8px;background:rgba(255,215,0,0.1);border-radius:10px;font-size:12px;color:var(--gold)">
+      🎯 Категория дня: ${ci.icon} <b>${ci.name}</b>
+    </div>`;
+  }
+
+  container.innerHTML = headerHtml + quests.map(q => {
     const isDone = !!checked[q.id];
     const canReroll = !isDone && rerollsLeft > 0;
     return `<div class="life-quest-item ${isDone ? 'checked' : ''}" onclick="toggleLifeQuest('${q.id}')">
@@ -1392,7 +1555,7 @@ function renderLifeQuests() {
       <button class="lq-reroll" onclick="rerollLifeQuest('${q.id}', event)" ${canReroll ? '' : 'disabled'} title="Заменить квест">🔄</button>
     </div>`;
   }).join('') +
-    `<div class="lq-reroll-counter">🎲 Реролов: ${rerollsLeft}/${MAX_REROLLS}</div>` +
+    `<div class="lq-reroll-counter">🎲 Реролов: ${rerollsLeft}/${totalRerolls}${bonusRerolls > 0 ? ` <span style="color:var(--gold)">(+${bonusRerolls} бонус)</span>` : ''}</div>` +
     (doneCount === quests.length && quests.length > 0
     ? '<div style="text-align:center;padding:10px;font-size:14px;color:var(--green);font-weight:700">🏆 ВСЕ ЛАЙФ-КВЕСТЫ ВЫПОЛНЕНЫ! 🎉</div>'
     : `<div style="text-align:center;padding:6px;font-size:11px;color:var(--text-dim)">${doneCount}/${quests.length} выполнено · обновляются каждый день</div>`);
@@ -1443,37 +1606,43 @@ function generateQuests() {
       id: 'start_shift', icon: '🚀', title: 'Выйти на смену',
       desc: 'Начни свою смену сегодня',
       progress: (isOnShift || todayShifts.length > 0) ? 1 : 0, target: 1,
-      reward: '🏅 Просто прийти — уже победа'
+      reward: '🏅 Просто прийти — уже победа',
+      bonus: null
     },
     {
       id: 'work_4h', icon: '⏱', title: 'Отработать 4 часа',
       desc: 'Набей 4 часа чистой работы',
       progress: Math.min(todayHours + workHours, 4), target: 4,
-      reward: '+XP к прогрессу'
+      reward: '🎲 +1 реролл лайф-квеста',
+      bonus: { type: 'reroll', amount: 1 }
     },
     {
       id: 'work_8h', icon: '💪', title: 'Марафон: 8 часов',
       desc: 'Полная смена — 8 часов работы',
       progress: Math.min(todayHours + workHours, 8), target: 8,
-      reward: '🦆 Достоин МакДака'
+      reward: '🎲 +1 реролл лайф-квеста',
+      bonus: { type: 'reroll', amount: 1 }
     },
     {
       id: 'earn_5k', icon: '💰', title: 'Заработать 5000₽',
       desc: 'Сегодняшний заработок ≥ 5000₽',
       progress: Math.min(todayEarned, 5000), target: 5000,
-      reward: '💵 Кэш'
+      reward: '💵 Кэш',
+      bonus: null
     },
     {
       id: 'earn_8k', icon: '🤑', title: 'Заработать 8000₽',
       desc: 'Погнали на 8K сегодня!',
       progress: Math.min(todayEarned, 8000), target: 8000,
-      reward: '🏆 Молодец!'
+      reward: '🎯 Выбор категории квестов!',
+      bonus: { type: 'category_choice' }
     },
     {
       id: 'hit_goal', icon: '🎯', title: `Выбить ${goal}₽/час`,
       desc: `Средний rate за день ≥ ${goal}₽/час`,
       progress: todayRate >= goal ? 1 : 0, target: 1,
-      reward: '🔥 В цели!'
+      reward: '🎲 +1 реролл лайф-квеста',
+      bonus: { type: 'reroll', amount: 1 }
     },
   ];
 
@@ -1851,6 +2020,7 @@ async function init() {
   renderLifeStats();
   renderMotivationTip();
   calInit();
+  checkAndGrantBonuses(); // Check if any shift quests already completed
   hideLoading();
 }
 
@@ -1896,6 +2066,8 @@ async function addShift() {
     rainCoins(Math.min(Math.floor(earned / 500), 30));
     render();
     switchTab('live');
+    // Check for bonus rewards from shift quests
+    setTimeout(() => checkAndGrantBonuses(), 800);
   }
 }
 
