@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>💰 OZON Grind Tracker v3.4</title>
+<title>💰 OZON Grind Tracker v3.5</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="config.js?v=3"></script>
 <style>
@@ -84,12 +84,47 @@ body {
 .tab-btn {
   flex: 1; padding: 12px 8px; border: none; background: none;
   color: var(--text-dim); font-family: 'Nunito', sans-serif;
-  font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.3s;
+  font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.3s;
   text-align: center;
 }
 .tab-btn.active { background: rgba(255,215,0,0.15); color: var(--gold); }
 .tab-btn:first-child { border-radius: 14px 0 0 14px; }
 .tab-btn:last-child { border-radius: 0 14px 14px 0; }
+
+/* CALENDAR */
+.cal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+.cal-header h3 { font-size:16px; color:var(--gold); }
+.cal-nav { display:flex; gap:8px; }
+.cal-nav-btn { background:rgba(255,255,255,0.08); border:none; color:var(--text); font-size:18px; width:36px; height:36px; border-radius:10px; cursor:pointer; transition:all 0.2s; }
+.cal-nav-btn:hover { background:rgba(255,215,0,0.2); color:var(--gold); }
+.cal-month-title { font-size:15px; font-weight:700; color:var(--text); text-transform:capitalize; }
+.cal-weekdays { display:grid; grid-template-columns:repeat(7,1fr); text-align:center; margin-bottom:6px; }
+.cal-weekday { font-size:11px; font-weight:700; color:var(--text-dim); padding:6px 0; }
+.cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; }
+.cal-day { position:relative; aspect-ratio:1; display:flex; flex-direction:column; align-items:center; justify-content:center; border-radius:12px; background:rgba(255,255,255,0.03); border:2px solid transparent; cursor:pointer; transition:all 0.2s; font-size:13px; font-weight:700; color:var(--text-dim); min-height:48px; }
+.cal-day:hover { background:rgba(255,255,255,0.08); }
+.cal-day.empty { background:none; cursor:default; }
+.cal-day.today { border-color:var(--gold); color:var(--gold); background:rgba(255,215,0,0.08); }
+.cal-day.has-shift { background:rgba(0,230,118,0.12); border-color:rgba(0,230,118,0.3); color:var(--green); }
+.cal-day.is-dayoff { background:rgba(187,134,252,0.12); border-color:rgba(187,134,252,0.3); color:var(--purple); }
+.cal-day.is-planned { background:rgba(255,171,64,0.12); border-color:rgba(255,171,64,0.3); color:var(--orange); }
+.cal-day-num { font-size:14px; line-height:1; }
+.cal-day-icon { font-size:12px; line-height:1; margin-top:2px; }
+.cal-day-earned { font-size:8px; line-height:1; margin-top:1px; color:var(--green); font-weight:600; }
+.cal-legend { display:flex; flex-wrap:wrap; gap:12px; margin-top:12px; justify-content:center; }
+.cal-legend-item { display:flex; align-items:center; gap:4px; font-size:11px; color:var(--text-dim); }
+.cal-legend-dot { width:10px; height:10px; border-radius:50%; }
+.cal-summary { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:12px; }
+.cal-sum-card { background:rgba(255,255,255,0.05); border-radius:10px; padding:10px; text-align:center; }
+.cal-sum-val { font-size:18px; font-weight:800; color:var(--gold); }
+.cal-sum-lbl { font-size:10px; color:var(--text-dim); margin-top:2px; }
+.cal-actions { display:flex; gap:8px; margin-top:12px; }
+.cal-action-btn { flex:1; padding:10px; border:none; border-radius:10px; font-family:'Nunito',sans-serif; font-size:13px; font-weight:700; cursor:pointer; transition:all 0.2s; }
+.cal-action-btn.dayoff { background:rgba(187,134,252,0.2); color:var(--purple); }
+.cal-action-btn.planned { background:rgba(255,171,64,0.2); color:var(--orange); }
+.cal-action-btn.clear { background:rgba(255,82,82,0.15); color:var(--red); }
+.cal-action-btn:hover { filter:brightness(1.2); transform:scale(1.02); }
+.cal-selected-info { text-align:center; font-size:12px; color:var(--text-dim); margin-top:8px; padding:8px; background:rgba(255,255,255,0.03); border-radius:8px; }
 
 .tab-content { display: none; }
 .tab-content.active { display: block; }
@@ -485,6 +520,7 @@ body {
 <div class="tab-nav">
   <button class="tab-btn active" onclick="switchTab('live')" id="tabLive">⚡ СМЕНА</button>
   <button class="tab-btn" onclick="switchTab('add')" id="tabAdd">➕ ДОБАВИТЬ</button>
+  <button class="tab-btn" onclick="switchTab('calendar')" id="tabCalendar">📅 МЕСЯЦ</button>
   <button class="tab-btn" onclick="switchTab('stats')" id="tabStats">📊 СТАТА</button>
 </div>
 
@@ -579,6 +615,51 @@ body {
     <div class="form-group"><label>📝 Заметка</label><input type="text" id="inputNote" placeholder="541 операция..."></div>
   </div>
   <button class="btn-add" id="btnAdd" onclick="addShift()">🪙 ДОБАВИТЬ</button>
+</div>
+
+</div>
+
+<!-- ============ TAB: CALENDAR ============ -->
+<div class="tab-content" id="contentCalendar">
+
+<div style="margin:16px;padding:20px;background:linear-gradient(145deg,#1e2a45,#162040);border-radius:16px;border:1px solid rgba(255,255,255,0.06)">
+  <div class="cal-header">
+    <button class="cal-nav-btn" onclick="calChangeMonth(-1)">◀</button>
+    <div>
+      <h3 style="text-align:center">📅 РАСПИСАНИЕ</h3>
+      <div class="cal-month-title" id="calMonthTitle"></div>
+    </div>
+    <button class="cal-nav-btn" onclick="calChangeMonth(1)">▶</button>
+  </div>
+
+  <div class="cal-weekdays">
+    <div class="cal-weekday">ПН</div>
+    <div class="cal-weekday">ВТ</div>
+    <div class="cal-weekday">СР</div>
+    <div class="cal-weekday">ЧТ</div>
+    <div class="cal-weekday">ПТ</div>
+    <div class="cal-weekday">СБ</div>
+    <div class="cal-weekday">ВС</div>
+  </div>
+
+  <div class="cal-grid" id="calGrid"></div>
+
+  <div class="cal-legend">
+    <div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--green)"></div> Отработано</div>
+    <div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--orange)"></div> Запланировано</div>
+    <div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--purple)"></div> Выходной</div>
+    <div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--gold)"></div> Сегодня</div>
+  </div>
+
+  <div id="calSelectedInfo" class="cal-selected-info" style="display:none"></div>
+
+  <div class="cal-actions">
+    <button class="cal-action-btn dayoff" onclick="calMarkSelected('dayoff')">🌴 Выходной</button>
+    <button class="cal-action-btn planned" onclick="calMarkSelected('planned')">📋 Смена</button>
+    <button class="cal-action-btn clear" onclick="calMarkSelected('clear')">✕ Убрать</button>
+  </div>
+
+  <div class="cal-summary" id="calSummary"></div>
 </div>
 
 </div>
@@ -1584,6 +1665,168 @@ async function deleteFromEdit() {
   await removeShift(id);
 }
 
+// ====== CALENDAR ======
+let calYear, calMonth, calSelectedDate = null;
+const MONTH_NAMES_RU = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+
+function getCalendarPlan() {
+  try { return JSON.parse(localStorage.getItem('ozon_calendar_plan') || '{}'); } catch(e) { return {}; }
+}
+function saveCalendarPlan(plan) {
+  localStorage.setItem('ozon_calendar_plan', JSON.stringify(plan));
+}
+
+function calInit() {
+  const now = new Date();
+  calYear = now.getFullYear();
+  calMonth = now.getMonth();
+  renderCalendar();
+}
+
+function calChangeMonth(delta) {
+  calMonth += delta;
+  if (calMonth < 0) { calMonth = 11; calYear--; }
+  if (calMonth > 11) { calMonth = 0; calYear++; }
+  calSelectedDate = null;
+  renderCalendar();
+}
+
+function calSelectDay(dateStr) {
+  calSelectedDate = calSelectedDate === dateStr ? null : dateStr;
+  renderCalendar();
+}
+
+function calMarkSelected(type) {
+  if (!calSelectedDate) {
+    showToast('Сначала выбери дату на календаре', 'warn');
+    return;
+  }
+  const plan = getCalendarPlan();
+  if (type === 'clear') {
+    delete plan[calSelectedDate];
+    showToast('✕ Отметка убрана', 'success');
+  } else if (type === 'dayoff') {
+    plan[calSelectedDate] = 'dayoff';
+    showToast('🌴 Выходной поставлен!', 'success');
+  } else if (type === 'planned') {
+    plan[calSelectedDate] = 'planned';
+    showToast('📋 Смена запланирована!', 'success');
+  }
+  saveCalendarPlan(plan);
+  renderCalendar();
+}
+
+function renderCalendar() {
+  const titleEl = document.getElementById('calMonthTitle');
+  const gridEl = document.getElementById('calGrid');
+  const summaryEl = document.getElementById('calSummary');
+  const infoEl = document.getElementById('calSelectedInfo');
+  if (!titleEl || !gridEl) return;
+
+  titleEl.textContent = `${MONTH_NAMES_RU[calMonth]} ${calYear}`;
+
+  const plan = getCalendarPlan();
+  const today = new Date();
+  const todayStr = today.toISOString().slice(0, 10);
+
+  // Build shift map for this month
+  const monthPrefix = `${calYear}-${String(calMonth + 1).padStart(2, '0')}`;
+  const monthShifts = {};
+  for (const s of shifts) {
+    if (s.date.startsWith(monthPrefix)) {
+      if (!monthShifts[s.date]) monthShifts[s.date] = { earned: 0, hours: 0, count: 0 };
+      monthShifts[s.date].earned += s.earned;
+      monthShifts[s.date].hours += s.hours;
+      monthShifts[s.date].count++;
+    }
+  }
+
+  // First day of month (Monday = 0)
+  const firstDay = new Date(calYear, calMonth, 1);
+  let startDow = firstDay.getDay() - 1; // Mon=0
+  if (startDow < 0) startDow = 6; // Sun
+  const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+
+  let html = '';
+  // Empty cells before first day
+  for (let i = 0; i < startDow; i++) {
+    html += '<div class="cal-day empty"></div>';
+  }
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    const isToday = dateStr === todayStr;
+    const hasShift = !!monthShifts[dateStr];
+    const planType = plan[dateStr]; // 'dayoff' | 'planned' | undefined
+    const isSelected = dateStr === calSelectedDate;
+
+    let classes = 'cal-day';
+    if (isToday) classes += ' today';
+    if (hasShift) classes += ' has-shift';
+    else if (planType === 'dayoff') classes += ' is-dayoff';
+    else if (planType === 'planned') classes += ' is-planned';
+
+    let icon = '';
+    if (hasShift) icon = '💰';
+    else if (planType === 'dayoff') icon = '🌴';
+    else if (planType === 'planned') icon = '📋';
+
+    let earnedLabel = '';
+    if (hasShift) {
+      const k = Math.round(monthShifts[dateStr].earned / 1000);
+      earnedLabel = `<div class="cal-day-earned">${k}K</div>`;
+    }
+
+    const selStyle = isSelected ? 'box-shadow:0 0 0 2px var(--gold);' : '';
+
+    html += `<div class="${classes}" onclick="calSelectDay('${dateStr}')" style="${selStyle}">
+      <div class="cal-day-num">${d}</div>
+      ${icon ? `<div class="cal-day-icon">${icon}</div>` : ''}
+      ${earnedLabel}
+    </div>`;
+  }
+
+  gridEl.innerHTML = html;
+
+  // Selected info
+  if (calSelectedDate && calSelectedDate.startsWith(monthPrefix)) {
+    infoEl.style.display = '';
+    const sd = monthShifts[calSelectedDate];
+    const sp = plan[calSelectedDate];
+    const dateObj = new Date(calSelectedDate + 'T00:00:00');
+    const dateLabel = dateObj.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', weekday: 'short' });
+    if (sd) {
+      const rate = sd.hours > 0 ? Math.round(sd.earned / sd.hours) : 0;
+      infoEl.innerHTML = `<b>${dateLabel}</b><br>💰 ${sd.earned.toLocaleString('ru-RU')} ₽ · ${sd.hours} ч · ${rate} ₽/час`;
+    } else if (sp === 'dayoff') {
+      infoEl.innerHTML = `<b>${dateLabel}</b><br>🌴 Выходной`;
+    } else if (sp === 'planned') {
+      infoEl.innerHTML = `<b>${dateLabel}</b><br>📋 Запланирована смена`;
+    } else {
+      infoEl.innerHTML = `<b>${dateLabel}</b><br>Пусто — отметь день ниже`;
+    }
+  } else {
+    infoEl.style.display = 'none';
+  }
+
+  // Summary for month
+  const monthShiftDates = Object.keys(monthShifts);
+  const totalEarnedMonth = monthShiftDates.reduce((s, d) => s + monthShifts[d].earned, 0);
+  const totalHoursMonth = monthShiftDates.reduce((s, d) => s + monthShifts[d].hours, 0);
+  const plannedCount = Object.entries(plan).filter(([k, v]) => k.startsWith(monthPrefix) && v === 'planned').length;
+  const dayoffCount = Object.entries(plan).filter(([k, v]) => k.startsWith(monthPrefix) && v === 'dayoff').length;
+  const workedCount = monthShiftDates.length;
+
+  summaryEl.innerHTML = `
+    <div class="cal-sum-card"><div class="cal-sum-val">${workedCount}</div><div class="cal-sum-lbl">отработано</div></div>
+    <div class="cal-sum-card"><div class="cal-sum-val">${plannedCount}</div><div class="cal-sum-lbl">запланировано</div></div>
+    <div class="cal-sum-card"><div class="cal-sum-val">${dayoffCount}</div><div class="cal-sum-lbl">выходных 🌴</div></div>
+    <div class="cal-sum-card"><div class="cal-sum-val">${totalEarnedMonth > 0 ? Math.round(totalEarnedMonth / 1000) + 'K' : '0'}</div><div class="cal-sum-lbl">₽ за месяц</div></div>
+    <div class="cal-sum-card"><div class="cal-sum-val">${totalHoursMonth.toFixed(0)}</div><div class="cal-sum-lbl">часов</div></div>
+    <div class="cal-sum-card"><div class="cal-sum-val">${totalHoursMonth > 0 ? Math.round(totalEarnedMonth / totalHoursMonth) : 0}</div><div class="cal-sum-lbl">₽/час сред.</div></div>
+  `;
+}
+
 // ====== INIT ======
 async function init() {
   const now = new Date();
@@ -1607,6 +1850,7 @@ async function init() {
   renderLifeQuests();
   renderLifeStats();
   renderMotivationTip();
+  calInit();
   hideLoading();
 }
 
@@ -1741,6 +1985,8 @@ function render() {
 
   // Quests
   renderQuests();
+  // Calendar
+  renderCalendar();
 }
 
 // ====== STREAK ======
