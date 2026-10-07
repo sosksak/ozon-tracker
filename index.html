@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>💰 OZON Grind Tracker v3.5</title>
+<title>💰 OZON Grind Tracker v3.7</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="config.js?v=3"></script>
 <style>
@@ -1591,6 +1591,162 @@ function renderMotivationTip() {
 }
 
 // ====== QUESTS ======
+// Full pool of ~20 shift quests — 6 random ones picked daily
+const SHIFT_QUEST_POOL = [
+  // === ВРЕМЯ / ЧАСЫ ===
+  {
+    id: 'start_shift', icon: '🚀', title: 'Выйти на смену',
+    desc: 'Начни свою смену сегодня',
+    calc: (ctx) => ({ progress: (ctx.isOnShift || ctx.todayShifts.length > 0) ? 1 : 0, target: 1 }),
+    reward: '🏅 Просто прийти — уже победа', bonus: null
+  },
+  {
+    id: 'work_2h', icon: '⏳', title: 'Разогрев: 2 часа',
+    desc: 'Набей 2 часа чистой работы',
+    calc: (ctx) => ({ progress: Math.min(ctx.totalHours, 2), target: 2 }),
+    reward: '🔥 +50 XP к мотивации', bonus: null
+  },
+  {
+    id: 'work_4h', icon: '⏱', title: 'Отработать 4 часа',
+    desc: 'Набей 4 часа чистой работы',
+    calc: (ctx) => ({ progress: Math.min(ctx.totalHours, 4), target: 4 }),
+    reward: '🎲 +1 реролл лайф-квеста', bonus: { type: 'reroll', amount: 1 }
+  },
+  {
+    id: 'work_6h', icon: '⚡', title: 'Рабочий ритм: 6 часов',
+    desc: '6 часов чистой продуктивности',
+    calc: (ctx) => ({ progress: Math.min(ctx.totalHours, 6), target: 6 }),
+    reward: '💪 Уровень дисциплины +1', bonus: null
+  },
+  {
+    id: 'work_8h', icon: '💪', title: 'Марафон: 8 часов',
+    desc: 'Полная смена — 8 часов работы',
+    calc: (ctx) => ({ progress: Math.min(ctx.totalHours, 8), target: 8 }),
+    reward: '🎲 +1 реролл лайф-квеста', bonus: { type: 'reroll', amount: 1 }
+  },
+  {
+    id: 'work_10h', icon: '🦾', title: 'Железный человек: 10 часов',
+    desc: 'Сверхсмена — 10 часов чистой работы!',
+    calc: (ctx) => ({ progress: Math.min(ctx.totalHours, 10), target: 10 }),
+    reward: '🎲 +2 реролла лайф-квестов', bonus: { type: 'reroll', amount: 2 }
+  },
+
+  // === ЗАРАБОТОК ===
+  {
+    id: 'earn_2k', icon: '💵', title: 'Первые 2000₽',
+    desc: 'Заработай первые 2К за день',
+    calc: (ctx) => ({ progress: Math.min(ctx.todayEarned, 2000), target: 2000 }),
+    reward: '🪙 Копейка рубль бережёт', bonus: null
+  },
+  {
+    id: 'earn_5k', icon: '💰', title: 'Заработать 5000₽',
+    desc: 'Сегодняшний заработок ≥ 5000₽',
+    calc: (ctx) => ({ progress: Math.min(ctx.todayEarned, 5000), target: 5000 }),
+    reward: '🎲 +1 реролл лайф-квеста', bonus: { type: 'reroll', amount: 1 }
+  },
+  {
+    id: 'earn_8k', icon: '🤑', title: 'Заработать 8000₽',
+    desc: 'Погнали на 8K сегодня!',
+    calc: (ctx) => ({ progress: Math.min(ctx.todayEarned, 8000), target: 8000 }),
+    reward: '🎯 Выбор категории квестов!', bonus: { type: 'category_choice' }
+  },
+  {
+    id: 'earn_10k', icon: '💎', title: 'Десятка! 10 000₽',
+    desc: 'Пробей планку в 10К за день',
+    calc: (ctx) => ({ progress: Math.min(ctx.todayEarned, 10000), target: 10000 }),
+    reward: '🎲 +2 реролла + 🏆 ачивка', bonus: { type: 'reroll', amount: 2 }
+  },
+  {
+    id: 'earn_12k', icon: '👑', title: 'Король дня: 12 000₽',
+    desc: 'Элитный заработок — 12К за день',
+    calc: (ctx) => ({ progress: Math.min(ctx.todayEarned, 12000), target: 12000 }),
+    reward: '🎯 Выбор категории + 🎲 +1 реролл', bonus: { type: 'category_choice' }
+  },
+
+  // === RATE / ЭФФЕКТИВНОСТЬ ===
+  {
+    id: 'hit_goal', icon: '🎯', title: () => `Выбить ${DIFFICULTIES[difficulty].goal}₽/час`,
+    desc: () => `Средний rate за день ≥ ${DIFFICULTIES[difficulty].goal}₽/час`,
+    calc: (ctx) => ({ progress: ctx.todayRate >= ctx.goal ? 1 : 0, target: 1 }),
+    reward: '🎲 +1 реролл лайф-квеста', bonus: { type: 'reroll', amount: 1 }
+  },
+  {
+    id: 'rate_1200', icon: '🚀', title: 'Турборежим: 1200₽/час',
+    desc: 'Средний rate за день ≥ 1200₽/час',
+    calc: (ctx) => ({ progress: ctx.todayRate >= 1200 ? 1 : 0, target: 1 }),
+    reward: '⚡ Скорость — твоя суперсила', bonus: null
+  },
+  {
+    id: 'rate_1500', icon: '🔥', title: 'На максималках: 1500₽/час',
+    desc: 'Средний rate за день ≥ 1500₽/час',
+    calc: (ctx) => ({ progress: ctx.todayRate >= 1500 ? 1 : 0, target: 1 }),
+    reward: '🎲 +2 реролла лайф-квестов', bonus: { type: 'reroll', amount: 2 }
+  },
+
+  // === ПЕРЕРЫВЫ / ДИСЦИПЛИНА ===
+  {
+    id: 'no_long_break', icon: '⚔️', title: 'Без длинных перерывов',
+    desc: 'Ни один перерыв не длиннее 15 минут',
+    calc: (ctx) => {
+      if (!ctx.isOnShift && ctx.todayShifts.length === 0) return { progress: 0, target: 1 };
+      const breaks = activeShift ? activeShift.breaks : [];
+      const longBreak = breaks.some(b => ((b.end || Date.now()) - b.start) > 15 * 60000);
+      return { progress: longBreak ? 0 : 1, target: 1 };
+    },
+    reward: '🧘 Мастер фокуса', bonus: null
+  },
+  {
+    id: 'max_2_breaks', icon: '🎖️', title: 'Минимум перерывов',
+    desc: 'Не более 2 перерывов за смену',
+    calc: (ctx) => {
+      if (!ctx.isOnShift && ctx.todayShifts.length === 0) return { progress: 0, target: 1 };
+      const breakCount = activeShift ? activeShift.breaks.length + (activeShift.currentBreak ? 1 : 0) : 0;
+      return { progress: breakCount <= 2 ? 1 : 0, target: 1 };
+    },
+    reward: '🏆 Железная воля', bonus: null
+  },
+
+  // === СМЕНЫ / СЕРИИ ===
+  {
+    id: 'two_shifts', icon: '🔄', title: 'Двойной удар',
+    desc: 'Закрой 2 смены за один день',
+    calc: (ctx) => ({ progress: Math.min(ctx.todayShifts.length, 2), target: 2 }),
+    reward: '🎲 +1 реролл лайф-квеста', bonus: { type: 'reroll', amount: 1 }
+  },
+  {
+    id: 'early_bird', icon: '🌅', title: 'Ранняя пташка',
+    desc: 'Начни смену до 9:00',
+    calc: (ctx) => {
+      const hour = new Date().getHours();
+      const startedEarly = ctx.isOnShift && activeShift && new Date(activeShift.startTime).getHours() < 9;
+      const hadEarly = ctx.todayShifts.some(s => s.note && s.note.includes('Начало:') && parseInt(s.note.split('Начало:')[1]) < 9);
+      return { progress: (startedEarly || hadEarly) ? 1 : 0, target: 1 };
+    },
+    reward: '☀️ Утро вечера мудренее', bonus: null
+  },
+  {
+    id: 'quick_start', icon: '⚡', title: 'Быстрый старт',
+    desc: 'Заработай 1000₽ за первые 1.5 часа',
+    calc: (ctx) => {
+      if (ctx.totalHours <= 1.5 && ctx.todayEarned >= 1000) return { progress: 1, target: 1 };
+      if (ctx.totalHours > 1.5 && ctx.todayEarned >= 1000) return { progress: 1, target: 1 };
+      return { progress: Math.min(ctx.todayEarned, 1000), target: 1000 };
+    },
+    reward: '⚡ Разгон взят!', bonus: null
+  },
+  {
+    id: 'consistent_rate', icon: '📊', title: 'Стабильность',
+    desc: 'Все смены сегодня с rate ≥ 900₽/час',
+    calc: (ctx) => {
+      if (ctx.todayShifts.length === 0) return { progress: 0, target: 1 };
+      const allGood = ctx.todayShifts.every(s => s.hours > 0 && (s.earned / s.hours) >= 900);
+      return { progress: allGood ? 1 : 0, target: 1 };
+    },
+    reward: '🎲 +1 реролл лайф-квеста', bonus: { type: 'reroll', amount: 1 }
+  },
+];
+
+// Pick 6 random shift quests per day (seeded by date)
 function generateQuests() {
   const goal = DIFFICULTIES[difficulty].goal;
   const today = new Date().toISOString().slice(0, 10);
@@ -1602,53 +1758,37 @@ function generateQuests() {
   const isOnShift = !!activeShift;
   const workMs = isOnShift ? getWorkMs() : 0;
   const workHours = workMs / 3600000;
+  const totalHours = todayHours + workHours;
 
-  const quests = [
-    {
-      id: 'start_shift', icon: '🚀', title: 'Выйти на смену',
-      desc: 'Начни свою смену сегодня',
-      progress: (isOnShift || todayShifts.length > 0) ? 1 : 0, target: 1,
-      reward: '🏅 Просто прийти — уже победа',
-      bonus: null
-    },
-    {
-      id: 'work_4h', icon: '⏱', title: 'Отработать 4 часа',
-      desc: 'Набей 4 часа чистой работы',
-      progress: Math.min(todayHours + workHours, 4), target: 4,
-      reward: '🎲 +1 реролл лайф-квеста',
-      bonus: { type: 'reroll', amount: 1 }
-    },
-    {
-      id: 'work_8h', icon: '💪', title: 'Марафон: 8 часов',
-      desc: 'Полная смена — 8 часов работы',
-      progress: Math.min(todayHours + workHours, 8), target: 8,
-      reward: '🎲 +1 реролл лайф-квеста',
-      bonus: { type: 'reroll', amount: 1 }
-    },
-    {
-      id: 'earn_5k', icon: '💰', title: 'Заработать 5000₽',
-      desc: 'Сегодняшний заработок ≥ 5000₽',
-      progress: Math.min(todayEarned, 5000), target: 5000,
-      reward: '💵 Кэш',
-      bonus: null
-    },
-    {
-      id: 'earn_8k', icon: '🤑', title: 'Заработать 8000₽',
-      desc: 'Погнали на 8K сегодня!',
-      progress: Math.min(todayEarned, 8000), target: 8000,
-      reward: '🎯 Выбор категории квестов!',
-      bonus: { type: 'category_choice' }
-    },
-    {
-      id: 'hit_goal', icon: '🎯', title: `Выбить ${goal}₽/час`,
-      desc: `Средний rate за день ≥ ${goal}₽/час`,
-      progress: todayRate >= goal ? 1 : 0, target: 1,
-      reward: '🎲 +1 реролл лайф-квеста',
-      bonus: { type: 'reroll', amount: 1 }
-    },
-  ];
+  const ctx = { isOnShift, todayShifts, todayEarned, todayHours, todayRate, totalHours, goal, workHours };
 
-  return quests;
+  // Seeded shuffle — same quests all day
+  let hash = 0;
+  for (let i = 0; i < today.length; i++) { hash = ((hash << 5) - hash) + today.charCodeAt(i); hash |= 0; }
+  const shuffled = [...SHIFT_QUEST_POOL].sort((a, b) => {
+    let ha = hash, hb = hash;
+    for (let i = 0; i < a.id.length; i++) { ha = ((ha << 5) - ha) + a.id.charCodeAt(i); ha |= 0; }
+    for (let i = 0; i < b.id.length; i++) { hb = ((hb << 5) - hb) + b.id.charCodeAt(i); hb |= 0; }
+    return (ha % 10000) - (hb % 10000);
+  });
+
+  // Always include "start_shift" + 5 random others
+  const startQuest = SHIFT_QUEST_POOL.find(q => q.id === 'start_shift');
+  const others = shuffled.filter(q => q.id !== 'start_shift').slice(0, 5);
+  const selectedPool = [startQuest, ...others];
+
+  return selectedPool.map(q => {
+    const { progress, target } = q.calc(ctx);
+    return {
+      id: q.id,
+      icon: q.icon,
+      title: typeof q.title === 'function' ? q.title() : q.title,
+      desc: typeof q.desc === 'function' ? q.desc() : q.desc,
+      progress, target,
+      reward: q.reward,
+      bonus: q.bonus
+    };
+  });
 }
 
 function getWorkMs() {
