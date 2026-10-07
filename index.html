@@ -1506,7 +1506,6 @@ function rerollLifeQuest(oldId, event) {
   state.rerolls++;
   saveLifeQuestState(state);
   renderLifeQuests();
-  const totalRerolls = getTotalRerolls();
   showToast(`🔄 Квест заменён! (${totalRerolls - state.rerolls} реролов осталось)`, 'success');
 }
 
