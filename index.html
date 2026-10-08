@@ -6,7 +6,16 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>💰 OZON Grind Tracker v3.9</title>
+<meta name="theme-color" content="#0f0f1a">
+<meta name="description" content="Трекер смен, заработка и квестов">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Grind">
+<link rel="manifest" href="manifest.json?v=4">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<title>💰 OZON Grind Tracker v4.0</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="config.js?v=3"></script>
 <style>
@@ -582,6 +591,99 @@ body {
   transition: all 0.2s;
 }
 .data-tool-btn:active { transform: scale(0.97); background: rgba(255,255,255,0.08); }
+
+/* ====== ГРАФИК ЗАРАБОТКА (СТАТА) ====== */
+.chart-section { margin: 0 12px 18px; }
+.chart-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 10px; padding-left: 4px; gap: 8px;
+}
+.chart-head h3 { font-size: 15px; color: var(--text-dim); }
+.chart-switch { display: flex; gap: 4px; background: rgba(255,255,255,0.04); padding: 3px; border-radius: 10px; }
+.chart-switch button {
+  padding: 5px 10px; border: none; border-radius: 8px; cursor: pointer;
+  background: transparent; color: var(--text-dim);
+  font-family: inherit; font-size: 11px; font-weight: 700; transition: all 0.2s;
+}
+.chart-switch button.active { background: var(--gold); color: #0f0f1a; }
+.chart-card {
+  background: var(--glass); border: 1px solid var(--glass-border);
+  border-radius: 16px; padding: 14px 12px 10px;
+}
+.chart-sub {
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin-bottom: 12px; padding: 0 2px; gap: 8px;
+}
+.chart-sub .big { font-size: 20px; font-weight: 900; color: var(--gold); font-variant-numeric: tabular-nums; }
+.chart-sub .lbl { font-size: 11px; color: var(--text-dim); font-weight: 600; }
+/* сами столбики */
+.chart-bars {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  gap: 4px; height: 130px; position: relative;
+}
+/* на 14/30 днях зазор съедает ширину столбиков — ужимаем */
+.chart-bars.dense { gap: 2px; }
+.chart-xaxis.dense { gap: 2px; }
+.chart-goal-line {
+  position: absolute; left: 0; right: 0; height: 0;
+  border-top: 1px dashed rgba(0,230,118,0.45); pointer-events: none;
+}
+.chart-goal-line span {
+  position: absolute; right: 0; top: -14px;
+  font-size: 9px; color: var(--green); font-weight: 700; opacity: 0.85;
+}
+.chart-bar-wrap {
+  flex: 1; min-width: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: flex-end; height: 100%; gap: 4px;
+}
+.chart-bar {
+  width: 100%; max-width: 34px; border-radius: 6px 6px 3px 3px;
+  background: linear-gradient(180deg, var(--gold) 0%, var(--gold-dark) 100%);
+  min-height: 3px; transition: height 0.35s cubic-bezier(.4,0,.2,1);
+  position: relative;
+}
+.chart-bar.miss { background: linear-gradient(180deg, #4a4a5e 0%, #33334a 100%); }
+.chart-bar.hit  { background: linear-gradient(180deg, var(--green) 0%, #00a152 100%); }
+.chart-bar.empty { background: rgba(255,255,255,0.05); }
+.chart-val {
+  font-size: 9px; font-weight: 800; color: var(--text);
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+.chart-val.dim { color: var(--text-dim); opacity: 0.5; }
+.chart-xaxis { display: flex; justify-content: space-between; gap: 4px; margin-top: 8px; }
+.chart-xlabel {
+  flex: 1; min-width: 0; text-align: center;
+  font-size: 9px; color: var(--text-dim); font-weight: 600;
+  white-space: nowrap;
+  /* overflow: visible — на 14/30 днях ячейка уже самой подписи,
+     но соседние подписи прорежены, так что налезать не на что.
+     С overflow:hidden числа резались в «1.» вместо «14». */
+  overflow: visible;
+}
+.chart-xlabel.today { color: var(--gold); font-weight: 900; }
+.chart-legend {
+  display: flex; gap: 12px; justify-content: center;
+  margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.05);
+}
+.chart-legend span { font-size: 10px; color: var(--text-dim); display: flex; align-items: center; gap: 4px; }
+.chart-legend i { width: 8px; height: 8px; border-radius: 2px; display: inline-block; }
+.chart-empty { text-align: center; padding: 28px 10px; color: var(--text-dim); font-size: 13px; }
+
+/* ====== БАННЕР «ЕСТЬ ОБНОВЛЕНИЕ» ====== */
+.update-banner {
+  position: fixed; left: 12px; right: 12px; bottom: 76px; z-index: 900;
+  display: none; align-items: center; gap: 10px;
+  background: var(--bg-card2); border: 1px solid var(--gold);
+  border-radius: 14px; padding: 12px 14px;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.5);
+}
+.update-banner.show { display: flex; animation: slideUp 0.3s ease; }
+.update-banner .txt { flex: 1; font-size: 12px; font-weight: 700; }
+.update-banner button {
+  padding: 8px 14px; border: none; border-radius: 10px; cursor: pointer;
+  background: var(--gold); color: #0f0f1a; font-family: inherit;
+  font-size: 12px; font-weight: 800;
+}
 .shift-actions {
   position: absolute; top: 6px; right: 6px;
   display: flex; gap: 4px;
@@ -892,6 +994,24 @@ body {
     <div class="level-xp-text" id="xpText">0 / 50 000 XP</div>
   </div>
   <div class="xp-bar"><div class="xp-fill" id="xpFill" style="width:0%"></div></div>
+</div>
+
+<div class="chart-section">
+  <div class="chart-head">
+    <h3>📈 ДИНАМИКА</h3>
+    <div class="chart-switch">
+      <button id="chartMode7" class="active" onclick="setChartMode(7)">7 дней</button>
+      <button id="chartMode14" onclick="setChartMode(14)">14 дней</button>
+      <button id="chartMode30" onclick="setChartMode(30)">30 дней</button>
+    </div>
+  </div>
+  <div class="chart-card">
+    <div class="chart-sub">
+      <div><div class="big" id="chartTotal">0 ₽</div><div class="lbl" id="chartPeriodLbl">за 7 дней</div></div>
+      <div style="text-align:right;"><div class="big" id="chartAvg">0 ₽</div><div class="lbl">в среднем за день</div></div>
+    </div>
+    <div id="chartBody"></div>
+  </div>
 </div>
 
 <div class="achievements">
@@ -3000,6 +3120,8 @@ function render() {
 
   // Quests
   renderQuests();
+  // Chart
+  renderChart();
   // Calendar
   renderCalendar();
 }
@@ -3028,11 +3150,169 @@ function calcStreak(goal) {
   return streak;
 }
 
+// ====== ГРАФИК ЗАРАБОТКА ======
+// Сутки группируем по локальной дате (не UTC) — иначе ночные смены
+// уезжали бы на соседний столбик.
+let chartMode = parseInt(localStorage.getItem('ozon_chart_mode') || '7', 10);
+if (![7, 14, 30].includes(chartMode)) chartMode = 7;
+
+function setChartMode(days) {
+  chartMode = days;
+  localStorage.setItem('ozon_chart_mode', String(days));
+  [7, 14, 30].forEach(d => {
+    const b = document.getElementById('chartMode' + d);
+    if (b) b.classList.toggle('active', d === days);
+  });
+  renderChart();
+}
+
+function renderChart() {
+  const body = document.getElementById('chartBody');
+  if (!body) return;
+
+  // держим подсветку переключателя в соответствии с сохранённым режимом
+  [7, 14, 30].forEach(d => {
+    const b = document.getElementById('chartMode' + d);
+    if (b) b.classList.toggle('active', d === chartMode);
+  });
+
+  const goal = DIFFICULTIES[difficulty].goal;
+  const days = chartMode;
+
+  // сумма заработка и часов по каждой локальной дате
+  const byDate = {};
+  for (const s of shifts) {
+    if (!byDate[s.date]) byDate[s.date] = { earned: 0, hours: 0 };
+    byDate[s.date].earned += s.earned;
+    byDate[s.date].hours += s.hours;
+  }
+
+  // строим ось: последние N дней, включая сегодня
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const buckets = [];
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    const key = localDateStr(d);
+    const rec = byDate[key] || { earned: 0, hours: 0 };
+    buckets.push({
+      date: d,
+      key,
+      earned: rec.earned,
+      hours: rec.hours,
+      rate: rec.hours > 0 ? Math.round(rec.earned / rec.hours) : 0,
+      isToday: i === 0
+    });
+  }
+
+  const total = buckets.reduce((s, b) => s + b.earned, 0);
+  const workedDays = buckets.filter(b => b.earned > 0).length;
+  const avg = workedDays > 0 ? Math.round(total / workedDays) : 0;
+
+  document.getElementById('chartTotal').textContent = total.toLocaleString('ru-RU') + ' ₽';
+  document.getElementById('chartAvg').textContent = avg.toLocaleString('ru-RU') + ' ₽';
+  document.getElementById('chartPeriodLbl').textContent =
+    `за ${days} дн. · смен: ${workedDays}`;
+
+  if (total === 0) {
+    body.innerHTML = `<div class="chart-empty">Нет смен за этот период 🦆<br>Выйди на смену — появится график</div>`;
+    return;
+  }
+
+  const max = Math.max(...buckets.map(b => b.earned));
+  // на 30 днях подписи над каждым столбиком не влезут — показываем только на 7
+  const showVals = days <= 7;
+  // подписи оси: на 14/30 днях прореживаем, иначе каша
+  const labelEvery = days <= 7 ? 1 : (days <= 14 ? 2 : 5);
+
+  const barsHtml = buckets.map(b => {
+    const h = max > 0 ? Math.max((b.earned / max) * 100, b.earned > 0 ? 6 : 0) : 0;
+    let cls = 'empty';
+    if (b.earned > 0) cls = b.rate >= goal ? 'hit' : 'miss';
+    const valTxt = b.earned > 0 ? Math.round(b.earned / 1000) + 'к' : '';
+    const valHtml = (showVals && b.earned > 0)
+      ? `<div class="chart-val">${valTxt}</div>` : '';
+    const title = b.earned > 0
+      ? `${b.key}: ${b.earned.toLocaleString('ru-RU')} ₽ / ${b.hours.toFixed(1)} ч / ${b.rate} ₽ в час`
+      : `${b.key}: выходной`;
+    return `<div class="chart-bar-wrap" title="${title}">
+      ${valHtml}
+      <div class="chart-bar ${cls}" style="height:${h}%"></div>
+    </div>`;
+  }).join('');
+
+  const labelsHtml = buckets.map((b, i) => {
+    const show = (i % labelEvery === 0) || b.isToday;
+    const txt = show
+      ? (days <= 7
+          ? b.date.toLocaleDateString('ru-RU', { weekday: 'short' })
+          : b.date.getDate())
+      : '';
+    return `<div class="chart-xlabel ${b.isToday ? 'today' : ''}">${txt}</div>`;
+  }).join('');
+
+  const dense = days > 7 ? ' dense' : '';
+  body.innerHTML = `
+    <div class="chart-bars${dense}">${barsHtml}</div>
+    <div class="chart-xaxis${dense}">${labelsHtml}</div>
+    <div class="chart-legend">
+      <span><i style="background:#00e676"></i> цель взята</span>
+      <span><i style="background:#4a4a5e"></i> ниже цели</span>
+    </div>
+  `;
+}
+
+// ====== PWA: SERVICE WORKER ======
+// Регистрируем только по http/https — с file:// браузер ругается.
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').then(reg => {
+      // новая версия подъехала и ждёт активации — предлагаем обновиться
+      function offerUpdate(worker) {
+        if (!worker) return;
+        const banner = document.getElementById('updateBanner');
+        if (!banner) return;
+        banner.classList.add('show');
+        const btn = document.getElementById('updateBtn');
+        if (btn) btn.onclick = () => {
+          worker.postMessage('SKIP_WAITING');
+          banner.classList.remove('show');
+        };
+      }
+      if (reg.waiting) offerUpdate(reg.waiting);
+      reg.addEventListener('updatefound', () => {
+        const nw = reg.installing;
+        if (!nw) return;
+        nw.addEventListener('statechange', () => {
+          // controller есть => это обновление, а не первая установка
+          if (nw.state === 'installed' && navigator.serviceWorker.controller) offerUpdate(nw);
+        });
+      });
+      // проверяем обновления при каждом возврате в приложение
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) reg.update().catch(() => {});
+      });
+    }).catch(err => console.warn('SW register failed:', err));
+
+    let reloaded = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (reloaded) return;
+      reloaded = true;
+      location.reload();
+    });
+  });
+}
+
 // ====== START ======
 init();
 
 // Update quests every 30 seconds (for timer-based ones)
 setInterval(() => { if (activeShift) renderQuests(); }, 30000);
 </script>
+<div class="update-banner" id="updateBanner">
+  <div class="txt">🚀 Доступна новая версия</div>
+  <button id="updateBtn">Обновить</button>
+</div>
+
 </body>
 </html>
