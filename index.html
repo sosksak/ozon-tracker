@@ -2251,7 +2251,7 @@ function renderAccountModal() {
           <div class="ar-t">${a.role === 'dev' ? '🛠️' : '👤'} ${escapeHtml(a.name || a.login)}${isMe ? ' · это ты' : ''}</div>
           <div class="ar-s">${escapeHtml(a.login)} · ${a.role === 'dev' ? 'разработчик' : 'обычный'}</div>
         </div>
-        ${(canManage && !isMe) ? `<button class="acc-mini danger" onclick="accDelete(${JSON.stringify(a.login)})">Удалить</button>` : ''}
+        ${(canManage && !(isMe && a.role === 'dev')) ? `<button class="acc-mini danger" onclick="accDelete(${JSON.stringify(a.login)})">Удалить</button>` : ''}
       </div>`;
   }).join('');
 
@@ -2356,14 +2356,9 @@ async function accAddUser() {
   ], { icon: '✨', title: 'Новый профиль', okText: 'Создать' });
   if (!res || !res.login || !res.pass) return;
 
-  // Права разработчика выдаются только с системного устройства.
-  let role = 'user';
-  if (can('manageAccounts')) {
-    role = (await askConfirm('Полный доступ: правка и удаление смен, импорт бэкапа, управление профилями.',
-      { icon: '🛠️', title: 'Дать права разработчика?', okText: 'Дать', noText: 'Обычный' })) ? 'dev' : 'user';
-  }
+  // Новые профили ВСЕГДА обычные — права разработчика только у главного.
   try {
-    await createAccount(res.login, res.pass, role, res.name || res.login);
+    await createAccount(res.login, res.pass, 'user', res.name || res.login);
     showToast('✅ Профиль создан', 'success');
     renderAccountModal();
   } catch (e) { showToast(e.message || 'Ошибка', 'error'); }
@@ -2390,6 +2385,12 @@ async function accDelete(login) {
   const wa = getWebauthn();
   if (wa && wa.login === acc.login) saveWebauthn(null);
   showToast('Профиль удалён', 'warn');
+  // Если удалили свой текущий профиль — разлогиниваем
+  if (currentUser && currentUser.login.toLowerCase() === String(login).toLowerCase()) {
+    clearSession();
+    setTimeout(() => location.reload(), 600);
+    return;
+  }
   renderAccountModal();
 }
 
