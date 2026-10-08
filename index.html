@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>💰 OZON Grind Tracker v3.8</title>
+<title>💰 OZON Grind Tracker v3.9</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="config.js?v=3"></script>
 <style>
@@ -571,6 +571,17 @@ body {
 .shift-right .shift-rate.ok { color: var(--orange); }
 .shift-right .shift-rate.bad { color: var(--red); }
 .shift-note { font-size: 11px; color: var(--text-dim); margin-top: 4px; font-style: italic; }
+/* бейдж «ждёт загрузки в облако» */
+.shift-pending { font-size: 11px; opacity: 0.85; }
+/* кнопки экспорта/бэкапа в стате */
+.data-tools { display: flex; gap: 8px; margin-top: 12px; }
+.data-tool-btn {
+  flex: 1; padding: 11px 8px; border-radius: 12px; cursor: pointer;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+  color: var(--text); font-family: inherit; font-size: 12px; font-weight: 600;
+  transition: all 0.2s;
+}
+.data-tool-btn:active { transform: scale(0.97); background: rgba(255,255,255,0.08); }
 .shift-actions {
   position: absolute; top: 6px; right: 6px;
   display: flex; gap: 4px;
@@ -891,6 +902,10 @@ body {
 <div class="history">
   <h3>📋 История смен</h3>
   <div id="shiftList"></div>
+  <div class="data-tools">
+    <button class="data-tool-btn" onclick="exportDataCSV()">📤 Экспорт CSV</button>
+    <button class="data-tool-btn" onclick="exportDataJSON()">💾 Бэкап JSON</button>
+  </div>
 </div>
 
 </div>
@@ -1087,6 +1102,18 @@ function showToast(msg, type = 'success') {
 }
 
 // ====== HELPERS ======
+// FIX: локальная дата вместо toISOString() — тот давал UTC и с 00:00 до 03:00 (МСК)
+// приложение считало, что ещё «вчера»: квесты/реролы/бусты не сбрасывались вовремя.
+function localDateStr(d = new Date()) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function todayStr() { return localDateStr(); }
+
+function parseLocalDate(str) {
+  const p = String(str).split('-');
+  return new Date(parseInt(p[0]), parseInt(p[1]) - 1, parseInt(p[2]));
+}
+
 function enrichShift(s) {
   s.hours = parseFloat(s.hours) || 0;
   s.earned = parseFloat(s.earned) || 0;
@@ -1441,7 +1468,7 @@ const LQ_LEVELS = [
 
 // Pick 7 random life quests for today (seeded by date, from pool of 48)
 function getTodayLifeQuests() {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayStr();
   const chosenCat = getChosenCategory();
 
   if (chosenCat) {
@@ -1491,7 +1518,7 @@ function saveLifeXP(data) {
 
 function getXpMultiplier() {
   // Check if double XP is active
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayStr();
   try {
     const boosts = JSON.parse(localStorage.getItem('ozon_shop_boosts') || '{}');
     if (boosts.double_xp === today) return 2;
@@ -1501,7 +1528,7 @@ function getXpMultiplier() {
 
 function addLifeXP(questId, xpAmount, category) {
   const data = getLifeXP();
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayStr();
 
   const todayKey = `${today}_${questId}`;
   if (!data.history) data.history = [];
@@ -1529,7 +1556,7 @@ function addLifeXP(questId, xpAmount, category) {
 
 function removeLifeXP(questId, xpAmount, category) {
   const data = getLifeXP();
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayStr();
   const todayKey = `${today}_${questId}`;
 
   const idx = data.history.indexOf(todayKey);
@@ -1603,7 +1630,7 @@ function renderLifeStats() {
 }
 
 function getLifeQuestState() {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayStr();
   try {
     const saved = JSON.parse(localStorage.getItem('ozon_life_quests') || '{}');
     if (saved.date === today) return { checked: saved.checked || {}, rerolls: saved.rerolls || 0, replacements: saved.replacements || {} };
@@ -1612,7 +1639,7 @@ function getLifeQuestState() {
 }
 
 function saveLifeQuestState(state) {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayStr();
   localStorage.setItem('ozon_life_quests', JSON.stringify({ date: today, ...state }));
 }
 
@@ -1640,7 +1667,7 @@ const MAX_REROLLS = 3;
 
 // ====== BONUS SYSTEM ======
 function getShiftBonuses() {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayStr();
   try {
     const saved = JSON.parse(localStorage.getItem('ozon_shift_bonuses') || '{}');
     if (saved.date === today) return saved;
@@ -1655,7 +1682,7 @@ function saveShiftBonuses(data) {
 function getChosenCategory() {
   try {
     const saved = JSON.parse(localStorage.getItem('ozon_chosen_category') || '{}');
-    const today = new Date().toISOString().slice(0, 10);
+    const today = todayStr();
     if (saved.forDate === today) return saved.category;
     return null;
   } catch(e) { return null; }
@@ -1735,7 +1762,7 @@ function closeCategoryPicker() {
 function pickCategory(cat, source = 'bonus') {
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
-  const forDate = tomorrow.toISOString().slice(0, 10);
+  const forDate = localDateStr(tomorrow);
   saveChosenCategory(cat, forDate);
   closeCategoryPicker();
   const catInfo = LQ_CATEGORIES[cat];
@@ -1765,7 +1792,7 @@ function getWeeklyCategoryChoice() {
     const now = new Date();
     const monday = new Date(now);
     monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7));
-    const weekKey = monday.toISOString().slice(0, 10);
+    const weekKey = localDateStr(monday);
     if (saved.week === weekKey) return saved;
     return { week: weekKey, used: false };
   } catch(e) { return { week: '', used: false }; }
@@ -2059,7 +2086,7 @@ const SHIFT_QUEST_POOL = [
 
 function generateQuests() {
   const goal = DIFFICULTIES[difficulty].goal;
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayStr();
   const todayShifts = shifts.filter(s => s.date === today);
   const todayEarned = todayShifts.reduce((s, x) => s + x.earned, 0);
   const todayHours = todayShifts.reduce((s, x) => s + x.hours, 0);
@@ -2142,7 +2169,7 @@ function getShopOwned(itemId) {
 }
 
 function getShopExtraRerolls() {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayStr();
   try {
     const boosts = JSON.parse(localStorage.getItem('ozon_shop_boosts') || '{}');
     if (boosts.extra_reroll_date === today) return boosts.extra_reroll_count || 0;
@@ -2182,7 +2209,7 @@ function shopBuyItem(itemId) {
 
   // Apply consumable effects
   if (item.consumable) {
-    const today = new Date().toISOString().slice(0, 10);
+    const today = todayStr();
     const boosts = JSON.parse(localStorage.getItem('ozon_shop_boosts') || '{}');
 
     if (item.id === 'extra_reroll_1' || item.id === 'extra_reroll_3') {
@@ -2319,6 +2346,7 @@ async function loadShifts() {
       const { data, error } = await sb.from('shifts').select('*').order('date', { ascending: false });
       if (error) throw error;
       shifts = data.map(enrichShift);
+      mergePendingIntoShifts();
       backupToLocal();
       setSyncStatus('ok', '☁️ Синхронизировано');
       return;
@@ -2337,30 +2365,88 @@ async function loadShifts() {
   } catch(e2) { console.error('Local load error:', e2); }
 }
 
+// FIX: смены из офлайн-очереди раньше исчезали с экрана после перезагрузки страницы
+function mergePendingIntoShifts() {
+  const pending = getPendingShifts();
+  for (const p of pending) {
+    const { _queuedAt, ...payload } = p;
+    const dup = shifts.some(s => s.date === payload.date && s.hours == payload.hours && s.earned == payload.earned);
+    if (!dup) shifts.push(enrichShift({ ...payload, id: 'local_' + (_queuedAt || Date.now()), _pending: true }));
+  }
+  shifts.sort((a, b) => b.date.localeCompare(a.date));
+}
+
 async function insertShift(shift) {
   setSyncStatus('syncing', '⏳ Сохранение...');
-  if (!sb) { setSyncStatus('error', '❌ Нет соединения'); showToast('Supabase недоступен', 'error'); return false; }
-  try {
-    const { data, error } = await sb.from('shifts').insert([{
-      date: shift.date, hours: shift.hours, earned: shift.earned,
-      note: shift.note || '', difficulty: difficulty
-    }]).select();
-    if (error) throw error;
-    const s = enrichShift(data[0]);
-    shifts.unshift(s);
-    shifts.sort((a, b) => b.date.localeCompare(a.date));
-    backupToLocal();
-    setSyncStatus('ok', '☁️ Сохранено ✓');
-    return true;
-  } catch (e) {
-    console.error('Insert error:', e);
-    setSyncStatus('error', '❌ Ошибка сохранения');
-    showToast('Ошибка сохранения — попробуй ещё', 'error');
-    return false;
+  const payload = {
+    date: shift.date, hours: shift.hours, earned: shift.earned,
+    note: shift.note || '', difficulty: difficulty
+  };
+  if (sb) {
+    try {
+      const { data, error } = await sb.from('shifts').insert([payload]).select();
+      if (error) throw error;
+      const s = enrichShift(data[0]);
+      shifts.unshift(s);
+      shifts.sort((a, b) => b.date.localeCompare(a.date));
+      backupToLocal();
+      setSyncStatus('ok', '☁️ Сохранено ✓');
+      return true;
+    } catch (e) {
+      console.error('Insert error:', e);
+    }
+  }
+  // FIX: раньше смена просто ТЕРЯЛАСЬ, если облако недоступно.
+  // Теперь кладём в локальную очередь и доливаем в Supabase при следующем запуске.
+  queuePendingShift(payload);
+  const localShift = enrichShift({ ...payload, id: 'local_' + Date.now(), _pending: true });
+  shifts.unshift(localShift);
+  shifts.sort((a, b) => b.date.localeCompare(a.date));
+  backupToLocal();
+  setSyncStatus('warn', '📱 Сохранено локально');
+  showToast('Облако недоступно — смена сохранена на телефоне, зальётся позже', 'warn');
+  return true;
+}
+
+// ====== OFFLINE QUEUE ======
+function getPendingShifts() {
+  try { return JSON.parse(localStorage.getItem('ozon_pending_shifts') || '[]'); } catch(e) { return []; }
+}
+function queuePendingShift(payload) {
+  const q = getPendingShifts();
+  q.push({ ...payload, _queuedAt: Date.now() });
+  localStorage.setItem('ozon_pending_shifts', JSON.stringify(q));
+}
+async function flushPendingShifts() {
+  const q = getPendingShifts();
+  if (!q.length || !sb) return;
+  const stillPending = [];
+  let synced = 0;
+  for (const item of q) {
+    const { _queuedAt, ...payload } = item;
+    try {
+      const { error } = await sb.from('shifts').insert([payload]);
+      if (error) throw error;
+      synced++;
+    } catch (e) {
+      console.error('Flush error:', e);
+      stillPending.push(item);
+    }
+  }
+  localStorage.setItem('ozon_pending_shifts', JSON.stringify(stillPending));
+  if (synced > 0) {
+    showToast(`☁️ Залито в облако: ${synced} ${synced === 1 ? 'смена' : 'смен'}`, 'success');
+    await loadShifts();
+    render();
   }
 }
 
+
 async function updateShift(id, updates) {
+  if (typeof id === 'string' && id.startsWith('local_')) {
+    showToast('Смена ещё не в облаке — дождись синхронизации', 'warn');
+    return false;
+  }
   setSyncStatus('syncing', '⏳ Обновление...');
   if (!sb) { setSyncStatus('error', '❌ Нет соединения'); showToast('Supabase недоступен', 'error'); return false; }
   try {
@@ -2384,6 +2470,20 @@ async function updateShift(id, updates) {
 
 async function removeShift(id) {
   if (!confirm('Удалить эту смену?')) return;
+  // FIX: локальную (не синхронизированную) смену удаляем из очереди, а не из облака
+  if (typeof id === 'string' && id.startsWith('local_')) {
+    const target = shifts.find(s => s.id === id);
+    if (target) {
+      const q = getPendingShifts().filter(p =>
+        !(p.date === target.date && p.hours == target.hours && p.earned == target.earned));
+      localStorage.setItem('ozon_pending_shifts', JSON.stringify(q));
+    }
+    shifts = shifts.filter(s => s.id !== id);
+    backupToLocal();
+    showToast('Смена удалена', 'success');
+    render();
+    return;
+  }
   setSyncStatus('syncing', '⏳ Удаление...');
   if (!sb) { setSyncStatus('error', '❌ Нет соединения'); return; }
   try {
@@ -2636,14 +2736,13 @@ function renderCalendar() {
 
 // ====== INIT ======
 async function init() {
-  const now = new Date();
-  const yyyy = now.getFullYear();
-  const mm = String(now.getMonth() + 1).padStart(2, '0');
-  const dd = String(now.getDate()).padStart(2, '0');
-  document.getElementById('inputDate').value = `${yyyy}-${mm}-${dd}`;
+  document.getElementById('inputDate').value = todayStr();
   setDifficulty(difficulty, false);
 
   try { await loadShifts(); } catch(e) { console.error('Init error:', e); setSyncStatus('error', '❌ Ошибка загрузки'); }
+
+  // FIX: доливаем смены, которые не ушли в облако из-за обрыва связи
+  try { await flushPendingShifts(); } catch(e) { console.error('Flush init error:', e); }
 
   // Restore active shift if was running
   if (activeShift) {
@@ -2660,8 +2759,29 @@ async function init() {
   calInit();
   checkAndGrantBonuses();
   loadSavedTheme();
+  checkWeeklyFreeChoice();
   hideLoading();
 }
+
+// FIX: бесплатный выбор категории раз в неделю никто не показывал — теперь напоминаем
+function checkWeeklyFreeChoice() {
+  const wc = getWeeklyCategoryChoice();
+  if (!wc.used) {
+    setTimeout(() => showToast('🎁 Доступен бесплатный выбор категории лайф-квестов!', 'success'), 1800);
+  }
+}
+
+// FIX: возврат в приложение после сна телефона — досинхронизируем и обновляем экран
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') {
+    flushPendingShifts().catch(e => console.error(e));
+    if (activeShift) { updateTimer(); renderQuests(); }
+  }
+});
+window.addEventListener('online', () => {
+  showToast('🌐 Сеть вернулась — синхронизирую', 'success');
+  flushPendingShifts().catch(e => console.error(e));
+});
 
 // ====== DIFFICULTY ======
 function setDifficulty(diff, doRender = true) {
@@ -2727,6 +2847,46 @@ function rainCoins(count) {
       setTimeout(() => coin.remove(), 3000);
     }, i * 80);
   }
+}
+
+// ====== DATA EXPORT ======
+function downloadFile(filename, content, mime) {
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function exportDataCSV() {
+  if (!shifts.length) { showToast('Нет смен для экспорта', 'warn'); return; }
+  const rows = [['Дата', 'Часы', 'Заработок', 'Ставка', 'Заметка']];
+  for (const s of [...shifts].sort((a, b) => a.date.localeCompare(b.date))) {
+    rows.push([s.date, s.hours, s.earned, s.rate, (s.note || '').replace(/"/g, '""')]);
+  }
+  const totalE = shifts.reduce((a, s) => a + s.earned, 0);
+  const totalH = shifts.reduce((a, s) => a + s.hours, 0);
+  rows.push(['ИТОГО', totalH.toFixed(1), totalE, totalH > 0 ? Math.round(totalE / totalH) : 0, '']);
+  const csv = '\uFEFF' + rows.map(r => r.map(c => `"${c}"`).join(';')).join('\n');
+  downloadFile(`ozon_smeny_${todayStr()}.csv`, csv, 'text/csv;charset=utf-8');
+  showToast('📤 CSV скачан', 'success');
+}
+
+function exportDataJSON() {
+  const dump = {
+    exportedAt: new Date().toISOString(),
+    version: '3.9',
+    shifts,
+    pending: getPendingShifts(),
+    difficulty,
+    lifeXP: getLifeXP(),
+    shopPurchases: getShopPurchases(),
+    calendarPlan: getCalendarPlan(),
+    activeTheme: localStorage.getItem('ozon_active_theme') || null
+  };
+  downloadFile(`ozon_backup_${todayStr()}.json`, JSON.stringify(dump, null, 2), 'application/json');
+  showToast('💾 Полный бэкап скачан', 'success');
 }
 
 // ====== RENDER ======
@@ -2823,12 +2983,16 @@ function render() {
       const d = new Date(parseInt(dp[0]), parseInt(dp[1]) - 1, parseInt(dp[2]));
       const dateStr = d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
       const noteHtml = s.note ? `<div class="shift-note">${escapeHtml(s.note)}</div>` : '';
+      // FIX: id кладём в кавычках — у локальных (ещё не синхронизированных) смен он строковый
+      // и без кавычек onclick падал с ошибкой.
+      const idArg = JSON.stringify(s.id);
+      const pendingBadge = s._pending ? `<span class="shift-pending" title="Ждёт загрузки в облако">📱</span>` : '';
       return `<div class="shift-card ${cls} slide-up">
         <div class="shift-actions">
-          <button class="shift-action-btn edit" onclick="openEditModal(${s.id})" title="Редактировать">✏️</button>
-          <button class="shift-action-btn delete" onclick="removeShift(${s.id})" title="Удалить">✕</button>
+          <button class="shift-action-btn edit" onclick='openEditModal(${idArg})' title="Редактировать">✏️</button>
+          <button class="shift-action-btn delete" onclick='removeShift(${idArg})' title="Удалить">✕</button>
         </div>
-        <div class="shift-left"><div class="shift-date">${dateStr}</div><div class="shift-hours">${s.hours} ч</div>${noteHtml}</div>
+        <div class="shift-left"><div class="shift-date">${dateStr} ${pendingBadge}</div><div class="shift-hours">${s.hours} ч</div>${noteHtml}</div>
         <div class="shift-right"><div class="shift-earned">${s.earned.toLocaleString('ru-RU')} ₽</div><div class="shift-rate ${rateCls}">${icon} ${s.rate} ₽/час</div></div>
       </div>`;
     }).join('');
