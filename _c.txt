@@ -769,24 +769,6 @@ body {
 .shift-right .shift-rate.ok { color: var(--orange); }
 .shift-right .shift-rate.bad { color: var(--red); }
 .shift-note { font-size: 11px; color: var(--text-dim); margin-top: 4px; font-style: italic; }
-/* Перерывы в карточке смены */
-.shift-breaks { font-size: 11px; color: var(--text-dim); margin-top: 4px; font-weight: 600; font-variant-numeric: tabular-nums; }
-/* Цель месяца / прогноз / рекорды */
-.mg-note { font-size: 12px; color: var(--text-dim); font-weight: 600; padding: 2px 0; }
-.mg-forecast { margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.07); padding-top: 8px; }
-.mg-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 5px 0; font-size: 13px; color: var(--text-dim); font-weight: 600; }
-.mg-row b { color: var(--gold); font-variant-numeric: tabular-nums; font-size: 14px; }
-.rec-date { color: var(--text-dim); font-weight: 600; font-size: 11px; }
-/* Дни недели */
-.dow-row { display: grid; grid-template-columns: 28px 1fr auto 18px; align-items: center; gap: 8px; padding: 4px 0; }
-.dow-name { font-size: 12px; font-weight: 800; color: var(--text-dim); }
-.dow-bar { height: 8px; background: rgba(255,255,255,0.06); border-radius: 20px; overflow: hidden; min-width: 0; }
-.dow-fill { height: 100%; border-radius: 20px; background: linear-gradient(90deg, #4CAF50, #8bc34a); transition: width .5s ease; }
-.dow-val { font-size: 12px; font-weight: 800; color: var(--text); font-variant-numeric: tabular-nums; }
-.dow-cnt { font-size: 10px; color: var(--text-dim); text-align: right; font-weight: 700; }
-.dow-row.is-top .dow-fill { background: linear-gradient(90deg, #ffd700, #ffb300); }
-.dow-row.is-top .dow-val { color: var(--gold); }
-.dow-row.is-zero { opacity: .45; }
 /* бейдж «ждёт загрузки в облако» */
 .shift-pending { font-size: 11px; opacity: 0.85; }
 /* строка со сборкой и статусом облака */
@@ -1231,24 +1213,6 @@ body {
   </div>
 </div>
 
-<div class="chart-section">
-  <div class="chart-head">
-    <h3>🎯 ЦЕЛЬ МЕСЯЦА</h3>
-    <button class="data-tool-btn" style="padding:6px 12px" onclick="openMonthGoalPrompt()">✏️ Изменить</button>
-  </div>
-  <div class="chart-card" id="monthGoalCard"></div>
-</div>
-
-<div class="chart-section">
-  <div class="chart-head"><h3>📅 ПО ДНЯМ НЕДЕЛИ</h3></div>
-  <div class="chart-card" id="dowCard"></div>
-</div>
-
-<div class="chart-section">
-  <div class="chart-head"><h3>🏅 ЛИЧНЫЕ РЕКОРДЫ</h3></div>
-  <div class="chart-card" id="recordsCard"></div>
-</div>
-
 <div class="achievements">
   <h3>🏆 ДОСТИЖЕНИЯ</h3>
   <div class="ach-grid" id="achGrid"></div>
@@ -1340,27 +1304,17 @@ let sb = null;
 try { sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch(e) { console.error('Supabase init failed:', e); }
 
 // ====== CONSTANTS ======
-// Уровни: раньше считались от заработанных РУБЛЕЙ (LVL10 = 5 000 000 ₽ ≈ 1000 смен,
-// то есть годы — прогресс-бар стоял на месте и ничего не мотивировал).
-// Теперь очки опыта = смены и часы: shifts*100 + hours*10.
-// Одна смена (~9ч) ≈ 190 очков, LVL10 = 100 смен — достижимо и ощутимо.
-const LEVEL_PER_SHIFT = 100;
-const LEVEL_PER_HOUR = 10;
-function calcGrindXP(shiftCount, totalHours) {
-  return Math.round(shiftCount * LEVEL_PER_SHIFT + totalHours * LEVEL_PER_HOUR);
-}
-
 const LEVELS = [
   { lvl:1, name:'Новичок',        icon:'🐣', title:'Начало пути',         xp:0 },
-  { lvl:2, name:'Кладовщик',      icon:'📦', title:'Освоился на складе',   xp:600 },
-  { lvl:3, name:'Грузчик PRO',    icon:'💪', title:'Уже не новичок',       xp:1500 },
-  { lvl:4, name:'Бригадир',       icon:'👷', title:'Опытный работяга',     xp:2900 },
-  { lvl:5, name:'Золотые руки',   icon:'🤲', title:'Мастер своего дела',   xp:4800 },
-  { lvl:6, name:'Менеджер склада',icon:'🏭', title:'Управляешь процессом', xp:7200 },
-  { lvl:7, name:'Бизнесмен',      icon:'💼', title:'Думаешь масштабно',    xp:10000 },
-  { lvl:8, name:'Миллионер',      icon:'🎩', title:'Первый миллион!',      xp:13300 },
-  { lvl:9, name:'Магнат',         icon:'🏰', title:'Империя растёт',       xp:16000 },
-  { lvl:10,name:'Скрудж МакДак',  icon:'🦆', title:'Купаешься в монетах!', xp:19000 },
+  { lvl:2, name:'Кладовщик',      icon:'📦', title:'Освоился на складе',   xp:50000 },
+  { lvl:3, name:'Грузчик PRO',    icon:'💪', title:'Уже не новичок',       xp:150000 },
+  { lvl:4, name:'Бригадир',       icon:'👷', title:'Опытный работяга',     xp:350000 },
+  { lvl:5, name:'Золотые руки',   icon:'🤲', title:'Мастер своего дела',   xp:600000 },
+  { lvl:6, name:'Менеджер склада',icon:'🏭', title:'Управляешь процессом', xp:1000000 },
+  { lvl:7, name:'Бизнесмен',      icon:'💼', title:'Думаешь масштабно',    xp:1500000 },
+  { lvl:8, name:'Миллионер',      icon:'🎩', title:'Первый миллион!',      xp:2000000 },
+  { lvl:9, name:'Магнат',         icon:'🏰', title:'Империя растёт',       xp:3500000 },
+  { lvl:10,name:'Скрудж МакДак',  icon:'🦆', title:'Купаешься в монетах!', xp:5000000 },
 ];
 
 const DIFFICULTIES = { easy:{goal:800}, normal:{goal:850}, hard:{goal:900} };
@@ -1387,11 +1341,6 @@ const SHOP_ITEMS = [
   { id:'extra_reroll_3', icon:'🎰', name:'+3 реролла на день', desc:'Пак из 3 лайф-реролов на сегодня', price:100, cat:'boost', consumable:true },
   { id:'double_xp', icon:'⚡', name:'Двойной XP (1 день)', desc:'Все лайф-квесты дают x2 XP сегодня', price:200, cat:'boost', consumable:true },
   { id:'cat_choice', icon:'🎯', name:'Выбор категории', desc:'Выбери категорию квестов на завтра', price:150, cat:'boost', consumable:true },
-  // Расходники: покупаются многократно, чтобы XP не обесценивался после
-  // выкупа всех тем и титулов (весь остальной магазин — разовый).
-  { id:'streak_shield', icon:'🛡', name:'Защита страйка', desc:'Страйк не сгорит за пропущенный день', price:250, cat:'boost', consumable:true },
-  { id:'mystery_box', icon:'🎁', name:'Мистери-бокс', desc:'Случайный приз: XP, реролы или буст', price:120, cat:'boost', consumable:true },
-  { id:'shift_reroll', icon:'🔄', name:'Реролл квеста смены', desc:'Заменить один квест смены сегодня', price:80, cat:'boost', consumable:true },
   // Косметика
   { id:'title_grinder', icon:'💎', name:'Титул: Грайндер', desc:'Отображается в заголовке', price:300, cat:'cosmetic', consumable:false },
   { id:'title_legend', icon:'👑', name:'Титул: Легенда', desc:'Отображается в заголовке', price:500, cat:'cosmetic', consumable:false },
@@ -1494,35 +1443,7 @@ function enrichShift(s) {
   s.hours = parseFloat(s.hours) || 0;
   s.earned = parseFloat(s.earned) || 0;
   s.rate = s.hours > 0 ? Math.round(s.earned / s.hours) : 0;
-  // Метаданные перерывов живут отдельно: в таблице Supabase нет под них колонок,
-  // а DDL анонимным ключом не сделать. Ключ — дата+часы+заработок, т.к. id
-  // локальной смены меняется после заливки в облако.
-  const meta = getShiftMeta()[shiftMetaKey(s)];
-  if (meta) {
-    s.totalMs = meta.totalMs;
-    s.breakMs = meta.breakMs;
-    s.breakCount = meta.breakCount;
-    s.breakSummary = meta.breakSummary;
-  }
   return s;
-}
-
-// ====== МЕТАДАННЫЕ СМЕН (перерывы) ======
-function shiftMetaKey(s) {
-  return `${s.date}|${s.hours}|${s.earned}`;
-}
-function getShiftMeta() {
-  try { return JSON.parse(localStorage.getItem('ozon_shift_meta') || '{}'); } catch (e) { return {}; }
-}
-function saveShiftMeta(map) {
-  localStorage.setItem('ozon_shift_meta', JSON.stringify(map));
-  markLocalChange();
-  schedulePushProgress();
-}
-function putShiftMeta(shift, meta) {
-  const all = getShiftMeta();
-  all[shiftMetaKey(shift)] = meta;
-  saveShiftMeta(all);
 }
 
 function escapeHtml(text) {
@@ -1671,18 +1592,6 @@ async function saveEndShift() {
     note: note
   });
 
-  // Перерывы считались в endShift() и раньше просто выбрасывались.
-  if (ok) {
-    putShiftMeta({ date: pendingEndShift.date, hours: pendingEndShift.hours, earned: earned }, {
-      totalMs: pendingEndShift.totalMs,
-      breakMs: pendingEndShift.breakMs,
-      breakCount: pendingEndShift.breakCount,
-      breakSummary: pendingEndShift.breakSummary
-    });
-    const t = shifts.find(s => s.date === pendingEndShift.date && s.earned === earned);
-    if (t) enrichShift(t);
-  }
-
   btn.disabled = false;
   btn.textContent = '💾 СОХРАНИТЬ';
 
@@ -1797,17 +1706,9 @@ const LIFE_QUESTS = [
   { id: 'say_hi', icon: '👋', title: 'Поздороваться с незнакомкой', desc: 'Просто «привет» — уже победа', reward: '+15 XP', xp: 15, cat: 'social' },
   { id: 'ask_name', icon: '💫', title: 'Узнать чьё-то имя', desc: 'Спроси и запомни', reward: '+20 XP', xp: 20, cat: 'social' },
   { id: 'start_convo', icon: '🗣', title: 'Завести разговор первым', desc: 'В очереди, в кафе, где угодно', reward: '+20 XP', xp: 20, cat: 'social' },
-  { id: 'ask_direction', icon: '🧭', title: 'Спросить дорогу у девушки', desc: 'Лёгкий заход без давления', reward: '+15 XP', xp: 15, cat: 'social' },
-  { id: 'talk_queue', icon: '🧾', title: 'Поболтать в очереди', desc: 'Пара фраз пока стоите — и уже контакт', reward: '+20 XP', xp: 20, cat: 'social' },
-  { id: 'three_hellos', icon: '🙌', title: 'Поздороваться с 3 людьми', desc: 'Разогрев социальной мышцы', reward: '+20 XP', xp: 20, cat: 'social' },
-  { id: 'remember_detail', icon: '🧠', title: 'Запомнить деталь о новой знакомой', desc: 'Имя, работа, увлечение — пригодится', reward: '+20 XP', xp: 20, cat: 'social' },
   { id: 'cold_approach', icon: '🔥', title: 'Подойти к незнакомой девушке', desc: 'Страшно? Значит нужно. Просто подойди', reward: '+30 XP', xp: 30, cat: 'approach' },
   { id: 'get_contact', icon: '📱', title: 'Взять номер / соцсеть', desc: 'Не бойся попросить контакт', reward: '+30 XP', xp: 30, cat: 'approach' },
   { id: 'invite_out', icon: '☕', title: 'Пригласить на кофе/прогулку', desc: 'Не откладывай — предложи встречу', reward: '+25 XP', xp: 25, cat: 'approach' },
-  { id: 'approach_daytime', icon: '☀️', title: 'Подход днём на улице', desc: 'Без алкоголя и музыки — чистый скилл', reward: '+35 XP', xp: 35, cat: 'approach' },
-  { id: 'two_approaches', icon: '⚡', title: 'Сделать 2 подхода за день', desc: 'Второй всегда легче первого', reward: '+40 XP', xp: 40, cat: 'approach' },
-  { id: 'approach_after_no', icon: '🛡', title: 'Подойти снова после отказа', desc: 'Отказ — не стоп, а статистика', reward: '+40 XP', xp: 40, cat: 'approach' },
-  { id: 'approach_group', icon: '👯', title: 'Подойти к девушке в компании', desc: 'Высшая сложность — максимум роста', reward: '+45 XP', xp: 45, cat: 'approach' },
 
   // 😎 Уверенность и харизма
   { id: 'eye_contact_girl', icon: '👀', title: 'Держать зрительный контакт 3 сек', desc: 'Смотри уверенно, не отводи первым', reward: '+15 XP', xp: 15, cat: 'confidence' },
@@ -2090,13 +1991,6 @@ function renderLifeStats() {
           <div class="lq-xp-fill" data-target="${progressPct}" style="width:0%"></div>
           <div class="lq-xp-ticks"></div>
         </div>
-        <div class="lq-xp-caption">
-          <span><span class="lq-xp-now">${xpNow}</span>${xpNeed ? ' / ' + xpNeed + ' XP' : ' XP'}</span>
-          <span class="lq-total-chip">✨ ${data.total}</span>
-        </div>
-      </div>
-    </div>
-    <div class="lq-stats-grid">
       <div class="lq-mini-stat">
         <span class="lq-ms-ico">⚔️</span>
         <span class="lq-ms-val">${data.questsDone || 0}</span>
@@ -2698,38 +2592,6 @@ function getShopOwned(itemId) {
   return !!p[itemId];
 }
 
-// Мистери-бокс: случайный приз. Записывает эффект прямо в boosts
-// (вызывающий сам сохраняет объект в localStorage).
-function rollMysteryBox(boosts, today) {
-  const roll = Math.random();
-  if (roll < 0.35) {
-    const amount = Math.random() < 0.5 ? 1 : 2;
-    if (boosts.extra_reroll_date !== today) { boosts.extra_reroll_date = today; boosts.extra_reroll_count = 0; }
-    boosts.extra_reroll_count = (boosts.extra_reroll_count || 0) + amount;
-    return `+${amount} реролл лайф-квестов!`;
-  }
-  if (roll < 0.60) {
-    const bonus = [30, 50, 80][Math.floor(Math.random() * 3)];
-    const xpData = getLifeXP();
-    xpData.total += bonus;
-    saveLifeXP(xpData);
-    return `+${bonus} XP назад!`;
-  }
-  if (roll < 0.80) {
-    boosts.double_xp = today;
-    return 'Двойной XP на сегодня!';
-  }
-  if (roll < 0.95) {
-    if (boosts.shift_reroll_date !== today) { boosts.shift_reroll_date = today; boosts.shift_reroll_count = 0; }
-    boosts.shift_reroll_count = (boosts.shift_reroll_count || 0) + 1;
-    return '+1 реролл квеста смены!';
-  }
-  const shields = Array.isArray(boosts.streak_shields) ? boosts.streak_shields : [];
-  if (!shields.includes(today)) shields.push(today);
-  boosts.streak_shields = shields;
-  return 'ДЖЕКПОТ: защита страйка! 🛡';
-}
-
 function getShopExtraRerolls() {
   const today = todayStr();
   try {
@@ -2788,22 +2650,6 @@ function shopBuyItem(itemId) {
       showToast('⚡ Двойной XP активирован на сегодня!', 'success');
     } else if (item.id === 'cat_choice') {
       openCategoryPicker(false);
-    } else if (item.id === 'streak_shield') {
-      // Щит ставим на сегодня: calcStreak учитывает защищённые дни.
-      const shields = Array.isArray(boosts.streak_shields) ? boosts.streak_shields : [];
-      if (!shields.includes(today)) shields.push(today);
-      boosts.streak_shields = shields;
-      showToast('🛡 Страйк защищён — пропуск не сожжёт серию', 'success');
-    } else if (item.id === 'shift_reroll') {
-      if (boosts.shift_reroll_date !== today) {
-        boosts.shift_reroll_date = today;
-        boosts.shift_reroll_count = 0;
-      }
-      boosts.shift_reroll_count = (boosts.shift_reroll_count || 0) + 1;
-      showToast('🔄 +1 реролл квеста смены на сегодня', 'success');
-    } else if (item.id === 'mystery_box') {
-      const prize = rollMysteryBox(boosts, today);
-      showToast(`🎁 ${prize}`, 'success');
     }
 
     localStorage.setItem('ozon_shop_boosts', JSON.stringify(boosts));
@@ -3099,8 +2945,6 @@ function backupToLocal() {
 // Лечение: прогресс уезжает в облако и подтягивается на любом устройстве.
 
 const PROGRESS_KEYS = [
-  'ozon_shift_meta',
-  'ozon_month_goal',
   'ozon_life_xp',
   'ozon_shop_purchases',
   'ozon_shop_boosts',
@@ -3117,7 +2961,7 @@ const PROGRESS_KEYS = [
 // Ключи, где значение — накопительный набор: объединяем, а не перетираем.
 // Покупки в магазине нельзя терять: купил тему на телефоне, зашёл с ноута —
 // обе покупки должны остаться.
-const PROGRESS_UNION_KEYS = ['ozon_shop_purchases', 'ozon_shift_meta'];
+const PROGRESS_UNION_KEYS = ['ozon_shop_purchases'];
 
 // Когда локальное значение последний раз менялось (на этом устройстве).
 // Без этого облако умеет только «залить, если локально пусто», и любое
@@ -3849,8 +3693,8 @@ function render() {
   document.getElementById('totalHours').textContent = totalHours.toFixed(1);
   document.getElementById('avgRate').textContent = avgRate.toLocaleString('ru-RU');
 
-  // Wallet badge — очки за смены и часы, а не за рубли (см. calcGrindXP).
-  const xp = calcGrindXP(shifts.length, totalHours);
+  // Wallet badge
+  const xp = totalEarned;
   let currentLevel = LEVELS[0], nextLevel = LEVELS[1];
   for (let i = LEVELS.length - 1; i >= 0; i--) {
     if (xp >= LEVELS[i].xp) { currentLevel = LEVELS[i]; nextLevel = LEVELS[i + 1] || null; break; }
@@ -3935,16 +3779,12 @@ function render() {
       // и без кавычек onclick падал с ошибкой.
       const idArg = JSON.stringify(s.id);
       const pendingBadge = s._pending ? `<span class="shift-pending" title="Ждёт загрузки в облако">📱</span>` : '';
-      // Перерывы: раньше считались и терялись, теперь видны в истории.
-      const breakHtml = (s.breakMs > 0)
-        ? `<div class="shift-breaks" title="${escapeHtml(s.breakSummary || '')}">☕ ${s.breakCount} · ${formatShortDuration(s.breakMs)} · на складе ${formatShortDuration(s.totalMs)}</div>`
-        : '';
       return `<div class="shift-card ${cls} slide-up">
         <div class="shift-actions">
           <button class="shift-action-btn edit" onclick='openEditModal(${idArg})' title="Редактировать">✏️</button>
           <button class="shift-action-btn delete" onclick='removeShift(${idArg})' title="Удалить">✕</button>
         </div>
-        <div class="shift-left"><div class="shift-date">${dateStr} ${pendingBadge}</div><div class="shift-hours">${s.hours} ч</div>${breakHtml}${noteHtml}</div>
+        <div class="shift-left"><div class="shift-date">${dateStr} ${pendingBadge}</div><div class="shift-hours">${s.hours} ч</div>${noteHtml}</div>
         <div class="shift-right"><div class="shift-earned">${s.earned.toLocaleString('ru-RU')} ₽</div><div class="shift-rate ${rateCls}">${icon} ${s.rate} ₽/час</div></div>
       </div>`;
     }).join('');
@@ -3954,167 +3794,12 @@ function render() {
   renderQuests();
   // Chart
   renderChart();
-  // Month goal / forecast / dow / records
-  renderMonthGoal();
-  renderDowStats();
-  renderRecords();
   // Calendar
   renderCalendar();
 }
 
-// ====== ЦЕЛЬ МЕСЯЦА / ПРОГНОЗ / ДНИ НЕДЕЛИ / РЕКОРДЫ ======
-function getMonthGoal() {
-  return parseInt(localStorage.getItem('ozon_month_goal') || '0', 10) || 0;
-}
-function openMonthGoalPrompt() {
-  const cur = getMonthGoal();
-  const v = prompt('Цель по заработку на этот месяц (₽):', cur || 80000);
-  if (v === null) return;
-  const n = parseInt(String(v).replace(/\D/g, ''), 10);
-  if (!n || n <= 0) { showToast('❌ Введи число больше нуля', 'error'); return; }
-  localStorage.setItem('ozon_month_goal', String(n));
-  markLocalChange();
-  schedulePushProgress();
-  render();
-  showToast(`🎯 Цель месяца: ${n.toLocaleString('ru-RU')} ₽`, 'success');
-}
-
-function renderMonthGoal() {
-  const el = document.getElementById('monthGoalCard');
-  if (!el) return;
-  const now = new Date();
-  const prefix = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-  const monthShifts = shifts.filter(s => s.date && s.date.startsWith(prefix));
-  const earned = monthShifts.reduce((a, s) => a + s.earned, 0);
-  const hours = monthShifts.reduce((a, s) => a + s.hours, 0);
-
-  // Средний заработок за смену: по этому месяцу, иначе по всей истории.
-  const avgPerShift = monthShifts.length
-    ? earned / monthShifts.length
-    : (shifts.length ? shifts.reduce((a, s) => a + s.earned, 0) / shifts.length : 0);
-
-  // Прогноз: уже заработано + запланированные в календаре будущие смены.
-  const plan = getCalendarPlan();
-  const todayS = todayStr();
-  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-  let plannedAhead = 0;
-  for (let d = 1; d <= daysInMonth; d++) {
-    const key = `${prefix}-${String(d).padStart(2, '0')}`;
-    if (key > todayS && plan[key] === 'shift') plannedAhead++;
-  }
-  const forecast = Math.round(earned + plannedAhead * avgPerShift);
-
-  const goal = getMonthGoal();
-  const pct = goal ? Math.min(100, (earned / goal) * 100) : 0;
-  const left = goal ? Math.max(0, goal - earned) : 0;
-  const shiftsLeft = (goal && avgPerShift > 0) ? Math.ceil(left / avgPerShift) : 0;
-
-  const goalBlock = goal ? `
-    <div class="chart-sub">
-      <div><div class="big">${earned.toLocaleString('ru-RU')} ₽</div><div class="lbl">из ${goal.toLocaleString('ru-RU')} ₽</div></div>
-      <div style="text-align:right;"><div class="big">${Math.round(pct)}%</div><div class="lbl">${left > 0 ? 'осталось ' + left.toLocaleString('ru-RU') + ' ₽' : 'цель взята! 🎉'}</div></div>
-    </div>
-    <div class="xp-bar" style="margin:4px 0 10px;"><div class="xp-fill" style="width:${pct}%"></div></div>
-    ${left > 0 && shiftsLeft ? `<div class="mg-note">≈ ещё ${shiftsLeft} ${pluralShifts(shiftsLeft)} до цели</div>` : ''}
-  ` : `<div class="mg-note">Цель не задана — нажми «Изменить», чтобы поставить план на месяц</div>`;
-
-  el.innerHTML = `
-    ${goalBlock}
-    <div class="mg-forecast">
-      <div class="mg-row"><span>📊 Прогноз к концу месяца</span><b>${forecast.toLocaleString('ru-RU')} ₽</b></div>
-      <div class="mg-row"><span>📋 Отработано смен</span><b>${monthShifts.length} · ${hours.toFixed(1)} ч</b></div>
-      <div class="mg-row"><span>📅 Запланировано впереди</span><b>${plannedAhead} ${pluralShifts(plannedAhead)}</b></div>
-    </div>`;
-}
-
-function pluralShifts(n) {
-  const a = Math.abs(n) % 100, b = a % 10;
-  if (a > 10 && a < 20) return 'смен';
-  if (b === 1) return 'смена';
-  if (b >= 2 && b <= 4) return 'смены';
-  return 'смен';
-}
-
-function renderDowStats() {
-  const el = document.getElementById('dowCard');
-  if (!el) return;
-  if (!shifts.length) { el.innerHTML = `<div class="mg-note">Нет данных — отработай первую смену</div>`; return; }
-  const names = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
-  const buckets = names.map(() => ({ earned: 0, hours: 0, count: 0 }));
-  for (const s of shifts) {
-    if (!s.date) continue;
-    const p = s.date.split('-');
-    let dow = new Date(parseInt(p[0]), parseInt(p[1]) - 1, parseInt(p[2])).getDay() - 1;
-    if (dow < 0) dow = 6;
-    buckets[dow].earned += s.earned;
-    buckets[dow].hours += s.hours;
-    buckets[dow].count++;
-  }
-  const rates = buckets.map(b => b.hours > 0 ? Math.round(b.earned / b.hours) : 0);
-  const maxRate = Math.max(...rates, 1);
-  const bestRate = Math.max(...rates);
-  el.innerHTML = names.map((n, i) => {
-    const b = buckets[i], r = rates[i];
-    const pct = (r / maxRate) * 100;
-    const cls = r > 0 && r === bestRate ? 'is-top' : (r === 0 ? 'is-zero' : '');
-    return `<div class="dow-row ${cls}">
-      <span class="dow-name">${n}</span>
-      <div class="dow-bar"><div class="dow-fill" style="width:${pct}%"></div></div>
-      <span class="dow-val">${r ? r.toLocaleString('ru-RU') + ' ₽/ч' : '—'}</span>
-      <span class="dow-cnt">${b.count || ''}</span>
-    </div>`;
-  }).join('');
-}
-
-function renderRecords() {
-  const el = document.getElementById('recordsCard');
-  if (!el) return;
-  if (!shifts.length) { el.innerHTML = `<div class="mg-note">Рекорды появятся после первой смены</div>`; return; }
-  const bestEarn = shifts.reduce((a, s) => s.earned > a.earned ? s : a, shifts[0]);
-  const bestRate = shifts.reduce((a, s) => s.rate > a.rate ? s : a, shifts[0]);
-  const longest = shifts.reduce((a, s) => s.hours > a.hours ? s : a, shifts[0]);
-  const bestStreak = calcBestStreak(DIFFICULTIES[difficulty].goal);
-  const fmtD = d => { const p = d.split('-'); return new Date(parseInt(p[0]), parseInt(p[1]) - 1, parseInt(p[2])).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }); };
-  el.innerHTML = `
-    <div class="mg-row"><span>💰 Лучшая смена</span><b>${bestEarn.earned.toLocaleString('ru-RU')} ₽ <span class="rec-date">${fmtD(bestEarn.date)}</span></b></div>
-    <div class="mg-row"><span>💎 Лучший rate</span><b>${bestRate.rate.toLocaleString('ru-RU')} ₽/ч <span class="rec-date">${fmtD(bestRate.date)}</span></b></div>
-    <div class="mg-row"><span>⏱ Самая долгая смена</span><b>${longest.hours} ч <span class="rec-date">${fmtD(longest.date)}</span></b></div>
-    <div class="mg-row"><span>🔥 Лучший страйк</span><b>${bestStreak} ${bestStreak === 1 ? 'день' : 'дней'}</b></div>`;
-}
-
-// Лучший страйк за всю историю (calcStreak считает только текущий).
-function calcBestStreak(goal) {
-  const dateMap = {};
-  for (const s of shifts) {
-    if (!dateMap[s.date] || s.rate > dateMap[s.date]) dateMap[s.date] = s.rate;
-  }
-  const dates = Object.keys(dateMap).sort();
-  let best = 0, cur = 0, prev = null;
-  for (const d of dates) {
-    const p = d.split('-');
-    const dt = new Date(parseInt(p[0]), parseInt(p[1]) - 1, parseInt(p[2]));
-    const consecutive = prev && Math.round((dt - prev) / 86400000) === 1;
-    if (dateMap[d] >= goal) {
-      cur = consecutive ? cur + 1 : 1;
-      if (cur > best) best = cur;
-    } else {
-      cur = 0;
-    }
-    prev = dt;
-  }
-  return best;
-}
-
 // ====== STREAK ======
-function getStreakShields() {
-  try {
-    const b = JSON.parse(localStorage.getItem('ozon_shop_boosts') || '{}');
-    return Array.isArray(b.streak_shields) ? b.streak_shields : [];
-  } catch (e) { return []; }
-}
-
 function calcStreak(goal) {
-  const shields = getStreakShields();
   const dateMap = {};
   for (const s of shifts) {
     if (!dateMap[s.date] || s.rate > dateMap[s.date]) dateMap[s.date] = s.rate;
@@ -4126,21 +3811,11 @@ function calcStreak(goal) {
   for (let i = 0; i < dates.length; i++) {
     const parts = dates[i].split('-');
     const shiftDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-    // Купленная защита страйка закрывает дыру в серии.
-    const gapCovered = (from, to) => {
-      for (let d = new Date(from); d > to; d.setDate(d.getDate() - 1)) {
-        const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-        if (d.getTime() !== from.getTime() && !shields.includes(key)) return false;
-      }
-      return true;
-    };
-    if (i === 0) {
-      if (Math.floor((today - shiftDate) / 86400000) > 1 && !gapCovered(today, shiftDate)) return 0;
-    }
+    if (i === 0) { if (Math.floor((today - shiftDate) / 86400000) > 1) return 0; }
     if (i > 0) {
       const prevParts = dates[i-1].split('-');
       const prevDate = new Date(parseInt(prevParts[0]), parseInt(prevParts[1]) - 1, parseInt(prevParts[2]));
-      if (Math.floor((prevDate - shiftDate) / 86400000) !== 1 && !gapCovered(prevDate, shiftDate)) break;
+      if (Math.floor((prevDate - shiftDate) / 86400000) !== 1) break;
     }
     if (dateMap[dates[i]] >= goal) streak++; else break;
   }
@@ -4261,7 +3936,7 @@ function renderChart() {
 
 // ====== PWA: SERVICE WORKER ======
 // Регистрируем только по http/https — с file:// браузер ругается.
-const APP_VERSION = 'v4.5.0';
+const APP_VERSION = 'v4.4.2';
 
 // Страховка: кнопка баннера обязана работать даже если обработчик
 // от service worker по какой-то причине не навесился.
