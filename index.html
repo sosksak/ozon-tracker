@@ -15,7 +15,7 @@
 <link rel="manifest" href="manifest.json?v=4">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
-<title>💰 OZON Grind Tracker v4.1</title>
+<title>💰 OZON Grind Tracker v4.2</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="config.js?v=3"></script>
 <style>
@@ -365,53 +365,237 @@ body {
 .cat-pick-btn:hover { transform: scale(1.05); filter: brightness(1.3); }
 .cat-pick-btn:active { transform: scale(0.95); }
 
-/* LIFE QUEST STATS */
+/* ============ LIFE QUEST STATS — GAME HUD v4.2 ============ */
 .life-stats-panel { margin-bottom: 14px; }
-.lq-level-header {
-  display: flex; align-items: center; gap: 10px; padding: 10px;
-  background: rgba(187,134,252,0.06); border-radius: 12px; margin-bottom: 10px;
-  border: 1px solid rgba(187,134,252,0.1);
+
+/* --- HERO: ранг-карта --- */
+.lq-hero {
+  position: relative; overflow: hidden;
+  display: flex; align-items: center; gap: 14px;
+  padding: 16px 14px; margin-bottom: 10px;
+  border-radius: 18px;
+  background:
+    radial-gradient(120% 140% at 0% 0%, rgba(187,134,252,0.16), transparent 60%),
+    radial-gradient(120% 140% at 100% 100%, rgba(0,229,255,0.12), transparent 60%),
+    linear-gradient(145deg, #1a1a2e, #13131f);
+  border: 1px solid rgba(187,134,252,0.22);
+  box-shadow: 0 8px 28px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.05);
 }
-.lq-level-icon { font-size: 32px; }
-.lq-level-info { flex: 1; }
-.lq-level-name { font-size: 13px; font-weight: 700; color: var(--purple); }
-.lq-xp-bar {
-  height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px;
-  margin-top: 4px; overflow: hidden;
+/* бегущий блик по карте */
+.lq-hero::after {
+  content: ''; position: absolute; top: 0; left: -60%; width: 40%; height: 100%;
+  background: linear-gradient(100deg, transparent, rgba(255,255,255,0.07), transparent);
+  transform: skewX(-18deg); animation: lq-hero-sheen 7s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes lq-hero-sheen {
+  0%, 72% { left: -60%; }
+  100% { left: 130%; }
+}
+
+/* --- БЕЙДЖ УРОВНЯ с кольцом прогресса (conic-gradient) --- */
+.lq-badge {
+  position: relative; flex-shrink: 0;
+  width: 68px; height: 68px; border-radius: 50%;
+  display: grid; place-items: center;
+  background:
+    conic-gradient(from -90deg,
+      var(--purple) 0turn,
+      var(--cyan) calc(var(--p, 0) * 1turn),
+      rgba(255,255,255,0.07) calc(var(--p, 0) * 1turn),
+      rgba(255,255,255,0.07) 1turn);
+  transition: --p 0.9s ease;
+  filter: drop-shadow(0 0 10px rgba(187,134,252,0.35));
+}
+.lq-badge::before {
+  content: ''; position: absolute; inset: 5px; border-radius: 50%;
+  background: linear-gradient(150deg, #1d1d33, #141422);
+  border: 1px solid rgba(255,255,255,0.07);
+}
+.lq-badge-inner {
+  position: relative; z-index: 1; text-align: center; line-height: 1;
+}
+.lq-badge-icon { display: block; font-size: 24px; }
+.lq-badge-lvl {
+  display: block; margin-top: 2px;
+  font-size: 11px; font-weight: 800; letter-spacing: 0.5px;
+  color: var(--gold); font-variant-numeric: tabular-nums;
+}
+.lq-badge.pop { animation: lq-badge-pop 0.65s cubic-bezier(0.34, 1.56, 0.64, 1); }
+@keyframes lq-badge-pop {
+  0%   { transform: scale(1) rotate(0deg); }
+  35%  { transform: scale(1.3) rotate(-8deg); }
+  60%  { transform: scale(0.93) rotate(4deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+/* --- ПРАВАЯ ЧАСТЬ: ранг + бар --- */
+.lq-hero-main { flex: 1; min-width: 0; }
+.lq-rank-row {
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  margin-bottom: 2px;
+}
+.lq-rank-name {
+  font-size: 15px; font-weight: 800; letter-spacing: 0.3px;
+  background: linear-gradient(90deg, var(--gold-light), var(--gold));
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-transform: uppercase;
+}
+.lq-boost-badge {
+  background: rgba(255,215,0,0.15); color: var(--gold);
+  padding: 2px 7px; border-radius: 6px; font-size: 10px; font-weight: 800;
+  border: 1px solid rgba(255,215,0,0.3);
+}
+.lq-next-rank {
+  font-size: 10px; color: var(--text-dim); margin-bottom: 7px;
+}
+.lq-next-rank b { color: var(--purple); font-weight: 700; }
+
+/* XP БАР: трек + заливка + бегущий шайн + сегменты */
+.lq-xp-track {
+  position: relative; height: 14px; border-radius: 8px;
+  background: rgba(0,0,0,0.45); overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
 }
 .lq-xp-fill {
-  height: 100%; background: linear-gradient(90deg, var(--purple), var(--cyan));
-  border-radius: 3px; transition: width 0.5s;
+  position: relative; height: 100%; width: 0; border-radius: 8px;
+  background: linear-gradient(90deg, #7c4dff, var(--purple) 55%, var(--cyan));
+  box-shadow: 0 0 12px rgba(187,134,252,0.55);
+  transition: width 0.9s cubic-bezier(0.65, 0, 0.35, 1);
 }
-.lq-xp-text { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
-.lq-total-xp { font-size: 16px; font-weight: 700; color: var(--gold); white-space: nowrap; }
+/* блик, бегущий внутри заливки */
+.lq-xp-fill::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(100deg, transparent 20%, rgba(255,255,255,0.45) 50%, transparent 80%);
+  animation: lq-xp-shine 2.2s linear infinite;
+}
+@keyframes lq-xp-shine {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(100%); }
+}
+/* насечки поверх трека — делят бар на 10 делений */
+.lq-xp-ticks {
+  position: absolute; inset: 0; pointer-events: none;
+  background: repeating-linear-gradient(90deg,
+    transparent 0 calc(10% - 1px), rgba(0,0,0,0.33) calc(10% - 1px) 10%);
+}
+.lq-xp-caption {
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin-top: 5px; font-size: 10px; color: var(--text-dim);
+}
+.lq-xp-caption .lq-xp-now {
+  font-weight: 800; color: var(--text); font-variant-numeric: tabular-nums;
+}
+.lq-total-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 9px; border-radius: 999px;
+  background: rgba(255,215,0,0.1); border: 1px solid rgba(255,215,0,0.28);
+  color: var(--gold); font-size: 11px; font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
 
-.lq-stats-grid {
-  display: flex; gap: 8px; margin-bottom: 10px;
-}
+/* --- МИНИ-СТАТЫ --- */
+.lq-stats-grid { display: flex; gap: 8px; margin-bottom: 12px; }
 .lq-mini-stat {
-  flex: 1; text-align: center; padding: 8px 4px;
-  background: rgba(255,255,255,0.03); border-radius: 10px;
+  position: relative; flex: 1; text-align: center;
+  padding: 10px 4px 8px; border-radius: 14px;
+  background: linear-gradient(160deg, rgba(255,255,255,0.055), rgba(255,255,255,0.015));
   border: 1px solid var(--glass-border);
+  transition: transform 0.2s, border-color 0.2s;
 }
-.lq-ms-val { display: block; font-size: 18px; font-weight: 700; color: var(--text); }
-.lq-ms-lbl { display: block; font-size: 10px; color: var(--text-dim); }
+.lq-mini-stat:active { transform: translateY(1px) scale(0.98); }
+.lq-ms-ico { display: block; font-size: 14px; margin-bottom: 2px; opacity: 0.85; }
+.lq-ms-val {
+  display: block; font-size: 19px; font-weight: 800; color: var(--text);
+  line-height: 1.1; font-variant-numeric: tabular-nums;
+}
+.lq-ms-lbl {
+  display: block; font-size: 9px; color: var(--text-dim);
+  text-transform: uppercase; letter-spacing: 0.6px; margin-top: 1px;
+}
 
-.lq-cat-bars { display: flex; flex-direction: column; gap: 4px; }
-.lq-stat-row {
-  display: flex; align-items: center; gap: 6px; font-size: 12px;
+/* --- КАТЕГОРИИ: заголовок + ряды --- */
+.lq-cat-title {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 10px; font-weight: 800; color: var(--text-dim);
+  text-transform: uppercase; letter-spacing: 1px;
+  margin: 0 2px 7px;
 }
-.lq-stat-icon { font-size: 14px; width: 20px; text-align: center; }
-.lq-stat-name { width: 70px; color: var(--text-dim); font-size: 11px; }
+.lq-cat-title::before {
+  content: ''; flex: 1; height: 1px; margin-right: 8px; order: 2;
+  background: linear-gradient(90deg, var(--glass-border), transparent);
+}
+.lq-cat-bars { display: flex; flex-direction: column; gap: 6px; }
+.lq-stat-row {
+  display: flex; align-items: center; gap: 8px; font-size: 12px;
+  padding: 5px 8px; border-radius: 10px;
+  background: rgba(255,255,255,0.022);
+  border: 1px solid transparent;
+  transition: background 0.2s, border-color 0.2s;
+}
+/* подсветка топовой категории */
+.lq-stat-row.is-top {
+  background: rgba(255,215,0,0.05);
+  border-color: rgba(255,215,0,0.18);
+}
+.lq-stat-icon { font-size: 15px; width: 20px; text-align: center; flex-shrink: 0; }
+.lq-stat-name {
+  width: 74px; flex-shrink: 0; color: var(--text);
+  font-size: 11px; font-weight: 600;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
 .lq-stat-bar {
-  flex: 1; height: 8px; background: rgba(255,255,255,0.06);
-  border-radius: 4px; overflow: hidden;
+  flex: 1; min-width: 0; height: 9px; border-radius: 5px;
+  background: rgba(0,0,0,0.4); overflow: hidden;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);
 }
 .lq-stat-fill {
-  height: 100%; border-radius: 4px; transition: width 0.5s;
-  min-width: 2px;
+  height: 100%; border-radius: 5px; min-width: 3px;
+  transition: width 0.8s cubic-bezier(0.65, 0, 0.35, 1);
+  box-shadow: 0 0 8px currentColor;
 }
-.lq-stat-val { width: 30px; text-align: right; font-weight: 700; color: var(--text); font-size: 11px; }
+.lq-stat-val {
+  width: 34px; text-align: right; flex-shrink: 0;
+  font-weight: 800; color: var(--text); font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.lq-stat-row.is-zero { opacity: 0.4; }
+
+/* --- LEVEL UP тост --- */
+.lq-levelup-toast {
+  position: fixed; left: 50%; top: 22%; z-index: 999;
+  transform: translate(-50%, -10px) scale(0.9);
+  padding: 14px 26px; border-radius: 16px;
+  background: linear-gradient(145deg, #2a1f4d, #1a1430);
+  border: 1px solid rgba(255,215,0,0.45);
+  box-shadow: 0 10px 40px rgba(187,134,252,0.4);
+  text-align: center; opacity: 0; pointer-events: none;
+  transition: opacity 0.3s, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.lq-levelup-toast.show { opacity: 1; transform: translate(-50%, 0) scale(1); }
+.lq-lu-title {
+  font-size: 18px; font-weight: 900; letter-spacing: 1px;
+  background: linear-gradient(90deg, var(--gold-light), var(--gold));
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.lq-lu-sub { font-size: 12px; color: var(--purple); font-weight: 700; margin-top: 3px; }
+
+/* узкие экраны */
+@media (max-width: 360px) {
+  .lq-badge { width: 58px; height: 58px; }
+  .lq-badge-icon { font-size: 20px; }
+  .lq-rank-name { font-size: 13px; }
+  .lq-stat-name { width: 60px; }
+  .lq-ms-val { font-size: 17px; }
+}
+/* уважение к reduce-motion */
+@media (prefers-reduced-motion: reduce) {
+  .lq-hero::after, .lq-xp-fill::after { animation: none; }
+  .lq-xp-fill, .lq-stat-fill { transition: none; }
+}
 
 /* MOTIVATION TIP */
 .motivation-tip {
@@ -1026,7 +1210,6 @@ body {
     <button class="data-tool-btn" onclick="exportDataCSV()">📤 Экспорт CSV</button>
     <button class="data-tool-btn" onclick="exportDataJSON()">💾 Бэкап JSON</button>
     <button class="data-tool-btn" onclick="openImportPicker()">📥 Восстановить</button>
-    <button class="data-tool-btn" onclick="manualRestoreXP()">🛠 Задать XP</button>
   </div>
   <input type="file" id="importFile" accept="application/json,.json" style="display:none" onchange="handleImportFile(event)">
 </div>
@@ -1629,6 +1812,26 @@ function getTodayLifeQuests() {
 }
 
 // ====== LIFE QUEST XP SYSTEM ======
+
+// ВОССТАНОВЛЕНИЕ: реальный Life XP был ~200 (LVL 2), а 20400 — это рубли из
+// кошелька, я их спутал. Накатываем один раз: только если XP ещё пустой,
+// чтобы не затереть живой прогресс при повторных заходах.
+const XP_RESTORE_VALUE = 200;
+function restoreLostXPOnce() {
+  try {
+    if (localStorage.getItem('ozon_xp_restored_v42')) return;
+    const raw = localStorage.getItem('ozon_life_xp');
+    let cur = null;
+    try { cur = raw ? JSON.parse(raw) : null; } catch (e) { cur = null; }
+    if (!cur || !cur.total) {
+      const seeded = cur || { total: 0, cats: {}, history: [], questsDone: 0, daysDone: 0, lastDay: '' };
+      seeded.total = XP_RESTORE_VALUE;
+      localStorage.setItem('ozon_life_xp', JSON.stringify(seeded));
+    }
+    localStorage.setItem('ozon_xp_restored_v42', '1');
+  } catch (e) { console.warn('XP restore skipped:', e); }
+}
+
 function getLifeXP() {
   try {
     return JSON.parse(localStorage.getItem('ozon_life_xp') || '{"total":0,"cats":{},"history":[],"questsDone":0,"daysDone":0,"lastDay":""}');
@@ -1706,51 +1909,129 @@ function getLQLevel(xp) {
   return { current, next };
 }
 
+// Храним последний показанный уровень, чтобы поймать момент level-up.
+let _lastShownLvl = null;
+
 function renderLifeStats() {
   const data = getLifeXP();
   const { current, next } = getLQLevel(data.total);
   const container = document.getElementById('lifeStatsPanel');
   if (!container) return;
 
+  // прогресс внутри текущего уровня
   let progressPct = 100;
-  let xpText = 'MAX LEVEL! 🌟';
+  let xpNow = data.total, xpNeed = null;
   if (next) {
     progressPct = ((data.total - current.xp) / (next.xp - current.xp)) * 100;
-    xpText = `${data.total} / ${next.xp} XP`;
+    xpNow = data.total - current.xp;
+    xpNeed = next.xp - current.xp;
   }
+  progressPct = Math.max(0, Math.min(progressPct, 100));
 
-  const maxCatXP = Math.max(...Object.values(data.cats || {}), 1);
-  const catBars = Object.entries(LQ_CATEGORIES).map(([key, cat]) => {
-    const catXP = (data.cats && data.cats[key]) || 0;
-    const pct = (catXP / maxCatXP) * 100;
-    return `<div class="lq-stat-row">
-      <span class="lq-stat-icon">${cat.icon}</span>
-      <span class="lq-stat-name">${cat.name}</span>
-      <div class="lq-stat-bar"><div class="lq-stat-fill" style="width:${pct}%;background:${cat.color}"></div></div>
-      <span class="lq-stat-val">${catXP}</span>
+  // категории: сортируем по убыванию, топ подсвечиваем
+  const catEntries = Object.entries(LQ_CATEGORIES).map(([key, cat]) => ({
+    key, cat, xp: (data.cats && data.cats[key]) || 0
+  })).sort((a, b) => b.xp - a.xp);
+  const maxCatXP = Math.max(...catEntries.map(e => e.xp), 1);
+  const catBars = catEntries.map((e, i) => {
+    const pct = (e.xp / maxCatXP) * 100;
+    const cls = e.xp === 0 ? 'is-zero' : (i === 0 ? 'is-top' : '');
+    return `<div class="lq-stat-row ${cls}">
+      <span class="lq-stat-icon">${e.cat.icon}</span>
+      <span class="lq-stat-name">${e.cat.name}</span>
+      <div class="lq-stat-bar"><div class="lq-stat-fill" data-target="${pct}" style="width:0%;background:${e.cat.color};color:${e.cat.color}"></div></div>
+      <span class="lq-stat-val">${e.xp}</span>
     </div>`;
   }).join('');
 
   const multiplier = getXpMultiplier();
-  const boostBadge = multiplier > 1 ? `<span style="background:rgba(255,215,0,0.15);color:var(--gold);padding:2px 6px;border-radius:6px;font-size:10px;font-weight:700;margin-left:6px">x${multiplier} XP</span>` : '';
+  const boostBadge = multiplier > 1 ? `<span class="lq-boost-badge">x${multiplier} XP</span>` : '';
+  const nextLine = next
+    ? `до <b>${next.name}</b> — ещё ${next.xp - data.total} XP`
+    : 'максимальный ранг достигнут 🌟';
+  const avgPerQuest = data.questsDone > 0 ? Math.round(data.total / data.questsDone) : 0;
 
   container.innerHTML = `
-    <div class="lq-level-header">
-      <span class="lq-level-icon">${current.icon}</span>
-      <div class="lq-level-info">
-        <div class="lq-level-name">LVL ${current.lvl} — ${current.name}${boostBadge}</div>
-        <div class="lq-xp-bar"><div class="lq-xp-fill" style="width:${Math.min(progressPct, 100)}%"></div></div>
-        <div class="lq-xp-text">${xpText}</div>
+    <div class="lq-hero">
+      <div class="lq-badge" id="lqBadge" style="--p:${(progressPct / 100).toFixed(3)}">
+        <span class="lq-badge-inner">
+          <span class="lq-badge-icon">${current.icon}</span>
+          <span class="lq-badge-lvl">LVL ${current.lvl}</span>
+        </span>
       </div>
-      <span class="lq-total-xp">✨ ${data.total}</span>
+      <div class="lq-hero-main">
+        <div class="lq-rank-row">
+          <span class="lq-rank-name">${current.name}</span>
+          ${boostBadge}
+        </div>
+        <div class="lq-next-rank">${nextLine}</div>
+        <div class="lq-xp-track">
+          <div class="lq-xp-fill" data-target="${progressPct}" style="width:0%"></div>
+          <div class="lq-xp-ticks"></div>
+        </div>
+        <div class="lq-xp-caption">
+          <span><span class="lq-xp-now">${xpNow}</span>${xpNeed ? ' / ' + xpNeed + ' XP' : ' XP'}</span>
+          <span class="lq-total-chip">✨ ${data.total}</span>
+        </div>
+      </div>
     </div>
     <div class="lq-stats-grid">
-      <div class="lq-mini-stat"><span class="lq-ms-val">${data.questsDone || 0}</span><span class="lq-ms-lbl">квестов</span></div>
-      <div class="lq-mini-stat"><span class="lq-ms-val">${data.daysDone || 0}</span><span class="lq-ms-lbl">дней</span></div>
-      <div class="lq-mini-stat"><span class="lq-ms-val">${data.questsDone > 0 ? Math.round(data.total / data.questsDone) : 0}</span><span class="lq-ms-lbl">XP/квест</span></div>
+      <div class="lq-mini-stat">
+        <span class="lq-ms-ico">⚔️</span>
+        <span class="lq-ms-val">${data.questsDone || 0}</span>
+        <span class="lq-ms-lbl">квестов</span>
+      </div>
+      <div class="lq-mini-stat">
+        <span class="lq-ms-ico">🔥</span>
+        <span class="lq-ms-val">${data.daysDone || 0}</span>
+        <span class="lq-ms-lbl">дней</span>
+      </div>
+      <div class="lq-mini-stat">
+        <span class="lq-ms-ico">📈</span>
+        <span class="lq-ms-val">${avgPerQuest}</span>
+        <span class="lq-ms-lbl">XP/квест</span>
+      </div>
     </div>
+    <div class="lq-cat-title"><span>Навыки</span></div>
     <div class="lq-cat-bars">${catBars}</div>
   `;
+
+  // Полоски рисуем с нуля и доводим до цели в следующем кадре —
+  // иначе inline-width применяется сразу и анимации не видно.
+  requestAnimationFrame(() => {
+    const xpFill = container.querySelector('.lq-xp-fill');
+    if (xpFill) xpFill.style.width = xpFill.dataset.target + '%';
+    container.querySelectorAll('.lq-stat-fill').forEach(el => {
+      el.style.width = el.dataset.target + '%';
+    });
+  });
+
+  // Поймали переход на новый уровень — празднуем.
+  if (_lastShownLvl !== null && current.lvl > _lastShownLvl) {
+    celebrateLevelUp(current);
+  }
+  _lastShownLvl = current.lvl;
+}
+
+// Тост + поп бейджа при новом уровне.
+function celebrateLevelUp(level) {
+  const badge = document.getElementById('lqBadge');
+  if (badge) {
+    badge.classList.remove('pop');
+    void badge.offsetWidth; // перезапуск анимации
+    badge.classList.add('pop');
+  }
+  let toast = document.getElementById('lqLevelUpToast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'lqLevelUpToast';
+    toast.className = 'lq-levelup-toast';
+    document.body.appendChild(toast);
+  }
+  toast.innerHTML = `<div class="lq-lu-title">${level.icon} LEVEL UP!</div>
+    <div class="lq-lu-sub">LVL ${level.lvl} — ${level.name}</div>`;
+  requestAnimationFrame(() => toast.classList.add('show'));
+  setTimeout(() => toast.classList.remove('show'), 2600);
 }
 
 function getLifeQuestState() {
@@ -2978,6 +3259,10 @@ async function init() {
   document.getElementById('inputDate').value = todayStr();
   setDifficulty(difficulty, false);
 
+  // Сначала возвращаем потерянный XP локально, потом тянем облако —
+  // mergeLifeXP берёт максимум, так что ни одна из сторон не затрётся.
+  restoreLostXPOnce();
+
   try { await loadShifts(); } catch(e) { console.error('Init error:', e); setSyncStatus('error', '❌ Ошибка загрузки'); }
 
   // FIX: доливаем смены, которые не ушли в облако из-за обрыва связи
@@ -3178,10 +3463,12 @@ async function handleImportFile(ev) {
   }
 }
 
-// Ручное восстановление XP — если бэкапа нет, а прогресс потерялся.
-function manualRestoreXP() {
+// Ручное восстановление XP было кнопкой в UI — убрал: в готовом приложении
+// читерская «задать XP» ломает смысл прогресса. Оставляю функцию доступной
+// из консоли на случай аварийного восстановления.
+function manualRestoreXP(value) {
   const cur = getLifeXP();
-  const val = prompt('Сколько всего Life XP должно быть?', String(cur.total || 0));
+  const val = (value !== undefined) ? value : prompt('Сколько всего Life XP должно быть?', String(cur.total || 0));
   if (val === null) return;
   const n = parseInt(val, 10);
   if (isNaN(n) || n < 0) { showToast('Нужно число', 'warn'); return; }

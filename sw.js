@@ -5,7 +5,7 @@
 //   - иконки/манифест/CDN     : cache-first (не меняются).
 //   - Supabase REST/realtime  : НИКОГДА не кэшируем (данные должны быть живыми).
 
-const VERSION = 'v4.1.0';
+const VERSION = 'v4.2.0';
 const CACHE = 'ozon-tracker-' + VERSION;
 
 const PRECACHE = [
