@@ -15,7 +15,7 @@
 <link rel="manifest" href="manifest.json?v=4">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
-<title>💰 OZON Grind Tracker v4.0</title>
+<title>💰 OZON Grind Tracker v4.1</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="config.js?v=3"></script>
 <style>
@@ -1025,7 +1025,10 @@ body {
   <div class="data-tools">
     <button class="data-tool-btn" onclick="exportDataCSV()">📤 Экспорт CSV</button>
     <button class="data-tool-btn" onclick="exportDataJSON()">💾 Бэкап JSON</button>
+    <button class="data-tool-btn" onclick="openImportPicker()">📥 Восстановить</button>
+    <button class="data-tool-btn" onclick="manualRestoreXP()">🛠 Задать XP</button>
   </div>
+  <input type="file" id="importFile" accept="application/json,.json" style="display:none" onchange="handleImportFile(event)">
 </div>
 
 </div>
@@ -1634,6 +1637,7 @@ function getLifeXP() {
 
 function saveLifeXP(data) {
   localStorage.setItem('ozon_life_xp', JSON.stringify(data));
+  schedulePushProgress();
 }
 
 function getXpMultiplier() {
@@ -1797,6 +1801,7 @@ function getShiftBonuses() {
 
 function saveShiftBonuses(data) {
   localStorage.setItem('ozon_shift_bonuses', JSON.stringify(data));
+  schedulePushProgress();
 }
 
 function getChosenCategory() {
@@ -1810,6 +1815,7 @@ function getChosenCategory() {
 
 function saveChosenCategory(cat, forDate) {
   localStorage.setItem('ozon_chosen_category', JSON.stringify({ category: cat, forDate: forDate }));
+  schedulePushProgress();
 }
 
 function checkAndGrantBonuses() {
@@ -1920,6 +1926,7 @@ function getWeeklyCategoryChoice() {
 
 function saveWeeklyCategoryChoice(data) {
   localStorage.setItem('ozon_weekly_cat', JSON.stringify(data));
+  schedulePushProgress();
 }
 
 function useWeeklyCategoryChoice() {
@@ -2281,6 +2288,7 @@ function getShopPurchases() {
 }
 function saveShopPurchases(data) {
   localStorage.setItem('ozon_shop_purchases', JSON.stringify(data));
+  schedulePushProgress();
 }
 
 function getShopOwned(itemId) {
@@ -2320,6 +2328,7 @@ function shopBuyItem(itemId) {
     if (item.cat === 'theme') {
       applyTheme(itemId);
       localStorage.setItem('ozon_active_theme', itemId);
+      schedulePushProgress();
     }
   }
 
@@ -2348,6 +2357,7 @@ function shopBuyItem(itemId) {
     }
 
     localStorage.setItem('ozon_shop_boosts', JSON.stringify(boosts));
+  schedulePushProgress();
   } else {
     showToast(`✅ ${item.icon} ${item.name} куплено!`, 'success');
   }
@@ -2435,7 +2445,7 @@ function renderShop() {
         if (isActiveTheme) {
           btnHtml = `<button class="shop-item-price bought" onclick="resetTheme();renderShop()" style="font-size:11px">🔄 Сброс</button>`;
         } else {
-          btnHtml = `<button class="shop-item-price buy" onclick="applyTheme('${item.id}');localStorage.setItem('ozon_active_theme','${item.id}');renderShop()" style="font-size:11px">🎨 Надеть</button>`;
+          btnHtml = `<button class="shop-item-price buy" onclick="applyTheme('${item.id}');localStorage.setItem('ozon_active_theme','${item.id}');schedulePushProgress();renderShop()" style="font-size:11px">🎨 Надеть</button>`;
         }
       } else {
         const btnClass = owned ? 'bought' : (canAfford ? 'buy' : 'expensive');
@@ -2625,6 +2635,114 @@ function backupToLocal() {
   try { localStorage.setItem('ozon_tracker', JSON.stringify({ shifts, difficulty })); } catch(e) {}
 }
 
+// ====== PROGRESS SYNC (v4.1) ======
+// ПРИЧИНА БАГА: весь прогресс (лайф-XP, покупки, темы, планы) жил ТОЛЬКО в
+// localStorage. localStorage привязан к конкретному браузеру/контейнеру, поэтому
+// запуск как отдельное приложение (или другой браузер / переустановка) открывал
+// ПУСТОЕ хранилище — XP и уровень выглядели «сброшенными».
+// Лечение: прогресс уезжает в облако и подтягивается на любом устройстве.
+
+const PROGRESS_KEYS = [
+  'ozon_life_xp',
+  'ozon_shop_purchases',
+  'ozon_shop_boosts',
+  'ozon_active_theme',
+  'ozon_calendar_plan',
+  'ozon_shift_bonuses',
+  'ozon_weekly_cat',
+  'ozon_chosen_category',
+  'ozon_difficulty'
+];
+
+let cloudStateOk = false;
+
+function collectProgress() {
+  const out = {};
+  for (const k of PROGRESS_KEYS) {
+    const v = localStorage.getItem(k);
+    if (v !== null) out[k] = v;
+  }
+  return out;
+}
+
+// Главное правило слияния: НИКОГДА не уменьшаем накопленный XP и не теряем
+// историю — берём максимум/объединение, чтобы «пустое» устройство не затёрло облако.
+function mergeLifeXP(localRaw, cloudRaw) {
+  let a = {}, b = {};
+  try { a = JSON.parse(localRaw || '{}'); } catch(e) {}
+  try { b = JSON.parse(cloudRaw || '{}'); } catch(e) {}
+
+  const hist = Array.from(new Set([...(a.history || []), ...(b.history || [])]));
+  const cats = {};
+  for (const src of [a.cats || {}, b.cats || {}]) {
+    for (const [k, v] of Object.entries(src)) cats[k] = Math.max(cats[k] || 0, v || 0);
+  }
+  return JSON.stringify({
+    total: Math.max(a.total || 0, b.total || 0),
+    cats,
+    history: hist.slice(-500),
+    questsDone: Math.max(a.questsDone || 0, b.questsDone || 0),
+    daysDone: Math.max(a.daysDone || 0, b.daysDone || 0),
+    lastDay: (a.lastDay || '') > (b.lastDay || '') ? a.lastDay : b.lastDay
+  });
+}
+
+function applyProgress(cloud) {
+  if (!cloud || typeof cloud !== 'object') return false;
+  let changed = false;
+
+  for (const k of PROGRESS_KEYS) {
+    const cloudVal = cloud[k];
+    if (cloudVal === undefined) continue;
+    const localVal = localStorage.getItem(k);
+
+    if (k === 'ozon_life_xp') {
+      const merged = mergeLifeXP(localVal, cloudVal);
+      if (merged !== localVal) { localStorage.setItem(k, merged); changed = true; }
+      continue;
+    }
+    // остальное: облако выигрывает только если локально пусто
+    if (localVal === null) { localStorage.setItem(k, cloudVal); changed = true; }
+  }
+  return changed;
+}
+
+async function pullProgress() {
+  if (!sb) return false;
+  try {
+    const { data, error } = await sb.from('app_state').select('value').eq('key', 'progress').maybeSingle();
+    if (error) throw error;
+    cloudStateOk = true;
+    if (data && data.value) return applyProgress(data.value);
+    return false;
+  } catch (e) {
+    // таблица ещё не создана или нет прав — работаем локально, без шума
+    cloudStateOk = false;
+    console.warn('Progress pull skipped:', e.message || e);
+    return false;
+  }
+}
+
+let pushTimer = null;
+function schedulePushProgress() {
+  if (!sb) return;
+  clearTimeout(pushTimer);
+  pushTimer = setTimeout(pushProgress, 1200);
+}
+
+async function pushProgress() {
+  if (!sb) return;
+  try {
+    const { error } = await sb.from('app_state')
+      .upsert({ key: 'progress', value: collectProgress(), updated_at: new Date().toISOString() }, { onConflict: 'key' });
+    if (error) throw error;
+    cloudStateOk = true;
+  } catch (e) {
+    cloudStateOk = false;
+    console.warn('Progress push skipped:', e.message || e);
+  }
+}
+
 function setSyncStatus(type, text) {
   const el = document.getElementById('syncStatus');
   if (!el) return;
@@ -2696,6 +2814,7 @@ function getCalendarPlan() {
 }
 function saveCalendarPlan(plan) {
   localStorage.setItem('ozon_calendar_plan', JSON.stringify(plan));
+  schedulePushProgress();
 }
 
 function calInit() {
@@ -2864,6 +2983,10 @@ async function init() {
   // FIX: доливаем смены, которые не ушли в облако из-за обрыва связи
   try { await flushPendingShifts(); } catch(e) { console.error('Flush init error:', e); }
 
+  // FIX: подтягиваем прогресс из облака ДО отрисовки — иначе новое
+  // устройство/приложение показало бы пустой XP и уровень.
+  try { await pullProgress(); } catch(e) { console.error('Progress pull error:', e); }
+
   // Restore active shift if was running
   if (activeShift) {
     renderActiveShift();
@@ -2881,6 +3004,7 @@ async function init() {
   loadSavedTheme();
   checkWeeklyFreeChoice();
   hideLoading();
+  schedulePushProgress();
 }
 
 // FIX: бесплатный выбор категории раз в неделю никто не показывал — теперь напоминаем
@@ -2907,6 +3031,7 @@ window.addEventListener('online', () => {
 function setDifficulty(diff, doRender = true) {
   difficulty = diff;
   localStorage.setItem('ozon_difficulty', diff);
+  schedulePushProgress();
   document.querySelectorAll('.diff-btn').forEach(b => b.classList.toggle('active', b.dataset.diff === diff));
   if (doRender) render();
 }
@@ -2996,7 +3121,7 @@ function exportDataCSV() {
 function exportDataJSON() {
   const dump = {
     exportedAt: new Date().toISOString(),
-    version: '3.9',
+    version: '4.1',
     shifts,
     pending: getPendingShifts(),
     difficulty,
@@ -3007,6 +3132,65 @@ function exportDataJSON() {
   };
   downloadFile(`ozon_backup_${todayStr()}.json`, JSON.stringify(dump, null, 2), 'application/json');
   showToast('💾 Полный бэкап скачан', 'success');
+}
+
+// FIX: бэкап можно было СКАЧАТЬ, но нельзя было ЗАГРУЗИТЬ обратно —
+// при потере localStorage файл был бесполезен. Теперь есть импорт.
+function openImportPicker() {
+  const inp = document.getElementById('importFile');
+  if (inp) { inp.value = ''; inp.click(); }
+}
+
+async function handleImportFile(ev) {
+  const file = ev.target.files && ev.target.files[0];
+  if (!file) return;
+  try {
+    const dump = JSON.parse(await file.text());
+
+    if (dump.lifeXP) {
+      const merged = mergeLifeXP(localStorage.getItem('ozon_life_xp'), JSON.stringify(dump.lifeXP));
+      localStorage.setItem('ozon_life_xp', merged);
+    }
+    if (dump.shopPurchases) localStorage.setItem('ozon_shop_purchases', JSON.stringify(dump.shopPurchases));
+    if (dump.calendarPlan) localStorage.setItem('ozon_calendar_plan', JSON.stringify(dump.calendarPlan));
+    if (dump.activeTheme) localStorage.setItem('ozon_active_theme', dump.activeTheme);
+    if (dump.difficulty) localStorage.setItem('ozon_difficulty', dump.difficulty);
+
+    // смены доливаем в облако только те, которых ещё нет
+    let added = 0;
+    if (Array.isArray(dump.shifts)) {
+      for (const s of dump.shifts) {
+        const dup = shifts.some(x => x.date === s.date && x.hours == s.hours && x.earned == s.earned);
+        if (!dup) { await insertShift(s); added++; }
+      }
+    }
+
+    await pushProgress();
+    loadSavedTheme();
+    render();
+    renderLifeQuests();
+    renderLifeStats();
+    renderChart();
+    showToast(`✅ Восстановлено: XP ${getLifeXP().total}, смен +${added}`, 'success');
+  } catch (e) {
+    console.error('Import error:', e);
+    showToast('❌ Не смог прочитать файл бэкапа', 'error');
+  }
+}
+
+// Ручное восстановление XP — если бэкапа нет, а прогресс потерялся.
+function manualRestoreXP() {
+  const cur = getLifeXP();
+  const val = prompt('Сколько всего Life XP должно быть?', String(cur.total || 0));
+  if (val === null) return;
+  const n = parseInt(val, 10);
+  if (isNaN(n) || n < 0) { showToast('Нужно число', 'warn'); return; }
+  const data = getLifeXP();
+  data.total = n;
+  saveLifeXP(data);
+  renderLifeStats();
+  render();
+  showToast(`✅ Life XP восстановлен: ${n}`, 'success');
 }
 
 // ====== RENDER ======
