@@ -15,7 +15,7 @@
 <link rel="manifest" href="manifest.json?v=5">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
-<title>💰 OZON Grind Tracker v4.7</title>
+<title>💰 OZON Grind Tracker v5.0</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="config.js?v=6"></script>
 <style>
@@ -194,8 +194,186 @@ body {
 .cal-action-btn:hover { filter:brightness(1.2); transform:scale(1.02); }
 .cal-selected-info { text-align:center; font-size:12px; color:var(--text-dim); margin-top:8px; padding:10px; background:rgba(255,255,255,0.03); border-radius:10px; border:1px solid var(--glass-border); }
 
-.tab-content { display: none; }
-.tab-content.active { display: block; }
+/* TAB TRANSITION ANIMATIONS */
+.tab-content { display: none; opacity: 0; transform: translateY(12px); transition: opacity 0.3s ease, transform 0.3s ease; }
+.tab-content.active { display: block; opacity: 1; transform: translateY(0); }
+.tab-content.fade-enter { opacity: 0; transform: translateY(12px); }
+
+/* LIVE RATE DISPLAY */
+.live-rate-display { text-align: center; margin-top: -4px; margin-bottom: 12px; }
+.live-rate-amount {
+  font-size: 24px; font-weight: 900; font-variant-numeric: tabular-nums;
+  transition: color 0.5s;
+}
+.live-rate-amount.earning { color: var(--green); text-shadow: 0 0 15px rgba(0,230,118,0.2); }
+.live-rate-amount.break-loss { color: var(--red); text-shadow: 0 0 15px rgba(255,82,82,0.2); }
+.live-rate-label { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+.live-rate-label .loss { color: var(--red); font-weight: 700; }
+
+/* FOCUS MODE */
+.focus-overlay {
+  position: fixed; top:0; left:0; width:100%; height:100%;
+  background: #000; z-index: 8888; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:12px;
+  transition: opacity 0.3s;
+}
+.focus-overlay.hidden { opacity:0; pointer-events:none; }
+.focus-timer { font-size: 72px; font-weight: 900; color: #fff; font-variant-numeric: tabular-nums; letter-spacing: 3px; }
+.focus-earn { font-size: 40px; font-weight: 800; color: var(--green); font-variant-numeric: tabular-nums; }
+.focus-sub { font-size: 14px; color: rgba(255,255,255,0.5); }
+.focus-btns { display: flex; gap: 12px; margin-top: 20px; }
+.focus-btn { padding: 14px 28px; border-radius: 16px; border: none; font-family: 'Nunito',sans-serif; font-size: 15px; font-weight: 800; cursor: pointer; }
+.focus-btn.brk { background: rgba(255,171,64,0.2); color: var(--orange); }
+.focus-btn.end { background: rgba(255,82,82,0.2); color: var(--red); }
+.focus-btn.exit { background: rgba(255,255,255,0.1); color: var(--text-dim); margin-top: 20px; font-size: 13px; }
+
+/* MILLION PATH */
+.million-path { margin: 0 12px 12px; padding: 14px 16px; background: var(--bg-card); border-radius: 16px; border: 1px solid var(--glass-border); }
+.million-path-title { font-size: 12px; color: var(--text-dim); margin-bottom: 8px; text-align: center; }
+.million-bar-wrap { position: relative; height: 10px; background: rgba(255,255,255,0.06); border-radius: 5px; overflow: visible; }
+.million-bar-fill { height: 100%; border-radius: 5px; background: linear-gradient(90deg, #4CAF50, #FFD700); transition: width 0.8s ease; position: relative; }
+.million-bar-fill::after { content:''; position:absolute; right:-4px; top:-3px; width:16px; height:16px; border-radius:50%; background:var(--gold); box-shadow:0 0 10px rgba(255,215,0,0.5); animation: millionPulse 2s ease infinite; }
+@keyframes millionPulse { 0%,100% { transform:scale(1); opacity:1; } 50% { transform:scale(1.3); opacity:0.7; } }
+.million-milestones { display: flex; justify-content: space-between; margin-top: 6px; font-size: 10px; color: var(--text-dim); }
+.million-milestones .reached { color: var(--gold); font-weight: 700; }
+.million-current { text-align: center; margin-top: 8px; font-size: 13px; font-weight: 700; color: var(--gold); }
+
+/* WEEK COMPARISON */
+.week-compare { margin: 0 12px 12px; }
+.week-compare-title { font-size: 14px; font-weight: 800; color: var(--text); margin-bottom: 10px; text-align: center; }
+.week-compare-grid { display: grid; grid-template-columns: 1fr auto auto auto; gap: 6px 12px; align-items: center; }
+.wc-label { font-size: 12px; color: var(--text-dim); }
+.wc-val { font-size: 13px; font-weight: 700; color: var(--text); text-align: right; }
+.wc-prev { font-size: 12px; color: var(--text-dim); text-align: right; }
+.wc-delta { font-size: 12px; font-weight: 700; text-align: right; }
+.wc-delta.up { color: var(--green); }
+.wc-delta.down { color: var(--red); }
+.wc-delta.same { color: var(--text-dim); }
+
+/* HEATMAP */
+.heatmap-section { margin: 0 12px 12px; }
+.heatmap-title { font-size: 14px; font-weight: 800; color: var(--text); margin-bottom: 8px; text-align: center; }
+.heatmap-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+.heatmap-cell { aspect-ratio: 1; border-radius: 4px; cursor: pointer; transition: all 0.2s; position: relative; min-width: 0; }
+.heatmap-cell:hover { transform: scale(1.15); z-index: 1; }
+.heatmap-cell.empty { background: transparent; cursor: default; }
+.heatmap-cell.empty:hover { transform: none; }
+.heatmap-weekday { font-size: 10px; color: var(--text-dim); text-align: center; font-weight: 700; }
+
+/* INSIGHTS CARD */
+.insight-card {
+  margin: 0 12px 12px; padding: 14px 16px;
+  background: linear-gradient(135deg, rgba(255,215,0,0.08), rgba(187,134,252,0.06));
+  border-radius: 16px; border: 1px solid rgba(255,215,0,0.15);
+}
+.insight-icon { font-size: 20px; float: left; margin-right: 10px; }
+.insight-text { font-size: 13px; color: var(--text); line-height: 1.5; }
+.insight-label { font-size: 10px; color: var(--text-dim); margin-top: 6px; }
+
+/* FORTUNE WHEEL */
+.wheel-modal-inner { text-align: center; }
+.wheel-canvas-wrap { position: relative; width: 280px; height: 280px; margin: 0 auto 16px; }
+.wheel-canvas-wrap canvas { width: 100%; height: 100%; }
+.wheel-pointer { position: absolute; top: -8px; left: 50%; transform: translateX(-50%); font-size: 28px; z-index: 2; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
+.wheel-spin-btn {
+  padding: 14px 40px; border: none; border-radius: 16px;
+  background: linear-gradient(135deg, var(--gold), #e6a800);
+  color: #1a1a2e; font-family: 'Nunito', sans-serif; font-size: 16px; font-weight: 800;
+  cursor: pointer; transition: all 0.3s;
+}
+.wheel-spin-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.wheel-spin-btn:hover:not(:disabled) { transform: scale(1.05); box-shadow: 0 4px 20px rgba(255,215,0,0.4); }
+.wheel-result { font-size: 18px; font-weight: 800; margin-top: 12px; }
+
+/* WEEKLY CHALLENGE */
+.weekly-challenge {
+  margin: 0 12px 12px; padding: 14px 16px;
+  background: linear-gradient(135deg, rgba(255,171,64,0.1), rgba(255,215,0,0.05));
+  border-radius: 16px; border: 1px solid rgba(255,171,64,0.2);
+}
+.wchallenge-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.wchallenge-title { font-size: 13px; font-weight: 800; color: var(--orange); }
+.wchallenge-timer { font-size: 11px; color: var(--text-dim); }
+.wchallenge-desc { font-size: 13px; color: var(--text); margin-bottom: 10px; }
+.wchallenge-bar { height: 8px; background: rgba(255,255,255,0.06); border-radius: 4px; overflow: hidden; }
+.wchallenge-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--orange), var(--gold)); transition: width 0.5s; }
+.wchallenge-progress { font-size: 11px; color: var(--text-dim); margin-top: 6px; text-align: center; }
+.wchallenge-reward { font-size: 11px; color: var(--gold); margin-top: 4px; text-align: center; }
+
+/* SAVINGS GOAL (KOPILKA) */
+.kopilka-card {
+  margin: 0 20px 0; padding: 12px 16px;
+  background: rgba(255,215,0,0.04); border-radius: 14px;
+  border: 1px solid rgba(255,215,0,0.1); position: relative;
+}
+.kopilka-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.kopilka-name { font-size: 13px; font-weight: 700; color: var(--text); }
+.kopilka-amount { font-size: 13px; font-weight: 800; color: var(--gold); font-variant-numeric: tabular-nums; }
+.kopilka-bar { height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden; }
+.kopilka-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--gold-dark), var(--gold)); transition: width 0.5s; }
+.kopilka-sub { font-size: 10px; color: var(--text-dim); margin-top: 4px; text-align: center; }
+.kopilka-edit { position: absolute; top: 10px; right: 12px; background: none; border: none; font-size: 14px; cursor: pointer; color: var(--text-dim); }
+
+/* ACHIEVEMENT UNLOCK ANIMATION */
+.ach-unlock-overlay {
+  position: fixed; top:0; left:0; width:100%; height:100%;
+  background: rgba(0,0,0,0.85); z-index: 9000; display:flex;
+  flex-direction:column; align-items:center; justify-content:center;
+  animation: achFadeIn 0.3s ease;
+}
+@keyframes achFadeIn { from { opacity:0; } to { opacity:1; } }
+.ach-unlock-icon { font-size: 72px; animation: achBounce 0.6s cubic-bezier(0.68,-0.55,0.265,1.55); }
+@keyframes achBounce { 0% { transform:scale(0); } 60% { transform:scale(1.3); } 100% { transform:scale(1); } }
+.ach-unlock-title { font-size: 22px; font-weight: 900; color: var(--gold); margin-top: 16px; text-transform: uppercase; letter-spacing: 2px; }
+.ach-unlock-name { font-size: 18px; font-weight: 700; color: var(--text); margin-top: 8px; }
+.ach-unlock-glow { width: 120px; height: 120px; position: absolute; border-radius: 50%; background: radial-gradient(circle, rgba(255,215,0,0.3), transparent); animation: achGlow 1.5s ease infinite; }
+@keyframes achGlow { 0%,100% { transform:scale(1); opacity:0.5; } 50% { transform:scale(1.5); opacity:0; } }
+
+/* SOCIAL DIARY */
+.diary-section { margin: 0 12px 12px; }
+.diary-title { font-size: 14px; font-weight: 800; color: var(--text); margin-bottom: 8px; text-align: center; }
+.diary-card { background: var(--bg-card); border-radius: 14px; padding: 12px; margin-bottom: 8px; border: 1px solid var(--glass-border); }
+.diary-card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.diary-place { font-size: 13px; font-weight: 700; color: var(--text); }
+.diary-date { font-size: 11px; color: var(--text-dim); }
+.diary-desc { font-size: 12px; color: var(--text-dim); line-height: 1.4; }
+.diary-rating { margin-top: 6px; }
+.diary-star { font-size: 16px; cursor: default; }
+.diary-lesson { font-size: 11px; color: var(--purple); margin-top: 4px; font-style: italic; }
+.diary-stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+.diary-stat-card { background: rgba(255,255,255,0.04); border-radius: 10px; padding: 10px; text-align: center; border: 1px solid var(--glass-border); }
+.diary-stat-val { font-size: 20px; font-weight: 800; color: var(--purple); }
+.diary-stat-lbl { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
+.diary-add-btn {
+  width: 100%; padding: 12px; border: 2px dashed rgba(187,134,252,0.3); border-radius: 14px;
+  background: none; color: var(--purple); font-family: 'Nunito',sans-serif;
+  font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s;
+}
+.diary-add-btn:hover { border-color: var(--purple); background: rgba(187,134,252,0.05); }
+
+/* DAILY SUMMARY POPUP */
+.summary-overlay {
+  position: fixed; top:0; left:0; width:100%; height:100%;
+  background: rgba(0,0,0,0.9); z-index: 9500; display:flex;
+  align-items:center; justify-content:center; animation: achFadeIn 0.3s;
+}
+.summary-card {
+  width: 300px; padding: 24px; border-radius: 20px;
+  background: linear-gradient(145deg, #1a1a35, #12122a);
+  border: 1px solid rgba(255,215,0,0.2); text-align: center;
+}
+.summary-title { font-size: 18px; font-weight: 900; color: var(--gold); margin-bottom: 16px; }
+.summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+.summary-item { }
+.summary-item-val { font-size: 22px; font-weight: 800; color: var(--text); }
+.summary-item-lbl { font-size: 11px; color: var(--text-dim); }
+.summary-streak { font-size: 24px; margin: 12px 0; }
+.summary-close-btn {
+  padding: 12px 32px; border: none; border-radius: 14px;
+  background: linear-gradient(135deg, var(--gold), #e6a800);
+  color: #1a1a2e; font-family: 'Nunito',sans-serif; font-size: 14px; font-weight: 800;
+  cursor: pointer; transition: all 0.3s;
+}
 
 /* WALLET (redesigned vault) */
 .wallet {
@@ -1219,6 +1397,11 @@ body:not(.role-dev) .dev-only { display: none !important; }
     <div class="timer-sub" id="timerSub">Нажми «Начать смену»</div>
   </div>
 
+  <div class="live-rate-display" id="liveRateDisplay" style="display:none">
+    <div class="live-rate-amount earning" id="liveRateAmount">~0 ₽/час</div>
+    <div class="live-rate-label" id="liveRateLabel">текущий заработок в реальном времени</div>
+  </div>
+
   <div class="shift-controls">
     <button class="shift-ctrl-btn btn-start" id="btnStart" onclick="startShift()">▶ НАЧАТЬ СМЕНУ</button>
     <button class="shift-ctrl-btn btn-break" id="btnBreak" onclick="startBreak()" style="display:none">☕ ПЕРЕРЫВ</button>
@@ -1240,6 +1423,41 @@ body:not(.role-dev) .dev-only { display: none !important; }
     <div id="breakList"></div>
     <div class="break-total" id="breakTotal"></div>
   </div>
+</div>
+
+<!-- MILLION PATH (on live tab) -->
+<div class="million-path" id="millionPath" style="display:none">
+  <div class="million-path-title">🏆 ПУТЬ К МИЛЛИОНУ</div>
+  <div class="million-bar-wrap"><div class="million-bar-fill" id="millionFill" style="width:0%"></div></div>
+  <div class="million-milestones" id="millionMilestones"></div>
+  <div class="million-current" id="millionCurrent">0 ₽ / 1 000 000 ₽</div>
+</div>
+
+<!-- KOPILKA (wallet savings goal) -->
+<div class="kopilka-card" id="kopilkaCard" style="display:none;">
+  <button class="kopilka-edit" onclick="setupKopilka()">✏️</button>
+  <div class="kopilka-row"><span class="kopilka-name" id="kopilkaName">🎯 Цель</span><span class="kopilka-amount" id="kopilkaAmount">0 / 0 ₽</span></div>
+  <div class="kopilka-bar"><div class="kopilka-fill" id="kopilkaFill" style="width:0%"></div></div>
+  <div class="kopilka-sub" id="kopilkaSub"></div>
+</div>
+
+<!-- WEEKLY CHALLENGE -->
+<div class="weekly-challenge" id="weeklyChallenge" style="display:none">
+  <div class="wchallenge-head">
+    <span class="wchallenge-title" id="wcTitle">🎯 Челлендж недели</span>
+    <span class="wchallenge-timer" id="wcTimer"></span>
+  </div>
+  <div class="wchallenge-desc" id="wcDesc"></div>
+  <div class="wchallenge-bar"><div class="wchallenge-fill" id="wcFill" style="width:0%"></div></div>
+  <div class="wchallenge-progress" id="wcProgress"></div>
+  <div class="wchallenge-reward" id="wcReward"></div>
+</div>
+
+<!-- INSIGHT CARD -->
+<div class="insight-card" id="insightCard" style="display:none">
+  <span class="insight-icon" id="insightIcon">💡</span>
+  <div class="insight-text" id="insightText"></div>
+  <div class="insight-label">💡 Умный совет</div>
 </div>
 
 <!-- DAILY QUESTS -->
@@ -1408,6 +1626,30 @@ body:not(.role-dev) .dev-only { display: none !important; }
 <div class="chart-section">
   <div class="chart-head"><h3>🏅 ЛИЧНЫЕ РЕКОРДЫ</h3></div>
   <div class="chart-card" id="recordsCard"></div>
+</div>
+
+<!-- WEEK COMPARISON -->
+<div class="week-compare" id="weekCompare" style="display:none">
+  <div class="week-compare-title">📊 Эта неделя vs прошлая</div>
+  <div class="chart-card">
+    <div class="week-compare-grid" id="weekCompareGrid"></div>
+  </div>
+</div>
+
+<!-- HEATMAP -->
+<div class="heatmap-section" id="heatmapSection" style="display:none">
+  <div class="heatmap-title">🔥 Тепловая карта (90 дней)</div>
+  <div class="chart-card">
+    <div class="heatmap-grid" id="heatmapGrid"></div>
+  </div>
+</div>
+
+<!-- SOCIAL DIARY -->
+<div class="diary-section" id="diarySection">
+  <div class="diary-title">📓 Дневник общения</div>
+  <div class="diary-stats-grid" id="diaryStatsGrid"></div>
+  <div id="diaryList"></div>
+  <button class="diary-add-btn" onclick="openDiaryModal()">+ Новая запись</button>
 </div>
 
 <div class="achievements">
@@ -5519,7 +5761,7 @@ function renderChart() {
 
 // ====== PWA: SERVICE WORKER ======
 // Регистрируем только по http/https — с file:// браузер ругается.
-const APP_VERSION = 'v4.7.0';
+const APP_VERSION = 'v5.0.0';
 
 // Страховка: кнопка баннера обязана работать даже если обработчик
 // от service worker по какой-то причине не навесился.
@@ -5596,6 +5838,716 @@ function renderVersionTag() {
   if (el) el.textContent = APP_VERSION;
 }
 
+// ====== GLOBAL UPDATE v5.0 ======
+
+// --- Haptic feedback ---
+function haptic(type = 'light') {
+  if (!navigator.vibrate) return;
+  if (type === 'light') navigator.vibrate(10);
+  else if (type === 'medium') navigator.vibrate(25);
+  else if (type === 'heavy') navigator.vibrate([30, 10, 30]);
+  else if (type === 'success') navigator.vibrate([10, 50, 10, 50, 10]);
+}
+
+// --- Tab animation ---
+const _origSwitchTab = switchTab;
+switchTab = function(tab) {
+  haptic('light');
+  const targets = document.querySelectorAll('.tab-content');
+  targets.forEach(c => { c.classList.remove('active'); c.style.opacity='0'; c.style.transform='translateY(12px)'; });
+  _origSwitchTab(tab);
+  const active = document.querySelector('.tab-content.active');
+  if (active) { requestAnimationFrame(() => { active.style.opacity='1'; active.style.transform='translateY(0)'; }); }
+};
+
+// --- CountUp animation ---
+function countUp(el, target, duration = 600) {
+  const start = parseInt(el.textContent.replace(/\s/g,'')) || 0;
+  if (start === target) return;
+  const startTime = performance.now();
+  function tick(now) {
+    const p = Math.min((now - startTime) / duration, 1);
+    const ease = 1 - Math.pow(1 - p, 3);
+    const val = Math.round(start + (target - start) * ease);
+    el.textContent = val.toLocaleString('ru-RU');
+    if (p < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+// --- Live Rate Display ---
+function updateLiveRate() {
+  if (!activeShift) {
+    document.getElementById('liveRateDisplay').style.display = 'none';
+    return;
+  }
+  document.getElementById('liveRateDisplay').style.display = 'block';
+  const now = Date.now();
+  const totalMs = now - activeShift.startTime;
+  const breakMs = activeShift.breaks.reduce((sum, b) => sum + ((b.end || now) - b.start), 0)
+    + (activeShift.currentBreak ? (now - activeShift.currentBreak.start) : 0);
+  const workH = (totalMs - breakMs) / 3600000;
+  const el = document.getElementById('liveRateAmount');
+  const lbl = document.getElementById('liveRateLabel');
+
+  if (workH > 0.01) {
+    // Use average of last shifts to estimate ₽/hour
+    const recentRate = shifts.length > 0 ? shifts.slice(0, 5).reduce((s, x) => s + x.rate, 0) / Math.min(shifts.length, 5) : 850;
+    const estimatedEarned = Math.round(recentRate * workH);
+    const currentRate = Math.round(recentRate);
+    el.textContent = `~${estimatedEarned.toLocaleString('ru-RU')} ₽`;
+
+    if (activeShift.status === 'break') {
+      el.className = 'live-rate-amount break-loss';
+      const breakMin = (activeShift.currentBreak ? (now - activeShift.currentBreak.start) : 0) / 60000;
+      const lossPerMin = Math.round(recentRate / 60);
+      lbl.innerHTML = `☕ на перерыве · теряешь <span class="loss">~${lossPerMin} ₽/мин</span>`;
+    } else {
+      el.className = 'live-rate-amount earning';
+      lbl.textContent = `⚡ прогноз по ~${currentRate} ₽/час`;
+    }
+  }
+}
+
+// --- Focus Mode ---
+let focusInterval = null;
+function openFocusMode() {
+  if (!activeShift) return;
+  haptic('medium');
+  document.getElementById('focusOverlay').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+  focusInterval = setInterval(updateFocusMode, 1000);
+  updateFocusMode();
+}
+function closeFocusMode() {
+  haptic('light');
+  document.getElementById('focusOverlay').classList.add('hidden');
+  document.body.style.overflow = '';
+  clearInterval(focusInterval);
+}
+function focusBreak() {
+  if (activeShift && activeShift.status === 'working') startBreak();
+  else if (activeShift && activeShift.status === 'break') endBreak();
+  updateFocusMode();
+}
+function focusEnd() { closeFocusMode(); endShift(); }
+function updateFocusMode() {
+  if (!activeShift) { closeFocusMode(); return; }
+  const now = Date.now();
+  const totalMs = now - activeShift.startTime;
+  const breakMs = activeShift.breaks.reduce((s, b) => s + ((b.end || now) - b.start), 0)
+    + (activeShift.currentBreak ? (now - activeShift.currentBreak.start) : 0);
+  const workMs = totalMs - breakMs;
+  document.getElementById('focusTimer').textContent = formatDuration(workMs);
+  const recentRate = shifts.length > 0 ? shifts.slice(0, 5).reduce((s, x) => s + x.rate, 0) / Math.min(shifts.length, 5) : 850;
+  const estimated = Math.round(recentRate * workMs / 3600000);
+  document.getElementById('focusEarn').textContent = `~${estimated.toLocaleString('ru-RU')} ₽`;
+  document.getElementById('focusSub').textContent = activeShift.status === 'break' ? '☕ перерыв' : '💪 работаю';
+  const brkBtn = document.querySelector('.focus-btn.brk');
+  if (brkBtn) brkBtn.textContent = activeShift.status === 'break' ? '▶ Работать' : '☕ Перерыв';
+}
+
+// --- Achievement Unlock Animation ---
+let _prevUnlocked = null;
+function checkNewAchievements() {
+  const totalEarned = shifts.reduce((s, x) => s + x.earned, 0);
+  const streak = calcStreak(DIFFICULTIES[difficulty].goal);
+  const achData = { shifts, totalEarned, streak };
+  const nowUnlocked = ACHIEVEMENTS.filter(a => a.check(achData)).map(a => a.id);
+  if (_prevUnlocked === null) { _prevUnlocked = new Set(nowUnlocked); return; }
+  const newOnes = nowUnlocked.filter(id => !_prevUnlocked.has(id));
+  newOnes.forEach(id => {
+    const ach = ACHIEVEMENTS.find(a => a.id === id);
+    if (ach) showAchUnlock(ach);
+  });
+  _prevUnlocked = new Set(nowUnlocked);
+}
+function showAchUnlock(ach) {
+  haptic('success');
+  const ov = document.createElement('div');
+  ov.className = 'ach-unlock-overlay';
+  ov.innerHTML = `
+    <div class="ach-unlock-glow"></div>
+    <div class="ach-unlock-icon">${ach.icon}</div>
+    <div class="ach-unlock-title">🏆 ДОСТИЖЕНИЕ!</div>
+    <div class="ach-unlock-name">${ach.name}</div>
+  `;
+  ov.onclick = () => { ov.style.opacity='0'; setTimeout(()=>ov.remove(), 300); };
+  document.body.appendChild(ov);
+  setTimeout(() => { ov.style.opacity='0'; setTimeout(()=>ov.remove(), 300); }, 3000);
+}
+
+// --- Daily Summary Popup ---
+function showDailySummary(earned, workHours, rate) {
+  const streak = calcStreak(DIFFICULTIES[difficulty].goal);
+  const grid = document.getElementById('summaryGrid');
+  grid.innerHTML = `
+    <div class="summary-item"><div class="summary-item-val">💰 ${earned.toLocaleString('ru-RU')}</div><div class="summary-item-lbl">заработок ₽</div></div>
+    <div class="summary-item"><div class="summary-item-val">⏱ ${workHours} ч</div><div class="summary-item-lbl">работа</div></div>
+    <div class="summary-item"><div class="summary-item-val">🚀 ${rate}</div><div class="summary-item-lbl">₽/час</div></div>
+    <div class="summary-item"><div class="summary-item-val">📋 ${shifts.length}</div><div class="summary-item-lbl">смен всего</div></div>
+  `;
+  const streakEl = document.getElementById('summaryStreak');
+  streakEl.textContent = streak > 0 ? `🔥 ${streak} дней подряд в цели!` : '';
+  document.getElementById('summaryOverlay').style.display = 'flex';
+  haptic('success');
+}
+function closeSummary() {
+  document.getElementById('summaryOverlay').style.display = 'none';
+}
+
+// --- Million Path ---
+function renderMillionPath() {
+  const total = shifts.reduce((s, x) => s + x.earned, 0);
+  const el = document.getElementById('millionPath');
+  if (total < 1000) { el.style.display = 'none'; return; }
+  el.style.display = 'block';
+  const pct = Math.min((total / 1000000) * 100, 100);
+  document.getElementById('millionFill').style.width = pct + '%';
+  document.getElementById('millionCurrent').textContent = `${total.toLocaleString('ru-RU')} ₽ / 1 000 000 ₽`;
+  const milestones = [0, 100000, 250000, 500000, 750000, 1000000];
+  const labels = ['0', '100К', '250К', '500К', '750К', '1М'];
+  document.getElementById('millionMilestones').innerHTML = milestones.map((m, i) =>
+    `<span class="${total >= m ? 'reached' : ''}">${labels[i]}</span>`
+  ).join('');
+}
+
+// --- Kopilka (Savings Goal) ---
+function getKopilka() { return uGet('kopilka', null); }
+function saveKopilkaData(d) { uSet('kopilka', d); }
+function renderKopilka() {
+  const k = getKopilka();
+  const card = document.getElementById('kopilkaCard');
+  if (!k || !k.goal) { card.style.display = 'none'; return; }
+  card.style.display = 'block';
+  const total = shifts.reduce((s, x) => s + x.earned, 0);
+  const pct = Math.min((total / k.goal) * 100, 100);
+  document.getElementById('kopilkaName').textContent = `🎯 ${k.name || 'Цель'}`;
+  document.getElementById('kopilkaAmount').textContent = `${total.toLocaleString('ru-RU')} / ${k.goal.toLocaleString('ru-RU')} ₽`;
+  document.getElementById('kopilkaFill').style.width = pct + '%';
+  const remaining = Math.max(k.goal - total, 0);
+  const avgPerShift = shifts.length > 0 ? shifts.reduce((s, x) => s + x.earned, 0) / shifts.length : 0;
+  const shiftsLeft = avgPerShift > 0 ? Math.ceil(remaining / avgPerShift) : '∞';
+  document.getElementById('kopilkaSub').textContent = remaining > 0 ? `Осталось ~${shiftsLeft} смен` : '🎉 Цель достигнута!';
+}
+function setupKopilka() {
+  const k = getKopilka() || {};
+  document.getElementById('kopilkaNameInput').value = k.name || '';
+  document.getElementById('kopilkaGoalInput').value = k.goal || '';
+  document.getElementById('kopilkaModal').classList.add('show');
+  document.body.classList.add('modal-open');
+}
+function closeKopilkaModal() {
+  document.getElementById('kopilkaModal').classList.remove('show');
+  document.body.classList.remove('modal-open');
+}
+function saveKopilka() {
+  const name = document.getElementById('kopilkaNameInput').value.trim();
+  const goal = parseInt(document.getElementById('kopilkaGoalInput').value) || 0;
+  if (goal <= 0) { showToast('❌ Укажи сумму цели', 'error'); return; }
+  saveKopilkaData({ name: name || 'Цель', goal });
+  closeKopilkaModal();
+  renderKopilka();
+  showToast(`🎯 Копилка «${name || 'Цель'}» установлена!`, 'success');
+}
+
+// --- Weekly Challenge ---
+const WEEKLY_CHALLENGES = [
+  { id:'wc_5shifts', title:'Марафонец', desc:'Выйди на 5 смен за неделю', target:5, unit:'shifts', reward:300, icon:'🏃' },
+  { id:'wc_40hours', title:'Трудоголик', desc:'Отработай 40 часов за неделю', target:40, unit:'hours', reward:400, icon:'⏰' },
+  { id:'wc_50k', title:'Полтинник', desc:'Заработай 50 000₽ за неделю', target:50000, unit:'earned', reward:500, icon:'💸' },
+  { id:'wc_avg900', title:'Топ-рейтер', desc:'Средний rate ≥ 900₽/час за неделю', target:900, unit:'avg_rate', reward:350, icon:'🚀' },
+  { id:'wc_streak5', title:'Без выходных', desc:'5 дней подряд работай', target:5, unit:'streak', reward:400, icon:'🔥' },
+  { id:'wc_3quests', title:'Квестоман', desc:'Выполни 15+ лайф-квестов за неделю', target:15, unit:'quests', reward:300, icon:'⚔️' },
+];
+function getWeeklyChallenge() {
+  const saved = uGet('weekly_challenge', null);
+  const now = new Date();
+  const monday = new Date(now); monday.setDate(now.getDate() - ((now.getDay() + 6) % 7)); monday.setHours(0,0,0,0);
+  const weekKey = monday.toISOString().slice(0,10);
+  if (saved && saved.weekKey === weekKey) return saved;
+  // New week — pick random challenge
+  const ch = WEEKLY_CHALLENGES[Math.floor(Math.random() * WEEKLY_CHALLENGES.length)];
+  const data = { ...ch, weekKey, completed: false };
+  uSet('weekly_challenge', data);
+  return data;
+}
+function renderWeeklyChallenge() {
+  const wc = getWeeklyChallenge();
+  const el = document.getElementById('weeklyChallenge');
+  el.style.display = 'block';
+  document.getElementById('wcTitle').textContent = `${wc.icon} ${wc.title}`;
+  document.getElementById('wcDesc').textContent = wc.desc;
+  document.getElementById('wcReward').textContent = `🎁 Награда: ${wc.reward} Life XP`;
+
+  // Calculate progress
+  const now = new Date();
+  const monday = new Date(now); monday.setDate(now.getDate() - ((now.getDay() + 6) % 7)); monday.setHours(0,0,0,0);
+  const sunday = new Date(monday); sunday.setDate(monday.getDate() + 7);
+  const weekShifts = shifts.filter(s => {
+    const d = new Date(s.date.split('-').map(Number).join('/'));
+    return d >= monday && d < sunday;
+  });
+
+  let progress = 0;
+  if (wc.unit === 'shifts') progress = weekShifts.length;
+  else if (wc.unit === 'hours') progress = weekShifts.reduce((s, x) => s + x.hours, 0);
+  else if (wc.unit === 'earned') progress = weekShifts.reduce((s, x) => s + x.earned, 0);
+  else if (wc.unit === 'avg_rate') {
+    const h = weekShifts.reduce((s, x) => s + x.hours, 0);
+    const e = weekShifts.reduce((s, x) => s + x.earned, 0);
+    progress = h > 0 ? Math.round(e / h) : 0;
+  }
+  else if (wc.unit === 'streak') progress = calcStreak(DIFFICULTIES[difficulty].goal);
+
+  const pct = Math.min((progress / wc.target) * 100, 100);
+  document.getElementById('wcFill').style.width = pct + '%';
+
+  let progressText = '';
+  if (wc.unit === 'earned') progressText = `${progress.toLocaleString('ru-RU')} / ${wc.target.toLocaleString('ru-RU')} ₽`;
+  else if (wc.unit === 'avg_rate') progressText = `${progress} / ${wc.target} ₽/час`;
+  else if (wc.unit === 'hours') progressText = `${progress.toFixed(1)} / ${wc.target} ч`;
+  else progressText = `${progress} / ${wc.target}`;
+  document.getElementById('wcProgress').textContent = progressText;
+
+  // Days remaining
+  const daysLeft = Math.max(0, Math.ceil((sunday - now) / 86400000));
+  document.getElementById('wcTimer').textContent = `⏳ ${daysLeft} дн осталось`;
+
+  // Check completion
+  if (pct >= 100 && !wc.completed) {
+    wc.completed = true;
+    uSet('weekly_challenge', wc);
+    addLifeXP('wc_' + wc.id, wc.reward, 'challenge');
+    showToast(`🎉 Челлендж «${wc.title}» выполнен! +${wc.reward} XP`, 'success');
+    haptic('success');
+  }
+}
+
+// --- Smart Insights ---
+function renderInsight() {
+  const el = document.getElementById('insightCard');
+  if (shifts.length < 3) { el.style.display = 'none'; return; }
+
+  const insights = [];
+  const totalEarned = shifts.reduce((s, x) => s + x.earned, 0);
+  const totalHours = shifts.reduce((s, x) => s + x.hours, 0);
+  const avgRate = totalHours > 0 ? Math.round(totalEarned / totalHours) : 0;
+
+  // Best day of week
+  const dayStats = {};
+  shifts.forEach(s => {
+    const dp = s.date.split('-');
+    const d = new Date(parseInt(dp[0]), parseInt(dp[1])-1, parseInt(dp[2]));
+    const dow = d.getDay();
+    if (!dayStats[dow]) dayStats[dow] = { earned: 0, hours: 0, count: 0 };
+    dayStats[dow].earned += s.earned;
+    dayStats[dow].hours += s.hours;
+    dayStats[dow].count++;
+  });
+  const dayNames = ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
+  let bestDay = null, bestDayRate = 0;
+  Object.entries(dayStats).forEach(([dow, st]) => {
+    const rate = st.hours > 0 ? st.earned / st.hours : 0;
+    if (rate > bestDayRate) { bestDayRate = rate; bestDay = dayNames[dow]; }
+  });
+  if (bestDay) insights.push({ icon: '📅', text: `Твой лучший день — <b>${bestDay}</b> со средним rate <b>${Math.round(bestDayRate)} ₽/час</b>. Планируй больше смен на этот день!` });
+
+  // Trend
+  if (shifts.length >= 5) {
+    const last5 = shifts.slice(0, 5).reduce((s, x) => s + x.rate, 0) / 5;
+    const prev5 = shifts.length >= 10 ? shifts.slice(5, 10).reduce((s, x) => s + x.rate, 0) / 5 : avgRate;
+    const diff = last5 - prev5;
+    if (diff > 20) insights.push({ icon: '📈', text: `Твой rate растёт! Последние 5 смен в среднем <b>${Math.round(last5)} ₽/час</b> — это на <b>+${Math.round(diff)}</b> больше. Держи темп!` });
+    else if (diff < -20) insights.push({ icon: '📉', text: `Rate немного упал. Последние 5 смен — <b>${Math.round(last5)} ₽/час</b>. Попробуй работать в свой лучший день (${bestDay || 'Пн'})!` });
+  }
+
+  // Hours optimization
+  const shortShifts = shifts.filter(s => s.hours < 6).length;
+  const longShifts = shifts.filter(s => s.hours >= 8).length;
+  const longRate = shifts.filter(s => s.hours >= 8);
+  const shortRate = shifts.filter(s => s.hours < 6);
+  if (longRate.length > 0 && shortRate.length > 0) {
+    const avgLong = longRate.reduce((s, x) => s + x.rate, 0) / longRate.length;
+    const avgShort = shortRate.reduce((s, x) => s + x.rate, 0) / shortRate.length;
+    if (avgLong > avgShort + 30) {
+      insights.push({ icon: '⏰', text: `Длинные смены (8+ ч) дают тебе <b>${Math.round(avgLong)} ₽/час</b> vs <b>${Math.round(avgShort)}</b> на коротких. Планируй длиннее!` });
+    }
+  }
+
+  // Million countdown
+  const remaining = 1000000 - totalEarned;
+  if (remaining > 0 && totalEarned > 0) {
+    const avgPerShift = totalEarned / shifts.length;
+    const shiftsToMillion = Math.ceil(remaining / avgPerShift);
+    insights.push({ icon: '🏆', text: `До миллиона осталось <b>${remaining.toLocaleString('ru-RU')} ₽</b> — ещё ~<b>${shiftsToMillion} смен</b>. Ты сможешь!` });
+  }
+
+  if (insights.length === 0) { el.style.display = 'none'; return; }
+  const pick = insights[Math.floor(Math.random() * insights.length)];
+  el.style.display = 'block';
+  document.getElementById('insightIcon').textContent = pick.icon;
+  document.getElementById('insightText').innerHTML = pick.text;
+}
+
+// --- Week Comparison ---
+function renderWeekCompare() {
+  const el = document.getElementById('weekCompare');
+  if (shifts.length < 2) { el.style.display = 'none'; return; }
+  el.style.display = 'block';
+
+  const now = new Date();
+  const monday = new Date(now); monday.setDate(now.getDate() - ((now.getDay() + 6) % 7)); monday.setHours(0,0,0,0);
+  const prevMonday = new Date(monday); prevMonday.setDate(monday.getDate() - 7);
+
+  function weekData(from, to) {
+    const ws = shifts.filter(s => {
+      const dp = s.date.split('-');
+      const d = new Date(parseInt(dp[0]), parseInt(dp[1])-1, parseInt(dp[2]));
+      return d >= from && d < to;
+    });
+    return {
+      shifts: ws.length,
+      earned: ws.reduce((s, x) => s + x.earned, 0),
+      hours: Math.round(ws.reduce((s, x) => s + x.hours, 0) * 10) / 10,
+      rate: ws.reduce((s, x) => s + x.hours, 0) > 0
+        ? Math.round(ws.reduce((s, x) => s + x.earned, 0) / ws.reduce((s, x) => s + x.hours, 0)) : 0
+    };
+  }
+
+  const curr = weekData(monday, new Date(monday.getTime() + 7*86400000));
+  const prev = weekData(prevMonday, monday);
+
+  function deltaHtml(curr, prev, suffix = '') {
+    const diff = curr - prev;
+    if (diff === 0) return `<span class="wc-delta same">—</span>`;
+    const cls = diff > 0 ? 'up' : 'down';
+    const sign = diff > 0 ? '+' : '';
+    return `<span class="wc-delta ${cls}">${sign}${typeof diff === 'number' && diff % 1 !== 0 ? diff.toFixed(1) : diff}${suffix}</span>`;
+  }
+
+  document.getElementById('weekCompareGrid').innerHTML = `
+    <span class="wc-label">Смен</span><span class="wc-val">${curr.shifts}</span><span class="wc-prev">${prev.shifts}</span>${deltaHtml(curr.shifts, prev.shifts)}
+    <span class="wc-label">Заработок</span><span class="wc-val">${curr.earned.toLocaleString('ru-RU')} ₽</span><span class="wc-prev">${prev.earned.toLocaleString('ru-RU')}</span>${deltaHtml(curr.earned, prev.earned)}
+    <span class="wc-label">Часов</span><span class="wc-val">${curr.hours}</span><span class="wc-prev">${prev.hours}</span>${deltaHtml(curr.hours, prev.hours)}
+    <span class="wc-label">Rate</span><span class="wc-val">${curr.rate} ₽/ч</span><span class="wc-prev">${prev.rate}</span>${deltaHtml(curr.rate, prev.rate)}
+  `;
+}
+
+// --- Heatmap ---
+function renderHeatmap() {
+  const el = document.getElementById('heatmapSection');
+  if (shifts.length < 1) { el.style.display = 'none'; return; }
+  el.style.display = 'block';
+
+  const grid = document.getElementById('heatmapGrid');
+  const now = new Date(); now.setHours(0,0,0,0);
+  const start = new Date(now); start.setDate(start.getDate() - 89);
+  // Align to Monday
+  while (start.getDay() !== 1) start.setDate(start.getDate() - 1);
+
+  // Build date->earned map
+  const earnMap = {};
+  shifts.forEach(s => { earnMap[s.date] = (earnMap[s.date] || 0) + s.earned; });
+  const maxEarn = Math.max(...Object.values(earnMap), 1);
+
+  // Weekday headers
+  const days = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+  let html = days.map(d => `<div class="heatmap-weekday">${d}</div>`).join('');
+
+  const cur = new Date(start);
+  while (cur <= now) {
+    const key = cur.toISOString().slice(0,10);
+    const earned = earnMap[key] || 0;
+    const intensity = earned > 0 ? 0.2 + (earned / maxEarn) * 0.8 : 0;
+    const color = earned > 0
+      ? `rgba(0, 230, 118, ${intensity})`
+      : 'rgba(255,255,255,0.03)';
+    const title = earned > 0 ? `${key}: ${earned.toLocaleString('ru-RU')} ₽` : key;
+    html += `<div class="heatmap-cell" style="background:${color}" title="${title}"></div>`;
+    cur.setDate(cur.getDate() + 1);
+  }
+  grid.innerHTML = html;
+}
+
+// --- Social Diary ---
+function getDiary() { return uGet('social_diary', []); }
+function saveDiary(d) { uSet('social_diary', d); }
+let _diaryStar = 3;
+function setDiaryStar(n) {
+  _diaryStar = n;
+  const stars = document.getElementById('diaryStars');
+  if (stars) {
+    const spans = stars.querySelectorAll('span');
+    spans.forEach((s, i) => { s.textContent = i < n ? '⭐' : '☆'; });
+  }
+}
+function openDiaryModal() {
+  _diaryStar = 3;
+  document.getElementById('diaryPlace').value = '';
+  document.getElementById('diaryDesc').value = '';
+  document.getElementById('diaryLesson').value = '';
+  setDiaryStar(3);
+  document.getElementById('diaryModal').classList.add('show');
+  document.body.classList.add('modal-open');
+}
+function closeDiaryModal() {
+  document.getElementById('diaryModal').classList.remove('show');
+  document.body.classList.remove('modal-open');
+}
+function saveDiaryEntry() {
+  const place = document.getElementById('diaryPlace').value.trim();
+  const desc = document.getElementById('diaryDesc').value.trim();
+  const lesson = document.getElementById('diaryLesson').value.trim();
+  if (!place && !desc) { showToast('❌ Напиши хотя бы место или описание', 'error'); return; }
+  const diary = getDiary();
+  diary.unshift({
+    id: Date.now(),
+    date: todayStr(),
+    place, desc, lesson,
+    rating: _diaryStar,
+    ts: Date.now()
+  });
+  saveDiary(diary);
+  closeDiaryModal();
+  renderDiary();
+  showToast('📓 Запись сохранена!', 'success');
+  haptic('success');
+}
+function renderDiary() {
+  const diary = getDiary();
+  const list = document.getElementById('diaryList');
+  const stats = document.getElementById('diaryStatsGrid');
+
+  // Stats
+  const total = diary.length;
+  const thisWeek = diary.filter(d => {
+    const now = new Date(); const mon = new Date(now); mon.setDate(now.getDate() - ((now.getDay()+6)%7)); mon.setHours(0,0,0,0);
+    return d.ts >= mon.getTime();
+  }).length;
+  const avgRating = total > 0 ? (diary.reduce((s, d) => s + d.rating, 0) / total).toFixed(1) : '—';
+  stats.innerHTML = `
+    <div class="diary-stat-card"><div class="diary-stat-val">${total}</div><div class="diary-stat-lbl">всего записей</div></div>
+    <div class="diary-stat-card"><div class="diary-stat-val">${thisWeek}</div><div class="diary-stat-lbl">за неделю</div></div>
+    <div class="diary-stat-card"><div class="diary-stat-val">${avgRating}</div><div class="diary-stat-lbl">ср. оценка</div></div>
+  `;
+
+  // List (last 10)
+  if (diary.length === 0) {
+    list.innerHTML = '<div style="text-align:center;color:var(--text-dim);font-size:12px;padding:16px;">Пока пусто — добавь первую запись!</div>';
+    return;
+  }
+  list.innerHTML = diary.slice(0, 10).map(d => {
+    const stars = '⭐'.repeat(d.rating) + '☆'.repeat(5 - d.rating);
+    const dp = d.date.split('-');
+    const dateObj = new Date(parseInt(dp[0]), parseInt(dp[1])-1, parseInt(dp[2]));
+    const dateStr = dateObj.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+    return `<div class="diary-card">
+      <div class="diary-card-top"><span class="diary-place">${escapeHtml(d.place || '—')}</span><span class="diary-date">${dateStr}</span></div>
+      ${d.desc ? `<div class="diary-desc">${escapeHtml(d.desc)}</div>` : ''}
+      <div class="diary-rating">${stars}</div>
+      ${d.lesson ? `<div class="diary-lesson">💡 ${escapeHtml(d.lesson)}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+// --- Fortune Wheel ---
+const WHEEL_PRIZES = [
+  { label: '+50 XP', color: '#4CAF50', action: () => { addLifeXP('wheel_xp50', 50, 'wheel'); return '+50 Life XP!'; } },
+  { label: '+100 XP', color: '#FFD700', action: () => { addLifeXP('wheel_xp100', 100, 'wheel'); return '+100 Life XP!'; } },
+  { label: '+200 XP', color: '#ff4444', action: () => { addLifeXP('wheel_xp200', 200, 'wheel'); return '+200 Life XP! 🔥'; } },
+  { label: '+1 реролл', color: '#2196f3', action: () => { const d = uGet('shop_extra_rerolls', {}); const t = todayStr(); d[t] = (d[t]||0)+1; uSet('shop_extra_rerolls', d); return '+1 реролл лайф-квестов!'; } },
+  { label: '+3 реролла', color: '#bb86fc', action: () => { const d = uGet('shop_extra_rerolls', {}); const t = todayStr(); d[t] = (d[t]||0)+3; uSet('shop_extra_rerolls', d); return '+3 реролла! 🎰'; } },
+  { label: 'x2 XP день', color: '#ff9800', action: () => { const b = uGet('shop_boosts', {}); b.double_xp = todayStr(); uSet('shop_boosts', b); return 'Двойной XP на сегодня! ⚡'; } },
+  { label: 'Ничего 😅', color: '#555', action: () => 'Повезёт в следующий раз! 🍀' },
+  { label: '+150 XP', color: '#00e5ff', action: () => { addLifeXP('wheel_xp150', 150, 'wheel'); return '+150 Life XP! ✨'; } },
+];
+let wheelSpinning = false;
+function openWheelModal() {
+  document.getElementById('wheelModal').classList.add('show');
+  document.body.classList.add('modal-open');
+  document.getElementById('wheelResult').textContent = '';
+  drawWheel(0);
+}
+function closeWheelModal() {
+  document.getElementById('wheelModal').classList.remove('show');
+  document.body.classList.remove('modal-open');
+}
+function drawWheel(rotation) {
+  const canvas = document.getElementById('wheelCanvas');
+  const ctx = canvas.getContext('2d');
+  const cx = 140, cy = 140, r = 130;
+  ctx.clearRect(0, 0, 280, 280);
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(rotation);
+  const sliceAngle = (2 * Math.PI) / WHEEL_PRIZES.length;
+  WHEEL_PRIZES.forEach((p, i) => {
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.arc(0, 0, r, i * sliceAngle, (i + 1) * sliceAngle);
+    ctx.closePath();
+    ctx.fillStyle = p.color;
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    // Label
+    ctx.save();
+    ctx.rotate(i * sliceAngle + sliceAngle / 2);
+    ctx.textAlign = 'right';
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 11px Nunito';
+    ctx.fillText(p.label, r - 10, 4);
+    ctx.restore();
+  });
+  ctx.restore();
+}
+function spinWheel() {
+  if (wheelSpinning) return;
+  const xpData = getLifeXP();
+  if (xpData.total < 120) { showToast('❌ Нужно 120 XP для рулетки', 'error'); return; }
+  removeLifeXP('wheel_spin', 120, 'wheel');
+  renderLifeStats();
+
+  wheelSpinning = true;
+  document.getElementById('wheelSpinBtn').disabled = true;
+  haptic('medium');
+
+  const winIdx = Math.floor(Math.random() * WHEEL_PRIZES.length);
+  const sliceAngle = (2 * Math.PI) / WHEEL_PRIZES.length;
+  const targetAngle = 2 * Math.PI * 5 + (2 * Math.PI - winIdx * sliceAngle - sliceAngle / 2);
+  let currentAngle = 0;
+  const startTime = performance.now();
+  const duration = 3000;
+
+  function animate(now) {
+    const p = Math.min((now - startTime) / duration, 1);
+    const ease = 1 - Math.pow(1 - p, 3);
+    currentAngle = targetAngle * ease;
+    drawWheel(currentAngle);
+    if (p < 1) requestAnimationFrame(animate);
+    else {
+      wheelSpinning = false;
+      document.getElementById('wheelSpinBtn').disabled = false;
+      const result = WHEEL_PRIZES[winIdx].action();
+      document.getElementById('wheelResult').textContent = `🎉 ${result}`;
+      haptic('success');
+      renderLifeStats();
+    }
+  }
+  requestAnimationFrame(animate);
+}
+
+// --- Contextual phrases for timer ---
+function getTimerPhrase(workMs) {
+  const hours = workMs / 3600000;
+  if (hours < 0.5) return '🚀 Разогреваемся!';
+  if (hours < 1) return '💪 Первый час — настройся!';
+  if (hours < 2) return '⚡ В потоке!';
+  if (hours < 4) return '🔥 Горишь на работе!';
+  if (hours < 6) return '💎 Уже красавчик!';
+  if (hours < 8) return '🦁 Зверь на грайнде!';
+  return '👑 Легенда! 8+ часов!';
+}
+
+// --- Enhanced timer update ---
+const _origUpdateTimer = updateTimer;
+updateTimer = function() {
+  _origUpdateTimer();
+  updateLiveRate();
+  if (activeShift && activeShift.status === 'working') {
+    const now = Date.now();
+    const totalMs = now - activeShift.startTime;
+    const breakMs = activeShift.breaks.reduce((s, b) => s + ((b.end || now) - b.start), 0);
+    const workMs = totalMs - breakMs;
+    const sub = document.getElementById('timerSub');
+    if (sub) sub.textContent = `${getTimerPhrase(workMs)} | Всего: ${formatDuration(totalMs)} | ☕ ${formatShortDuration(breakMs)}`;
+  }
+};
+
+// --- Enhanced render with countUp ---
+const _origRender = render;
+render = function() {
+  _origRender();
+  const totalEarned = shifts.reduce((s, x) => s + x.earned, 0);
+  countUp(document.getElementById('totalEarned'), totalEarned);
+  renderMillionPath();
+  renderKopilka();
+  renderWeeklyChallenge();
+  renderInsight();
+  renderWeekCompare();
+  renderHeatmap();
+  renderDiary();
+  checkNewAchievements();
+};
+
+// --- Add Focus button to shift controls ---
+const _origRenderActiveShift = renderActiveShift;
+renderActiveShift = function() {
+  _origRenderActiveShift();
+  if (activeShift) {
+    // Add focus button if not exists
+    const controls = document.querySelector('.shift-controls');
+    if (controls && !document.getElementById('btnFocus')) {
+      const btn = document.createElement('button');
+      btn.id = 'btnFocus';
+      btn.className = 'shift-ctrl-btn';
+      btn.style.cssText = 'background:linear-gradient(135deg,#1a1a2e,#2a2a4e);color:var(--gold);border:1px solid rgba(255,215,0,0.3);';
+      btn.textContent = '🎯 ФОКУС';
+      btn.onclick = openFocusMode;
+      controls.appendChild(btn);
+    }
+    updateLiveRate();
+  } else {
+    document.getElementById('liveRateDisplay').style.display = 'none';
+  }
+};
+
+// --- Enhanced endShift to show summary ---
+const _origConfirmEndShift = confirmEndShift;
+confirmEndShift = async function() {
+  const earnedInput = document.getElementById('endShiftEarned');
+  const earned = parseInt(earnedInput.value) || 0;
+  const workHours = pendingEndShift ? pendingEndShift.hours : 0;
+  const rate = workHours > 0 ? Math.round(earned / workHours) : 0;
+  await _origConfirmEndShift();
+  // Show summary if shift was saved
+  if (!activeShift && earned > 0) {
+    setTimeout(() => showDailySummary(earned, workHours, rate), 500);
+  }
+};
+
+// --- Add Kopilka setup to FAB menu ---
+setTimeout(() => {
+  const fabMenu = document.querySelector('.fab-menu');
+  if (fabMenu) {
+    const kopilkaBtn = document.createElement('button');
+    kopilkaBtn.className = 'fab-item';
+    kopilkaBtn.onclick = setupKopilka;
+    kopilkaBtn.innerHTML = '<span class="fab-icon">🎯</span><span class="fab-label">Копилка</span>';
+    fabMenu.appendChild(kopilkaBtn);
+
+    const wheelBtn = document.createElement('button');
+    wheelBtn.className = 'fab-item';
+    wheelBtn.onclick = openWheelModal;
+    wheelBtn.innerHTML = '<span class="fab-icon">🎡</span><span class="fab-label">Рулетка</span>';
+    fabMenu.appendChild(wheelBtn);
+
+    const focusBtn = document.createElement('button');
+    focusBtn.className = 'fab-item';
+    focusBtn.onclick = openFocusMode;
+    focusBtn.innerHTML = '<span class="fab-icon">🎯</span><span class="fab-label">Режим фокуса</span>';
+    fabMenu.appendChild(focusBtn);
+  }
+}, 100);
+
+// --- Add haptic to buttons ---
+document.addEventListener('click', function(e) {
+  const btn = e.target.closest('button');
+  if (btn) haptic('light');
+});
+
 // ====== START ======
 // Приложение больше не стартует напрямую: сначала проверка доступа.
 // bootAuth() сам вызовет init(), когда вход состоялся.
@@ -5604,6 +6556,81 @@ bootAuth();
 // Update quests every 30 seconds (for timer-based ones)
 setInterval(() => { if (activeShift) renderQuests(); }, 30000);
 </script>
+
+<!-- FOCUS MODE OVERLAY -->
+<div class="focus-overlay hidden" id="focusOverlay">
+  <div class="focus-sub">⚡ РЕЖИМ ФОКУСА</div>
+  <div class="focus-timer" id="focusTimer">00:00:00</div>
+  <div class="focus-earn" id="focusEarn">~0 ₽</div>
+  <div class="focus-sub" id="focusSub">работаю</div>
+  <div class="focus-btns">
+    <button class="focus-btn brk" onclick="focusBreak()">☕ Перерыв</button>
+    <button class="focus-btn end" onclick="focusEnd()">⏹ Завершить</button>
+  </div>
+  <button class="focus-btn exit" onclick="closeFocusMode()">← Вернуться</button>
+</div>
+
+<!-- DAILY SUMMARY (after shift end) -->
+<div class="summary-overlay" id="summaryOverlay" style="display:none">
+  <div class="summary-card">
+    <div class="summary-title">🏁 ИТОГИ СМЕНЫ</div>
+    <div class="summary-grid" id="summaryGrid"></div>
+    <div class="summary-streak" id="summaryStreak"></div>
+    <button class="summary-close-btn" onclick="closeSummary()">Красавчик! 🦆</button>
+  </div>
+</div>
+
+<!-- FORTUNE WHEEL MODAL -->
+<div class="modal-overlay" id="wheelModal">
+  <div class="modal-content" style="max-width:340px">
+    <div class="modal-title">🎡 Колесо Фортуны</div>
+    <div class="wheel-modal-inner">
+      <div class="wheel-canvas-wrap">
+        <div class="wheel-pointer">▼</div>
+        <canvas id="wheelCanvas" width="280" height="280"></canvas>
+      </div>
+      <button class="wheel-spin-btn" id="wheelSpinBtn" onclick="spinWheel()">🎰 КРУТИТЬ! (120 XP)</button>
+      <div class="wheel-result" id="wheelResult"></div>
+    </div>
+    <button class="modal-close-btn" onclick="closeWheelModal()">Закрыть</button>
+  </div>
+</div>
+
+<!-- ============ TAB: STATS — extra sections (injected by JS) ============ -->
+
+<!-- DIARY MODAL -->
+<div class="modal-overlay" id="diaryModal">
+  <div class="modal-content" style="max-width:340px">
+    <div class="modal-title">📓 Новая запись</div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <input type="text" id="diaryPlace" placeholder="Место/ситуация" class="manual-input" style="width:100%">
+      <textarea id="diaryDesc" placeholder="Что произошло?" class="manual-input" rows="3" style="width:100%;resize:vertical;"></textarea>
+      <div style="text-align:center;">
+        <span style="font-size:12px;color:var(--text-dim);">Оценка:</span>
+        <span id="diaryStars" style="font-size:24px;cursor:pointer;">
+          <span onclick="setDiaryStar(1)">⭐</span><span onclick="setDiaryStar(2)">⭐</span><span onclick="setDiaryStar(3)">⭐</span><span onclick="setDiaryStar(4)">⭐</span><span onclick="setDiaryStar(5)">⭐</span>
+        </span>
+      </div>
+      <input type="text" id="diaryLesson" placeholder="Чему научился?" class="manual-input" style="width:100%">
+      <button class="modal-save-btn" onclick="saveDiaryEntry()">💾 Сохранить</button>
+    </div>
+    <button class="modal-close-btn" onclick="closeDiaryModal()">Отмена</button>
+  </div>
+</div>
+
+<!-- ============ MODAL: KOPILKA SETUP ============ -->
+<div class="modal-overlay" id="kopilkaModal">
+  <div class="modal-content" style="max-width:320px">
+    <div class="modal-title">🎯 Настрой копилку</div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <input type="text" id="kopilkaNameInput" placeholder="На что копишь? (напр. Квартира)" class="manual-input" style="width:100%">
+      <input type="number" id="kopilkaGoalInput" placeholder="Сколько нужно ₽?" class="manual-input" style="width:100%">
+      <button class="modal-save-btn" onclick="saveKopilka()">💾 Сохранить</button>
+    </div>
+    <button class="modal-close-btn" onclick="closeKopilkaModal()">Отмена</button>
+  </div>
+</div>
+
 <div class="update-banner" id="updateBanner">
   <div class="txt">🚀 Доступна новая версия</div>
   <button id="updateBtn">Обновить</button>
