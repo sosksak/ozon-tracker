@@ -2768,7 +2768,7 @@ async function loadShifts() {
     try {
       const { data, error } = await sb.from('shifts').select('*').order('date', { ascending: false });
       if (error) throw error;
-      shifts = data.map(enrichShift);
+      shifts = data.filter(s => !isProgressRow(s)).map(enrichShift);
       mergePendingIntoShifts();
       backupToLocal();
       setSyncStatus('ok', '☁️ Синхронизировано');
@@ -2781,7 +2781,7 @@ async function loadShifts() {
   try {
     const local = JSON.parse(localStorage.getItem('ozon_tracker'));
     if (local && Array.isArray(local.shifts)) {
-      shifts = local.shifts.map(enrichShift);
+      shifts = local.shifts.filter(s => !isProgressRow(s)).map(enrichShift);
       setSyncStatus('warn', '📱 Локальные данные');
       showToast('Загружены локальные данные', 'warn');
     }
@@ -2947,7 +2947,25 @@ const PROGRESS_KEYS = [
   'ozon_difficulty'
 ];
 
+// Где хранится прогресс в облаке:
+//   1) таблица app_state — правильный вариант (нужен один раз применённый SQL);
+//   2) если её нет — служебная строка в уже существующей таблице shifts.
+// Второй путь нужен потому, что создать таблицу анонимным ключом нельзя, а
+// прогресс обязан быть общим для установленного приложения и сайта: у PWA
+// отдельный localStorage, и без облака XP расходится.
+// Служебная строка: date = PROGRESS_ROW_DATE, note = JSON прогресса.
+// Она отфильтрована из истории, статистики и календаря (см. isProgressRow).
+const PROGRESS_ROW_DATE = '1970-01-01';
+const PROGRESS_ROW_TAG = '__PROGRESS__';
+
 let cloudStateOk = false;
+let progressBackend = null;   // 'app_state' | 'shifts' | null
+let progressRowId = null;
+
+function isProgressRow(s) {
+  return !!s && (s.date === PROGRESS_ROW_DATE ||
+                 (typeof s.note === 'string' && s.note.startsWith(PROGRESS_ROW_TAG)));
+}
 
 function collectProgress() {
   const out = {};
@@ -3002,15 +3020,44 @@ function applyProgress(cloud) {
 
 async function pullProgress() {
   if (!sb) return false;
+
+  // 1) штатный путь — таблица app_state
   try {
     const { data, error } = await sb.from('app_state').select('value').eq('key', 'progress').maybeSingle();
     if (error) throw error;
     cloudStateOk = true;
+    progressBackend = 'app_state';
     if (data && data.value) return applyProgress(data.value);
     return false;
   } catch (e) {
-    // таблица ещё не создана или нет прав — работаем локально, без шума
+    console.warn('app_state unavailable, using shifts row:', e.message || e);
+  }
+
+  // 2) фолбэк — служебная строка в shifts
+  try {
+    const { data, error } = await sb.from('shifts')
+      .select('id,note').eq('date', PROGRESS_ROW_DATE)
+      .order('id', { ascending: true });
+    if (error) throw error;
+    cloudStateOk = true;
+    progressBackend = 'shifts';
+
+    const rows = data || [];
+    if (!rows.length) { progressRowId = null; return false; }
+
+    // если из-за гонки записей строк несколько — оставляем первую, лишние убираем
+    progressRowId = rows[0].id;
+    if (rows.length > 1) {
+      const extra = rows.slice(1).map(r => r.id);
+      sb.from('shifts').delete().in('id', extra).then(() => {}, () => {});
+    }
+
+    const raw = String(rows[0].note || '');
+    if (!raw.startsWith(PROGRESS_ROW_TAG)) return false;
+    return applyProgress(JSON.parse(raw.slice(PROGRESS_ROW_TAG.length)));
+  } catch (e) {
     cloudStateOk = false;
+    progressBackend = null;
     console.warn('Progress pull skipped:', e.message || e);
     return false;
   }
@@ -3025,14 +3072,49 @@ function schedulePushProgress() {
 
 async function pushProgress() {
   if (!sb) return;
+  const payload = collectProgress();
+
+  // 1) штатный путь
+  if (progressBackend !== 'shifts') {
+    try {
+      const { error } = await sb.from('app_state')
+        .upsert({ key: 'progress', value: payload, updated_at: new Date().toISOString() }, { onConflict: 'key' });
+      if (error) throw error;
+      cloudStateOk = true;
+      progressBackend = 'app_state';
+      renderCloudSyncTag();
+      return;
+    } catch (e) {
+      console.warn('app_state push failed, using shifts row:', e.message || e);
+    }
+  }
+
+  // 2) фолбэк в shifts
   try {
-    const { error } = await sb.from('app_state')
-      .upsert({ key: 'progress', value: collectProgress(), updated_at: new Date().toISOString() }, { onConflict: 'key' });
-    if (error) throw error;
+    const note = PROGRESS_ROW_TAG + JSON.stringify(payload);
+    const row = { date: PROGRESS_ROW_DATE, hours: 0, earned: 0, note, difficulty: 'hard' };
+
+    if (progressRowId == null) {
+      // не затираем чужую строку: сначала ищем существующую
+      const { data: found } = await sb.from('shifts').select('id').eq('date', PROGRESS_ROW_DATE).limit(1);
+      if (found && found.length) progressRowId = found[0].id;
+    }
+
+    if (progressRowId != null) {
+      const { error } = await sb.from('shifts').update({ note }).eq('id', progressRowId);
+      if (error) throw error;
+    } else {
+      const { data, error } = await sb.from('shifts').insert(row).select('id').single();
+      if (error) throw error;
+      progressRowId = data.id;
+    }
     cloudStateOk = true;
+    progressBackend = 'shifts';
+    renderCloudSyncTag();
   } catch (e) {
     cloudStateOk = false;
     console.warn('Progress push skipped:', e.message || e);
+    renderCloudSyncTag();
   }
 }
 
@@ -3314,7 +3396,9 @@ function renderCloudSyncTag() {
   if (!el) return;
   if (cloudStateOk) {
     el.className = 'build-sync ok';
-    el.textContent = '☁️ прогресс в облаке';
+    el.textContent = progressBackend === 'shifts'
+      ? '☁️ прогресс в облаке (shifts)'
+      : '☁️ прогресс в облаке';
   } else {
     el.className = 'build-sync warn';
     el.textContent = '⚠️ только на устройстве';
@@ -3770,7 +3854,7 @@ function renderChart() {
 
 // ====== PWA: SERVICE WORKER ======
 // Регистрируем только по http/https — с file:// браузер ругается.
-const APP_VERSION = 'v4.3.1';
+const APP_VERSION = 'v4.3.2';
 
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
   window.addEventListener('load', () => {
