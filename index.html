@@ -1038,6 +1038,16 @@ body.modal-open { overflow: hidden !important; touch-action: none; }
   border-radius: 12px; margin-bottom: 12px; line-height: 1.45;
 }
 .auth-note { font-size: 11px; color: var(--text-dim); line-height: 1.5; margin-top: 14px; text-align: center; }
+.auth-prof-wrap { position: relative; }
+.auth-prof-del {
+  position: absolute; top: 6px; right: 6px; z-index: 2;
+  width: 26px; height: 26px; border-radius: 50%; border: none;
+  background: rgba(255,68,68,0.15); color: #ff6b6b; font-size: 13px; font-weight: 900;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: background 0.2s, transform 0.15s;
+}
+.auth-prof-del:hover { background: rgba(255,68,68,0.35); }
+.auth-prof-del:active { transform: scale(0.85); }
 .auth-divider { display:flex; align-items:center; gap:10px; margin: 16px 0 12px; color: var(--text-dim); font-size: 11px; font-weight: 700; }
 .auth-divider::before, .auth-divider::after { content:''; flex:1; height:1px; background: var(--glass-border); }
 
@@ -1786,6 +1796,22 @@ function hideAuthGate() {
   document.body.classList.remove('modal-open');
 }
 
+// Удаление профиля прямо с экрана выбора (только для dev-устройства, только user-профили)
+async function authDeleteProfile(login) {
+  const ok = await askConfirm(`Удалить профиль <b>${escapeHtml(login)}</b>?<br>Все данные профиля будут потеряны.`, {
+    icon: '🗑️', title: 'Удалить профиль?', okText: 'Удалить', noText: 'Отмена'
+  });
+  if (!ok) return;
+  const accs = getAccounts();
+  const next = accs.filter(a => a.login.toLowerCase() !== String(login).toLowerCase());
+  if (next.length === accs.length) { showToast('Профиль не найден', 'error'); return; }
+  saveAccounts(next);
+  const wa = getWebauthn();
+  if (wa && wa.login === login) saveWebauthn(null);
+  showToast('Профиль удалён', 'warn');
+  renderAuthGate();
+}
+
 function authSetView(v, login) {
   authView = v;
   authTargetLogin = login || null;
@@ -1889,16 +1915,22 @@ function renderAuthGate() {
   }
 
   // --- выбор профиля (основной экран) ---
-  const profHtml = accounts.map(a => `
-    <button class="auth-prof ${a.role === 'dev' ? 'dev' : ''}" onclick="authSetView('password', ${JSON.stringify(a.login)})">
-      <div class="ap-ava">${a.role === 'dev' ? '🛠️' : '👤'}</div>
-      <div class="ap-meta">
-        <div class="ap-name">${escapeHtml(a.name || a.login)}</div>
-        <div class="ap-role">${a.role === 'dev' ? 'Разработчик · полный доступ' : 'Обычный профиль'}</div>
-      </div>
-      <div class="ap-arrow">›</div>
-    </button>
-  `).join('');
+  const isDev = isDevDevice();
+  const profHtml = accounts.map(a => {
+    const canDel = isDev && a.role !== 'dev';
+    return `
+    <div class="auth-prof-wrap">
+      <button class="auth-prof ${a.role === 'dev' ? 'dev' : ''}" onclick="authSetView('password', ${JSON.stringify(a.login)})">
+        <div class="ap-ava">${a.role === 'dev' ? '🛠️' : '👤'}</div>
+        <div class="ap-meta">
+          <div class="ap-name">${escapeHtml(a.name || a.login)}</div>
+          <div class="ap-role">${a.role === 'dev' ? 'Разработчик · полный доступ' : 'Обычный профиль'}</div>
+        </div>
+        <div class="ap-arrow">›</div>
+      </button>
+      ${canDel ? `<button class="auth-prof-del" onclick="event.stopPropagation();authDeleteProfile(${JSON.stringify(a.login)})" title="Удалить профиль">✕</button>` : ''}
+    </div>`;
+  }).join('');
 
   const faceHtml = (wa && wa.id && webauthnSupported()) ? `
     <button class="auth-btn face" onclick="authDoFaceId()">
