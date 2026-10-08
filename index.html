@@ -1536,7 +1536,43 @@ const AUTH_KEYS = {
 // и на телефоне. Добавляется в PROGRESS_KEYS ниже.
 const SESSION_TTL_DAYS = 90;
 
-let currentUser = null;            // { login, name, role }
+let currentUser = null;
+
+// --- Per-profile localStorage helpers ---
+// All user data is namespaced by login so profiles don't share stats/shifts/quests
+function uKey(k) {
+  const prefix = (currentUser && currentUser.login) ? currentUser.login + '_' : '';
+  return prefix + k;
+}
+function uGet(k, fallback) {
+  try { const v = localStorage.getItem(uKey(k)); return v !== null ? JSON.parse(v) : fallback; }
+  catch(e) { return fallback; }
+}
+function uGetRaw(k) { return localStorage.getItem(uKey(k)); }
+function uSet(k, v) { try { localStorage.setItem(uKey(k), JSON.stringify(v)); } catch(e) {} }
+function uSetRaw(k, v) { try { localStorage.setItem(uKey(k), v); } catch(e) {} }
+function uRemove(k) { try { localStorage.removeItem(uKey(k)); } catch(e) {} }
+
+// One-time migration: copy legacy (un-prefixed) localStorage data to namespaced keys
+function migrateUserData(login) {
+  const flag = login + '_ozon_migrated';
+  if (localStorage.getItem(flag)) return;
+  const keys = [
+    'ozon_active_shift','ozon_shift_meta','ozon_life_xp','ozon_life_quests',
+    'ozon_shift_bonuses','ozon_chosen_category','ozon_weekly_cat',
+    'ozon_shop_purchases','ozon_shop_boosts','ozon_active_theme',
+    'ozon_tracker','ozon_pending_shifts','ozon_difficulty','ozon_xp_restored_v42'
+  ];
+  for (const k of keys) {
+    const v = localStorage.getItem(k);
+    const nk = login + '_' + k;
+    if (v !== null && localStorage.getItem(nk) === null) {
+      localStorage.setItem(nk, v);
+    }
+  }
+  localStorage.setItem(flag, '1');
+}
+            // { login, name, role }
 let deviceInfo = null;             // { id, role, name, createdAt }
 
 function nowMs() { return Date.now(); }
@@ -2028,6 +2064,13 @@ async function authEnter(acc) {
   currentUser = { login: acc.login, name: acc.name || acc.login, role: acc.role };
   saveSession(acc.login, acc.role);
 
+  // Migrate legacy data (no prefix) to namespaced keys for this user
+  migrateUserData(acc.login);
+
+  // Reload per-user variables now that currentUser is set
+  activeShift = uGet('ozon_active_shift', null);
+  difficulty = uGetRaw('ozon_difficulty') || 'normal';
+
   // Устройство ещё не представлено — регистрируем как обычное.
   if (!getDeviceInfo()) {
     saveDeviceInfo({ id: makeDeviceId(), role: acc.role === 'dev' ? 'dev' : 'user',
@@ -2505,10 +2548,10 @@ const SHOP_ITEMS = [
 
 // ====== STATE ======
 let shifts = [];
-let difficulty = localStorage.getItem('ozon_difficulty') || 'normal';
+let difficulty = uGetRaw('ozon_difficulty') || 'normal';
 
 // Active shift state (stored in localStorage)
-let activeShift = JSON.parse(localStorage.getItem('ozon_active_shift') || 'null');
+let activeShift = uGet('ozon_active_shift', null);
 let pendingEndShift = null; // data for end-shift modal
 
 let timerInterval = null;
@@ -2605,10 +2648,10 @@ function shiftMetaKey(s) {
   return `${s.date}|${s.hours}|${s.earned}`;
 }
 function getShiftMeta() {
-  try { return JSON.parse(localStorage.getItem('ozon_shift_meta') || '{}'); } catch (e) { return {}; }
+  try { return uGet('ozon_shift_meta', {}); } catch (e) { return {}; }
 }
 function saveShiftMeta(map) {
-  localStorage.setItem('ozon_shift_meta', JSON.stringify(map));
+  uSet('ozon_shift_meta', map);
   markLocalChange();
   schedulePushProgress();
 }
@@ -2642,9 +2685,9 @@ function formatShortDuration(ms) {
 
 function saveActiveShift() {
   if (activeShift) {
-    localStorage.setItem('ozon_active_shift', JSON.stringify(activeShift));
+    uSet('ozon_active_shift', activeShift);
   } else {
-    localStorage.removeItem('ozon_active_shift');
+    uRemove('ozon_active_shift');
   }
   // Активная смена теперь тоже в облаке: начал смену на телефоне —
   // таймер виден и на сайте, а не «потерялся».
@@ -3036,27 +3079,27 @@ function getTodayLifeQuests() {
 const XP_RESTORE_VALUE = 200;
 function restoreLostXPOnce() {
   try {
-    if (localStorage.getItem('ozon_xp_restored_v42')) return;
-    const raw = localStorage.getItem('ozon_life_xp');
+    if (uGetRaw('ozon_xp_restored_v42')) return;
+    const raw = uGetRaw('ozon_life_xp');
     let cur = null;
     try { cur = raw ? JSON.parse(raw) : null; } catch (e) { cur = null; }
     if (!cur || !cur.total) {
       const seeded = cur || { total: 0, cats: {}, history: [], questsDone: 0, daysDone: 0, lastDay: '' };
       seeded.total = XP_RESTORE_VALUE;
-      localStorage.setItem('ozon_life_xp', JSON.stringify(seeded));
+      uSet('ozon_life_xp', seeded);
     }
-    localStorage.setItem('ozon_xp_restored_v42', '1');
+    uSetRaw('ozon_xp_restored_v42', '1');
   } catch (e) { console.warn('XP restore skipped:', e); }
 }
 
 function getLifeXP() {
   try {
-    return JSON.parse(localStorage.getItem('ozon_life_xp') || '{"total":0,"cats":{},"history":[],"questsDone":0,"daysDone":0,"lastDay":""}');
+    return uGet('ozon_life_xp', {"total":0,"cats":{},"history":[],"questsDone":0,"daysDone":0,"lastDay":""});
   } catch(e) { return { total: 0, cats: {}, history: [], questsDone: 0, daysDone: 0, lastDay: '' }; }
 }
 
 function saveLifeXP(data) {
-  localStorage.setItem('ozon_life_xp', JSON.stringify(data));
+  uSet('ozon_life_xp', data);
   schedulePushProgress();
 }
 
@@ -3064,7 +3107,7 @@ function getXpMultiplier() {
   // Check if double XP is active
   const today = todayStr();
   try {
-    const boosts = JSON.parse(localStorage.getItem('ozon_shop_boosts') || '{}');
+    const boosts = uGet('ozon_shop_boosts', {});
     if (boosts.double_xp === today) return 2;
   } catch(e) {}
   return 1;
@@ -3254,7 +3297,7 @@ function celebrateLevelUp(level) {
 function getLifeQuestState() {
   const today = todayStr();
   try {
-    const saved = JSON.parse(localStorage.getItem('ozon_life_quests') || '{}');
+    const saved = uGet('ozon_life_quests', {});
     if (saved.date === today) return { checked: saved.checked || {}, rerolls: saved.rerolls || 0, replacements: saved.replacements || {} };
     return { checked: {}, rerolls: 0, replacements: {} };
   } catch(e) { return { checked: {}, rerolls: 0, replacements: {} }; }
@@ -3262,7 +3305,7 @@ function getLifeQuestState() {
 
 function saveLifeQuestState(state) {
   const today = todayStr();
-  localStorage.setItem('ozon_life_quests', JSON.stringify({ date: today, ...state }));
+  uSet('ozon_life_quests', { date: today, ...state });
 }
 
 function toggleLifeQuest(id) {
@@ -3291,20 +3334,20 @@ const MAX_REROLLS = 3;
 function getShiftBonuses() {
   const today = todayStr();
   try {
-    const saved = JSON.parse(localStorage.getItem('ozon_shift_bonuses') || '{}');
+    const saved = uGet('ozon_shift_bonuses', {});
     if (saved.date === today) return saved;
     return { date: today, bonusRerolls: 0, categoryChoice: false, claimedQuests: [] };
   } catch(e) { return { date: today, bonusRerolls: 0, categoryChoice: false, claimedQuests: [] }; }
 }
 
 function saveShiftBonuses(data) {
-  localStorage.setItem('ozon_shift_bonuses', JSON.stringify(data));
+  uSet('ozon_shift_bonuses', data);
   schedulePushProgress();
 }
 
 function getChosenCategory() {
   try {
-    const saved = JSON.parse(localStorage.getItem('ozon_chosen_category') || '{}');
+    const saved = uGet('ozon_chosen_category', {});
     const today = todayStr();
     if (saved.forDate === today) return saved.category;
     return null;
@@ -3312,7 +3355,7 @@ function getChosenCategory() {
 }
 
 function saveChosenCategory(cat, forDate) {
-  localStorage.setItem('ozon_chosen_category', JSON.stringify({ category: cat, forDate: forDate }));
+  uSet('ozon_chosen_category', { category: cat, forDate: forDate });
   schedulePushProgress();
 }
 
@@ -3414,7 +3457,7 @@ function getTotalRerolls() {
 // Weekly free category choice — 1 per week (resets Monday)
 function getWeeklyCategoryChoice() {
   try {
-    const saved = JSON.parse(localStorage.getItem('ozon_weekly_cat') || '{}');
+    const saved = uGet('ozon_weekly_cat', {});
     const now = new Date();
     const monday = new Date(now);
     monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7));
@@ -3425,7 +3468,7 @@ function getWeeklyCategoryChoice() {
 }
 
 function saveWeeklyCategoryChoice(data) {
-  localStorage.setItem('ozon_weekly_cat', JSON.stringify(data));
+  uSet('ozon_weekly_cat', data);
   schedulePushProgress();
 }
 
@@ -3784,10 +3827,10 @@ function renderQuests() {
 
 // ====== SHOP SYSTEM ======
 function getShopPurchases() {
-  try { return JSON.parse(localStorage.getItem('ozon_shop_purchases') || '{}'); } catch(e) { return {}; }
+  try { return uGet('ozon_shop_purchases', {}); } catch(e) { return {}; }
 }
 function saveShopPurchases(data) {
-  localStorage.setItem('ozon_shop_purchases', JSON.stringify(data));
+  uSet('ozon_shop_purchases', data);
   schedulePushProgress();
 }
 
@@ -3831,7 +3874,7 @@ function rollMysteryBox(boosts, today) {
 function getShopExtraRerolls() {
   const today = todayStr();
   try {
-    const boosts = JSON.parse(localStorage.getItem('ozon_shop_boosts') || '{}');
+    const boosts = uGet('ozon_shop_boosts', {});
     if (boosts.extra_reroll_date === today) return boosts.extra_reroll_count || 0;
   } catch(e) {}
   return 0;
@@ -3859,7 +3902,7 @@ function shopBuyItem(itemId) {
     // Apply theme if purchased
     if (item.cat === 'theme') {
       applyTheme(itemId);
-      localStorage.setItem('ozon_active_theme', itemId);
+      uSetRaw('ozon_active_theme', itemId);
       schedulePushProgress();
     }
   }
@@ -3871,7 +3914,7 @@ function shopBuyItem(itemId) {
   // Apply consumable effects
   if (item.consumable) {
     const today = todayStr();
-    const boosts = JSON.parse(localStorage.getItem('ozon_shop_boosts') || '{}');
+    const boosts = uGet('ozon_shop_boosts', {});
 
     if (item.id === 'extra_reroll_1' || item.id === 'extra_reroll_3') {
       const amount = item.id === 'extra_reroll_1' ? 1 : 3;
@@ -3904,7 +3947,7 @@ function shopBuyItem(itemId) {
       showToast(`🎁 ${prize}`, 'success');
     }
 
-    localStorage.setItem('ozon_shop_boosts', JSON.stringify(boosts));
+    uSet('ozon_shop_boosts', boosts);
   schedulePushProgress();
   } else {
     showToast(`✅ ${item.icon} ${item.name} куплено!`, 'success');
@@ -3958,11 +4001,11 @@ function resetTheme() {
   r.removeProperty('--purple'); r.removeProperty('--cyan');
   r.removeProperty('--bg-dark');
   document.body.style.background = '';
-  localStorage.removeItem('ozon_active_theme');
+  uRemove('ozon_active_theme');
 }
 
 function loadSavedTheme() {
-  const saved = localStorage.getItem('ozon_active_theme');
+  const saved = uGetRaw('ozon_active_theme');
   if (saved) applyTheme(saved);
 }
 
@@ -3984,7 +4027,7 @@ function renderShop() {
     for (const item of items) {
       const owned = !item.consumable && purchases[item.id];
       const canAfford = balance >= item.price;
-      const activeTheme = localStorage.getItem('ozon_active_theme');
+      const activeTheme = uGetRaw('ozon_active_theme');
       const isActiveTheme = item.cat === 'theme' && activeTheme === item.id;
       const itemClass = owned ? 'owned' : (!canAfford ? 'locked' : '');
 
@@ -3993,7 +4036,7 @@ function renderShop() {
         if (isActiveTheme) {
           btnHtml = `<button class="shop-item-price bought" onclick="resetTheme();renderShop()" style="font-size:11px">🔄 Сброс</button>`;
         } else {
-          btnHtml = `<button class="shop-item-price buy" onclick="applyTheme('${item.id}');localStorage.setItem('ozon_active_theme','${item.id}');schedulePushProgress();renderShop()" style="font-size:11px">🎨 Надеть</button>`;
+          btnHtml = `<button class="shop-item-price buy" onclick="applyTheme('${item.id}');uSetRaw('ozon_active_theme','${item.id}');schedulePushProgress();renderShop()" style="font-size:11px">🎨 Надеть</button>`;
         }
       } else {
         const btnClass = owned ? 'bought' : (canAfford ? 'buy' : 'expensive');
@@ -4034,7 +4077,7 @@ async function loadShifts() {
     }
   }
   try {
-    const local = JSON.parse(localStorage.getItem('ozon_tracker'));
+    const local = uGet('ozon_tracker', null);
     if (local && Array.isArray(local.shifts)) {
       shifts = local.shifts.filter(s => !isProgressRow(s)).map(enrichShift);
       setSyncStatus('warn', '📱 Локальные данные');
@@ -4088,12 +4131,12 @@ async function insertShift(shift) {
 
 // ====== OFFLINE QUEUE ======
 function getPendingShifts() {
-  try { return JSON.parse(localStorage.getItem('ozon_pending_shifts') || '[]'); } catch(e) { return []; }
+  try { return uGet('ozon_pending_shifts', []); } catch(e) { return []; }
 }
 function queuePendingShift(payload) {
   const q = getPendingShifts();
   q.push({ ...payload, _queuedAt: Date.now() });
-  localStorage.setItem('ozon_pending_shifts', JSON.stringify(q));
+  uSet('ozon_pending_shifts', q);
 }
 async function flushPendingShifts() {
   const q = getPendingShifts();
@@ -4117,7 +4160,7 @@ async function flushPendingShifts() {
       stillPending.push(item);
     }
   }
-  localStorage.setItem('ozon_pending_shifts', JSON.stringify(stillPending));
+  uSet('ozon_pending_shifts', stillPending);
   if (synced > 0) {
     showToast(`☁️ Залито в облако: ${synced} ${synced === 1 ? 'смена' : 'смен'}`, 'success');
     await loadShifts();
@@ -4161,7 +4204,7 @@ async function removeShift(id) {
     if (target) {
       const q = getPendingShifts().filter(p =>
         !(p.date === target.date && p.hours == target.hours && p.earned == target.earned));
-      localStorage.setItem('ozon_pending_shifts', JSON.stringify(q));
+      uSet('ozon_pending_shifts', q);
     }
     shifts = shifts.filter(s => s.id !== id);
     backupToLocal();
@@ -4187,7 +4230,7 @@ async function removeShift(id) {
 }
 
 function backupToLocal() {
-  try { localStorage.setItem('ozon_tracker', JSON.stringify({ shifts, difficulty })); } catch(e) {}
+  try { uSet('ozon_tracker', { shifts, difficulty }); } catch(e) {}
 }
 
 // ====== PROGRESS SYNC (v4.1) ======
@@ -4743,8 +4786,8 @@ async function init() {
   // Переменные в памяти были прочитаны ДО синка — перечитываем, иначе
   // активная смена и сложность из облака не попадут на экран.
   try {
-    activeShift = JSON.parse(localStorage.getItem('ozon_active_shift') || 'null');
-    const d = localStorage.getItem('ozon_difficulty');
+    activeShift = uGet('ozon_active_shift', null);
+    const d = uGetRaw('ozon_difficulty');
     if (d && d !== difficulty) setDifficulty(d, false);
   } catch (e) { console.warn('Re-read after sync failed:', e); }
 
@@ -4819,7 +4862,7 @@ window.addEventListener('online', () => {
 // ====== DIFFICULTY ======
 function setDifficulty(diff, doRender = true) {
   difficulty = diff;
-  localStorage.setItem('ozon_difficulty', diff);
+  uSetRaw('ozon_difficulty', diff);
   schedulePushProgress();
   document.querySelectorAll('.diff-btn').forEach(b => b.classList.toggle('active', b.dataset.diff === diff));
   if (doRender) render();
@@ -4917,7 +4960,7 @@ function exportDataJSON() {
     lifeXP: getLifeXP(),
     shopPurchases: getShopPurchases(),
     calendarPlan: getCalendarPlan(),
-    activeTheme: localStorage.getItem('ozon_active_theme') || null
+    activeTheme: uGetRaw('ozon_active_theme') || null
   };
   downloadFile(`ozon_backup_${todayStr()}.json`, JSON.stringify(dump, null, 2), 'application/json');
   showToast('💾 Полный бэкап скачан', 'success');
@@ -4940,13 +4983,13 @@ async function handleImportFile(ev) {
     const dump = JSON.parse(await file.text());
 
     if (dump.lifeXP) {
-      const merged = mergeLifeXP(localStorage.getItem('ozon_life_xp'), JSON.stringify(dump.lifeXP));
-      localStorage.setItem('ozon_life_xp', merged);
+      const merged = mergeLifeXP(uGetRaw('ozon_life_xp'), JSON.stringify(dump.lifeXP));
+      uSetRaw('ozon_life_xp', merged);
     }
-    if (dump.shopPurchases) localStorage.setItem('ozon_shop_purchases', JSON.stringify(dump.shopPurchases));
+    if (dump.shopPurchases) uSet('ozon_shop_purchases', dump.shopPurchases);
     if (dump.calendarPlan) localStorage.setItem('ozon_calendar_plan', JSON.stringify(dump.calendarPlan));
-    if (dump.activeTheme) localStorage.setItem('ozon_active_theme', dump.activeTheme);
-    if (dump.difficulty) localStorage.setItem('ozon_difficulty', dump.difficulty);
+    if (dump.activeTheme) uSetRaw('ozon_active_theme', dump.activeTheme);
+    if (dump.difficulty) uSetRaw('ozon_difficulty', dump.difficulty);
 
     // смены доливаем в облако только те, которых ещё нет
     let added = 0;
@@ -5261,7 +5304,7 @@ function calcBestStreak(goal) {
 // ====== STREAK ======
 function getStreakShields() {
   try {
-    const b = JSON.parse(localStorage.getItem('ozon_shop_boosts') || '{}');
+    const b = uGet('ozon_shop_boosts', {});
     return Array.isArray(b.streak_shields) ? b.streak_shields : [];
   } catch (e) { return []; }
 }
