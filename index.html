@@ -1467,6 +1467,9 @@ function saveActiveShift() {
   } else {
     localStorage.removeItem('ozon_active_shift');
   }
+  // Активная смена теперь тоже в облаке: начал смену на телефоне —
+  // таймер виден и на сайте, а не «потерялся».
+  schedulePushProgress();
 }
 
 // ====== ACTIVE SHIFT ======
@@ -2848,6 +2851,12 @@ async function flushPendingShifts() {
   for (const item of q) {
     const { _queuedAt, ...payload } = item;
     try {
+      // Защита от дублей: смена могла уйти в облако, а ответ потеряться
+      // по дороге (обрыв сети) — тогда повторная заливка создала бы копию.
+      const { data: exist } = await sb.from('shifts').select('id')
+        .eq('date', payload.date).eq('hours', payload.hours).eq('earned', payload.earned).limit(1);
+      if (exist && exist.length) { synced++; continue; }
+
       const { error } = await sb.from('shifts').insert([payload]);
       if (error) throw error;
       synced++;
@@ -2944,8 +2953,25 @@ const PROGRESS_KEYS = [
   'ozon_shift_bonuses',
   'ozon_weekly_cat',
   'ozon_chosen_category',
-  'ozon_difficulty'
+  'ozon_difficulty',
+  'ozon_active_shift',
+  'ozon_life_quests'
 ];
+
+// Ключи, где значение — накопительный набор: объединяем, а не перетираем.
+// Покупки в магазине нельзя терять: купил тему на телефоне, зашёл с ноута —
+// обе покупки должны остаться.
+const PROGRESS_UNION_KEYS = ['ozon_shop_purchases'];
+
+// Когда локальное значение последний раз менялось (на этом устройстве).
+// Без этого облако умеет только «залить, если локально пусто», и любое
+// изменение на втором устройстве молча терялось.
+function markLocalChange() {
+  try { localStorage.setItem('ozon_progress_ts', String(Date.now())); } catch (e) {}
+}
+function getLocalTs() {
+  return parseInt(localStorage.getItem('ozon_progress_ts') || '0', 10) || 0;
+}
 
 // Где хранится прогресс в облаке:
 //   1) таблица app_state — правильный вариант (нужен один раз применённый SQL);
@@ -2971,9 +2997,22 @@ function collectProgress() {
   const out = {};
   for (const k of PROGRESS_KEYS) {
     const v = localStorage.getItem(k);
-    if (v !== null) out[k] = v;
+    // null отправляем ЯВНО — это значит «ключ удалён». Иначе облако хранило бы
+    // старое значение и, например, завершённая смена возвращалась бы из облака.
+    out[k] = v;
   }
+  out.__ts = getLocalTs();
   return out;
+}
+
+// Объединение словарей-наборов (покупки): true побеждает отсутствие.
+function mergeUnion(localRaw, cloudRaw) {
+  let a = {}, b = {};
+  try { a = JSON.parse(localRaw || '{}'); } catch (e) {}
+  try { b = JSON.parse(cloudRaw || '{}'); } catch (e) {}
+  if (typeof a !== 'object' || a === null) a = {};
+  if (typeof b !== 'object' || b === null) b = {};
+  return JSON.stringify(Object.assign({}, b, a));
 }
 
 // Главное правило слияния: НИКОГДА не уменьшаем накопленный XP и не теряем
@@ -3002,18 +3041,43 @@ function applyProgress(cloud) {
   if (!cloud || typeof cloud !== 'object') return false;
   let changed = false;
 
+  // Кто свежее: это устройство или облако. PROGRESS_KEYS без своей стратегии
+  // слияния разруливаются по времени последнего изменения.
+  const cloudTs = parseInt(cloud.__ts || 0, 10) || 0;
+  const cloudIsNewer = cloudTs > getLocalTs();
+
   for (const k of PROGRESS_KEYS) {
     const cloudVal = cloud[k];
     if (cloudVal === undefined) continue;
     const localVal = localStorage.getItem(k);
+
+    // Облако говорит «удалено» и оно свежее — убираем и у себя.
+    if (cloudVal === null) {
+      if (cloudIsNewer && localVal !== null) { localStorage.removeItem(k); changed = true; }
+      continue;
+    }
 
     if (k === 'ozon_life_xp') {
       const merged = mergeLifeXP(localVal, cloudVal);
       if (merged !== localVal) { localStorage.setItem(k, merged); changed = true; }
       continue;
     }
-    // остальное: облако выигрывает только если локально пусто
-    if (localVal === null) { localStorage.setItem(k, cloudVal); changed = true; }
+
+    if (PROGRESS_UNION_KEYS.includes(k)) {
+      const merged = mergeUnion(localVal, cloudVal);
+      if (merged !== localVal) { localStorage.setItem(k, merged); changed = true; }
+      continue;
+    }
+
+    // Пусто локально — всегда берём облако. Иначе — только если облако свежее.
+    if (localVal === null || (cloudIsNewer && cloudVal !== localVal)) {
+      localStorage.setItem(k, cloudVal);
+      changed = true;
+    }
+  }
+
+  if (cloudIsNewer && cloudTs) {
+    try { localStorage.setItem('ozon_progress_ts', String(cloudTs)); } catch (e) {}
   }
   return changed;
 }
@@ -3065,6 +3129,7 @@ async function pullProgress() {
 
 let pushTimer = null;
 function schedulePushProgress() {
+  markLocalChange();   // штамп ставим всегда, даже если облака нет
   if (!sb) return;
   clearTimeout(pushTimer);
   pushTimer = setTimeout(pushProgress, 1200);
@@ -3366,6 +3431,14 @@ async function init() {
   // устройство/приложение показало бы пустой XP и уровень.
   try { await pullProgress(); } catch(e) { console.error('Progress pull error:', e); }
 
+  // Переменные в памяти были прочитаны ДО синка — перечитываем, иначе
+  // активная смена и сложность из облака не попадут на экран.
+  try {
+    activeShift = JSON.parse(localStorage.getItem('ozon_active_shift') || 'null');
+    const d = localStorage.getItem('ozon_difficulty');
+    if (d && d !== difficulty) setDifficulty(d, false);
+  } catch (e) { console.warn('Re-read after sync failed:', e); }
+
   // Restore active shift if was running
   if (activeShift) {
     renderActiveShift();
@@ -3385,7 +3458,9 @@ async function init() {
   renderVersionTag();
   renderCloudSyncTag();
   hideLoading();
-  schedulePushProgress();
+  // Без markLocalChange: простое открытие приложения не делает это устройство
+  // «свежее» облака, иначе старый клиент затирал бы новые данные.
+  if (sb) pushProgress();
 }
 
 // Честно говорим, работает ли облако. Если таблица app_state не создана,
@@ -3854,7 +3929,7 @@ function renderChart() {
 
 // ====== PWA: SERVICE WORKER ======
 // Регистрируем только по http/https — с file:// браузер ругается.
-const APP_VERSION = 'v4.3.2';
+const APP_VERSION = 'v4.4.0';
 
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
   window.addEventListener('load', () => {
