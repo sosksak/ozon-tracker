@@ -15,7 +15,7 @@
 <link rel="manifest" href="manifest.json?v=5">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
-<title>💰 OZON Grind Tracker v4.3</title>
+<title>💰 OZON Grind Tracker v4.7</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="config.js?v=6"></script>
 <style>
@@ -3011,7 +3011,7 @@ const LIFE_QUESTS = [
   { id: 'dance_public', icon: '💃', title: 'Потанцевать / подвигаться на людях', desc: 'Не бойся быть заметным', reward: '+20 XP', xp: 20, cat: 'challenge' },
 
   // 💜 Отношения и забота
-  { id: 'remember_detail', icon: '🧠', title: 'Запомнить деталь о человеке', desc: 'Имя кота, любимый цвет — это важно', reward: '+15 XP', xp: 15, cat: 'care' },
+  { id: 'remember_detail_care', icon: '🧠', title: 'Запомнить деталь о человеке', desc: 'Имя кота, любимый цвет — это важно', reward: '+15 XP', xp: 15, cat: 'care' },
   { id: 'surprise_small', icon: '🎁', title: 'Сделать маленький сюрприз', desc: 'Кофе, шоколадка, записка', reward: '+20 XP', xp: 20, cat: 'care' },
   { id: 'be_gentleman', icon: '🚪', title: 'Придержать дверь / помочь', desc: 'Маленькие жесты = большое впечатление', reward: '+10 XP', xp: 10, cat: 'care' },
   { id: 'share_food_girl', icon: '🍕', title: 'Угостить чем-то вкусным', desc: 'Еда = путь к сердцу', reward: '+15 XP', xp: 15, cat: 'care' },
@@ -3759,7 +3759,7 @@ const SHIFT_QUEST_POOL = [
     desc: 'Заработай 1000₽ за первые 1.5 часа',
     calc: (ctx) => {
       if (ctx.totalHours <= 1.5 && ctx.todayEarned >= 1000) return { progress: 1, target: 1 };
-      if (ctx.totalHours > 1.5 && ctx.todayEarned >= 1000) return { progress: 1, target: 1 };
+      if (ctx.totalHours > 1.5) return { progress: 0, target: 1 }; // опоздал — квест провален
       return { progress: Math.min(ctx.todayEarned, 1000), target: 1000 };
     },
     reward: '⚡ Разгон взят!', bonus: null
@@ -4024,6 +4024,8 @@ function resetTheme() {
   r.removeProperty('--bg-dark');
   document.body.style.background = '';
   uRemove('ozon_active_theme');
+  markLocalChange();
+  schedulePushProgress();
 }
 
 function loadSavedTheme() {
@@ -4233,7 +4235,7 @@ async function updateShift(id, updates) {
 
 async function removeShift(id) {
   if (!requirePerm('deleteShifts', '🔒 Удалять смены может только разработчик')) return;
-  if (!confirm('Удалить эту смену?')) return;
+  if (!await askConfirm('Удалить эту смену?', { icon: '🗑️', title: 'Удаление смены' })) return;
   // FIX: локальную (не синхронизированную) смену удаляем из очереди, а не из облака
   if (typeof id === 'string' && id.startsWith('local_')) {
     const target = shifts.find(s => s.id === id);
@@ -4643,10 +4645,10 @@ let calYear, calMonth, calSelectedDate = null;
 const MONTH_NAMES_RU = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
 
 function getCalendarPlan() {
-  try { return JSON.parse(localStorage.getItem('ozon_calendar_plan') || '{}'); } catch(e) { return {}; }
+  try { return JSON.parse(localStorage.getItem(uKey('ozon_calendar_plan')) || '{}'); } catch(e) { return {}; }
 }
 function saveCalendarPlan(plan) {
-  localStorage.setItem('ozon_calendar_plan', JSON.stringify(plan));
+  localStorage.setItem(uKey('ozon_calendar_plan'), JSON.stringify(plan));
   schedulePushProgress();
 }
 
@@ -4897,7 +4899,12 @@ document.addEventListener('visibilitychange', () => {
 });
 window.addEventListener('online', () => {
   showToast('🌐 Сеть вернулась — синхронизирую', 'success');
+  setSyncStatus('syncing', '⏳ Синхронизация...');
   flushPendingShifts().catch(e => console.error(e));
+});
+window.addEventListener('offline', () => {
+  showToast('📴 Нет интернета — работаю в офлайне', 'warn');
+  setSyncStatus('warn', '📴 Офлайн');
 });
 
 // ====== DIFFICULTY ======
@@ -4924,7 +4931,7 @@ async function addShift() {
   }
 
   if (shifts.some(s => s.date === date)) {
-    if (!confirm(`Смена на ${date} уже есть. Добавить ещё одну?`)) return;
+    if (!await askConfirm(`Смена на ${date} уже есть. Добавить ещё одну?`, { icon: '📋', title: 'Дубль смены' })) return;
   }
 
   const btn = document.getElementById('btnAdd');
@@ -4994,14 +5001,20 @@ function exportDataCSV() {
 function exportDataJSON() {
   const dump = {
     exportedAt: new Date().toISOString(),
-    version: '4.1',
+    version: '4.7',
     shifts,
     pending: getPendingShifts(),
     difficulty,
     lifeXP: getLifeXP(),
     shopPurchases: getShopPurchases(),
     calendarPlan: getCalendarPlan(),
-    activeTheme: uGetRaw('ozon_active_theme') || null
+    activeTheme: uGetRaw('ozon_active_theme') || null,
+    shiftBonuses: uGet('ozon_shift_bonuses', {}),
+    chosenCategory: uGet('ozon_chosen_category', {}),
+    weeklyCat: uGet('ozon_weekly_cat', {}),
+    shopBoosts: uGet('ozon_shop_boosts', {}),
+    monthGoal: getMonthGoal(),
+    chartMode: chartMode
   };
   downloadFile(`ozon_backup_${todayStr()}.json`, JSON.stringify(dump, null, 2), 'application/json');
   showToast('💾 Полный бэкап скачан', 'success');
@@ -5028,9 +5041,15 @@ async function handleImportFile(ev) {
       uSetRaw('ozon_life_xp', merged);
     }
     if (dump.shopPurchases) uSet('ozon_shop_purchases', dump.shopPurchases);
-    if (dump.calendarPlan) localStorage.setItem('ozon_calendar_plan', JSON.stringify(dump.calendarPlan));
+    if (dump.calendarPlan) localStorage.setItem(uKey('ozon_calendar_plan'), JSON.stringify(dump.calendarPlan));
     if (dump.activeTheme) uSetRaw('ozon_active_theme', dump.activeTheme);
     if (dump.difficulty) uSetRaw('ozon_difficulty', dump.difficulty);
+    if (dump.shiftBonuses) uSet('ozon_shift_bonuses', dump.shiftBonuses);
+    if (dump.chosenCategory) uSet('ozon_chosen_category', dump.chosenCategory);
+    if (dump.weeklyCat) uSet('ozon_weekly_cat', dump.weeklyCat);
+    if (dump.shopBoosts) uSet('ozon_shop_boosts', dump.shopBoosts);
+    if (dump.monthGoal) localStorage.setItem(uKey('ozon_month_goal'), String(dump.monthGoal));
+    if (dump.chartMode) localStorage.setItem(uKey('ozon_chart_mode'), String(dump.chartMode));
 
     // смены доливаем в облако только те, которых ещё нет
     let added = 0;
@@ -5198,15 +5217,17 @@ function render() {
 
 // ====== ЦЕЛЬ МЕСЯЦА / ПРОГНОЗ / ДНИ НЕДЕЛИ / РЕКОРДЫ ======
 function getMonthGoal() {
-  return parseInt(localStorage.getItem('ozon_month_goal') || '0', 10) || 0;
+  return parseInt(localStorage.getItem(uKey('ozon_month_goal')) || '0', 10) || 0;
 }
-function openMonthGoalPrompt() {
+async function openMonthGoalPrompt() {
   const cur = getMonthGoal();
-  const v = prompt('Цель по заработку на этот месяц (₽):', cur || 80000);
-  if (v === null) return;
-  const n = parseInt(String(v).replace(/\D/g, ''), 10);
+  const result = await askForm([
+    { key: 'goal', label: 'Цель по заработку (₽)', type: 'number', placeholder: '80000', value: String(cur || 80000) }
+  ], { icon: '🎯', title: 'Цель месяца', okText: 'Сохранить' });
+  if (!result) return;
+  const n = parseInt(String(result.goal).replace(/\D/g, ''), 10);
   if (!n || n <= 0) { showToast('❌ Введи число больше нуля', 'error'); return; }
-  localStorage.setItem('ozon_month_goal', String(n));
+  localStorage.setItem(uKey('ozon_month_goal'), String(n));
   markLocalChange();
   schedulePushProgress();
   render();
@@ -5387,12 +5408,12 @@ function calcStreak(goal) {
 // ====== ГРАФИК ЗАРАБОТКА ======
 // Сутки группируем по локальной дате (не UTC) — иначе ночные смены
 // уезжали бы на соседний столбик.
-let chartMode = parseInt(localStorage.getItem('ozon_chart_mode') || '7', 10);
+let chartMode = parseInt(localStorage.getItem(uKey('ozon_chart_mode')) || '7', 10);
 if (![7, 14, 30].includes(chartMode)) chartMode = 7;
 
 function setChartMode(days) {
   chartMode = days;
-  localStorage.setItem('ozon_chart_mode', String(days));
+  localStorage.setItem(uKey('ozon_chart_mode'), String(days));
   [7, 14, 30].forEach(d => {
     const b = document.getElementById('chartMode' + d);
     if (b) b.classList.toggle('active', d === days);
@@ -5498,7 +5519,7 @@ function renderChart() {
 
 // ====== PWA: SERVICE WORKER ======
 // Регистрируем только по http/https — с file:// браузер ругается.
-const APP_VERSION = 'v4.6.0';
+const APP_VERSION = 'v4.7.0';
 
 // Страховка: кнопка баннера обязана работать даже если обработчик
 // от service worker по какой-то причине не навесился.
