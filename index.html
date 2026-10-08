@@ -59,6 +59,7 @@ body {
   display: flex; align-items: center; justify-content: center;
   flex-direction: column; gap: 16px;
   z-index: 9999; transition: opacity 0.5s;
+  touch-action: none; overflow: hidden;
 }
 .loading-overlay.hidden { opacity: 0; pointer-events: none; }
 .loading-spinner { font-size: 60px; animation: spin 1s linear infinite; }
@@ -2373,7 +2374,12 @@ async function bootAuth() {
 
   // Облачные профили нужны ДО экрана входа: иначе на новом телефоне список
   // профилей будет пустым и войти будет некуда.
-  try { await pullAccountsOnly(); } catch (e) { console.warn('accounts pull:', e); }
+  try {
+    await Promise.race([
+      pullAccountsOnly(),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('pull timeout')), 4000))
+    ]);
+  } catch (e) { console.warn('accounts pull:', e); }
 
   const accounts = getAccounts();
 
@@ -6551,7 +6557,26 @@ document.addEventListener('click', function(e) {
 // ====== START ======
 // Приложение больше не стартует напрямую: сначала проверка доступа.
 // bootAuth() сам вызовет init(), когда вход состоялся.
-bootAuth();
+// Safety timeout: если bootAuth зависнет (Supabase не ответит), 
+// через 5 секунд принудительно прячем лоадер и показываем экран входа.
+{
+  let bootDone = false;
+  bootAuth().then(() => { bootDone = true; }).catch(e => {
+    console.error('bootAuth failed:', e);
+    bootDone = true;
+    hideLoading();
+    if (getAccounts().length) { authSetView('choose'); showAuthGate(); }
+    else { authSetView('setup'); showAuthGate(); }
+  });
+  setTimeout(() => {
+    if (!bootDone) {
+      console.warn('bootAuth timeout — forcing UI');
+      hideLoading();
+      if (getAccounts().length) { authSetView('choose'); showAuthGate(); }
+      else { authSetView('setup'); showAuthGate(); }
+    }
+  }, 5000);
+}
 
 // Update quests every 30 seconds (for timer-based ones)
 setInterval(() => { if (activeShift) renderQuests(); }, 30000);
