@@ -1920,7 +1920,7 @@ function renderAuthGate() {
     const canDel = isDev && a.role !== 'dev';
     return `
     <div class="auth-prof-wrap">
-      <button class="auth-prof ${a.role === 'dev' ? 'dev' : ''}" onclick="authSetView('password', ${JSON.stringify(a.login)})">
+      <button class="auth-prof ${a.role === 'dev' ? 'dev' : ''}" data-action="auth-login" data-login="${escapeHtml(a.login)}">
         <div class="ap-ava">${a.role === 'dev' ? '🛠️' : '👤'}</div>
         <div class="ap-meta">
           <div class="ap-name">${escapeHtml(a.name || a.login)}</div>
@@ -1928,7 +1928,7 @@ function renderAuthGate() {
         </div>
         <div class="ap-arrow">›</div>
       </button>
-      ${canDel ? `<button class="auth-prof-del" onclick="event.stopPropagation();authDeleteProfile(${JSON.stringify(a.login)})" title="Удалить профиль">✕</button>` : ''}
+      ${canDel ? `<button class="auth-prof-del" data-action="auth-delete" data-login="${escapeHtml(a.login)}" title="Удалить профиль">✕</button>` : ''}
     </div>`;
   }).join('');
 
@@ -1951,6 +1951,18 @@ function renderAuthGate() {
     <button class="auth-btn ghost" onclick="authSetView('newuser')">+ Новый профиль</button>
   `;
 }
+
+
+// Event delegation for auth gate buttons (avoids broken inline onclick with quotes)
+document.addEventListener('click', function(e) {
+  const btn = e.target.closest('[data-action]');
+  if (!btn) return;
+  const action = btn.dataset.action;
+  const login = btn.dataset.login;
+  if (action === 'auth-login') { authSetView('password', login); }
+  else if (action === 'auth-delete') { e.stopPropagation(); authDeleteProfile(login); }
+  else if (action === 'acc-delete') { accDelete(login); }
+});
 
 async function authDoSetup() {
   const login = (document.getElementById('suLogin') || {}).value || '';
@@ -2291,7 +2303,7 @@ function renderAccountModal() {
           <div class="ar-t">${a.role === 'dev' ? '🛠️' : '👤'} ${escapeHtml(a.name || a.login)}${isMe ? ' · это ты' : ''}</div>
           <div class="ar-s">${escapeHtml(a.login)} · ${a.role === 'dev' ? 'разработчик' : 'обычный'}</div>
         </div>
-        ${(canManage && !(isMe && a.role === 'dev')) ? `<button class="acc-mini danger" onclick="accDelete(${JSON.stringify(a.login)})">Удалить</button>` : ''}
+        ${(canManage && !(isMe && a.role === 'dev')) ? `<button class="acc-mini danger" data-action="acc-delete" data-login="${escapeHtml(a.login)}">Удалить</button>` : ''}
       </div>`;
   }).join('');
 
