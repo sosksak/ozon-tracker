@@ -2186,7 +2186,8 @@ async function pullAccountsOnly() {
   } catch (e) {}
 
   try {
-    const { data } = await sb.from('shifts').select('note').eq('date', PROGRESS_ROW_DATE).limit(1);
+    const userDiff = currentUser ? currentUser.login : 'dev';
+    const { data } = await sb.from('shifts').select('note').eq('date', PROGRESS_ROW_DATE).eq('difficulty', userDiff).limit(1);
     if (data && data.length) {
       const raw = String(data[0].note || '');
       if (raw.startsWith(PROGRESS_ROW_TAG)) apply(JSON.parse(raw.slice(PROGRESS_ROW_TAG.length)));
@@ -2626,10 +2627,31 @@ function parseLocalDate(str) {
   return new Date(parseInt(p[0]), parseInt(p[1]) - 1, parseInt(p[2]));
 }
 
+// ====== USER TAG IN NOTE ======
+// We encode user_login as [user:xxx] at the END of the note field
+// so each user sees only their shifts without needing a DB schema change.
+function extractUserTag(note) {
+  if (!note) return null;
+  const m = note.match(/\[user:([^\]]+)\]$/);
+  return m ? m[1] : null;
+}
+function injectUserTag(note, login) {
+  if (!login) return note || '';
+  // Remove any existing tag first
+  const clean = (note || '').replace(/\s*\[user:[^\]]+\]$/, '');
+  return clean ? clean + ' [user:' + login + ']' : '[user:' + login + ']';
+}
+function stripUserTag(note) {
+  if (!note) return '';
+  return note.replace(/\s*\[user:[^\]]+\]$/, '');
+}
+
 function enrichShift(s) {
   s.hours = parseFloat(s.hours) || 0;
   s.earned = parseFloat(s.earned) || 0;
   s.rate = s.hours > 0 ? Math.round(s.earned / s.hours) : 0;
+  // Strip user tag from note for display purposes
+  s.displayNote = stripUserTag(s.note);
   // Метаданные перерывов живут отдельно: в таблице Supabase нет под них колонок,
   // а DDL анонимным ключом не сделать. Ключ — дата+часы+заработок, т.к. id
   // локальной смены меняется после заливки в облако.
@@ -4062,11 +4084,19 @@ function renderShop() {
 // ====== SUPABASE OPS ======
 async function loadShifts() {
   setSyncStatus('syncing', '⏳ Загрузка...');
+  const login = currentUser ? currentUser.login : '';
   if (sb) {
     try {
       const { data, error } = await sb.from('shifts').select('*').order('date', { ascending: false });
       if (error) throw error;
-      shifts = data.filter(s => !isProgressRow(s)).map(enrichShift);
+      // Filter shifts by user: tagged shifts belong to their owner, untagged belong to dev (legacy)
+      const myShifts = data.filter(s => {
+        const tag = extractUserTag(s.note);
+        if (tag) return tag === login;
+        // Legacy rows (no tag) belong to the dev account
+        return currentUser && currentUser.role === 'dev';
+      });
+      shifts = myShifts.filter(s => !isProgressRow(s)).map(enrichShift);
       mergePendingIntoShifts();
       backupToLocal();
       setSyncStatus('ok', '☁️ Синхронизировано');
@@ -4099,9 +4129,10 @@ function mergePendingIntoShifts() {
 
 async function insertShift(shift) {
   setSyncStatus('syncing', '⏳ Сохранение...');
+  const login = currentUser ? currentUser.login : '';
   const payload = {
     date: shift.date, hours: shift.hours, earned: shift.earned,
-    note: shift.note || '', difficulty: difficulty
+    note: injectUserTag(shift.note || '', login), difficulty: difficulty
   };
   if (sb) {
     try {
@@ -4141,10 +4172,15 @@ function queuePendingShift(payload) {
 async function flushPendingShifts() {
   const q = getPendingShifts();
   if (!q.length || !sb) return;
+  const login = currentUser ? currentUser.login : '';
   const stillPending = [];
   let synced = 0;
   for (const item of q) {
     const { _queuedAt, ...payload } = item;
+    // Ensure user tag in note for pending shifts
+    if (login && !extractUserTag(payload.note)) {
+      payload.note = injectUserTag(payload.note, login);
+    }
     try {
       // Защита от дублей: смена могла уйти в облако, а ответ потеряться
       // по дороге (обрыв сети) — тогда повторная заливка создала бы копию.
@@ -4447,6 +4483,7 @@ async function pullProgress() {
   try {
     const { data, error } = await sb.from('shifts')
       .select('id,note').eq('date', PROGRESS_ROW_DATE)
+      .eq('difficulty', currentUser ? currentUser.login : 'dev')
       .order('id', { ascending: true });
     if (error) throw error;
     cloudStateOk = true;
@@ -4503,11 +4540,12 @@ async function pushProgress() {
   // 2) фолбэк в shifts
   try {
     const note = PROGRESS_ROW_TAG + JSON.stringify(payload);
-    const row = { date: PROGRESS_ROW_DATE, hours: 0, earned: 0, note, difficulty: 'hard' };
+    const userDiff = currentUser ? currentUser.login : 'dev';
+    const row = { date: PROGRESS_ROW_DATE, hours: 0, earned: 0, note, difficulty: userDiff };
 
     if (progressRowId == null) {
       // не затираем чужую строку: сначала ищем существующую
-      const { data: found } = await sb.from('shifts').select('id').eq('date', PROGRESS_ROW_DATE).limit(1);
+      const { data: found } = await sb.from('shifts').select('id').eq('date', PROGRESS_ROW_DATE).eq('difficulty', userDiff).limit(1);
       if (found && found.length) progressRowId = found[0].id;
     }
 
@@ -4551,7 +4589,7 @@ function openEditModal(id) {
   document.getElementById('editDate').value = shift.date;
   document.getElementById('editHours').value = shift.hours;
   document.getElementById('editEarned').value = shift.earned;
-  document.getElementById('editNote').value = shift.note || '';
+  document.getElementById('editNote').value = shift.displayNote || stripUserTag(shift.note) || '';
   document.getElementById('editShiftModal').classList.add('show');
   document.body.classList.add('modal-open');
 }
@@ -4578,7 +4616,10 @@ async function saveEditShift() {
   btn.disabled = true;
   btn.textContent = '⏳...';
 
-  const ok = await updateShift(id, { date, hours, earned, note });
+  const login = currentUser ? currentUser.login : '';
+  const taggedNote = injectUserTag(note, login);
+
+  const ok = await updateShift(id, { date, hours, earned, note: taggedNote });
 
   btn.disabled = false;
   btn.textContent = '💾 СОХРАНИТЬ';
@@ -4940,7 +4981,7 @@ function exportDataCSV() {
   if (!shifts.length) { showToast('Нет смен для экспорта', 'warn'); return; }
   const rows = [['Дата', 'Часы', 'Заработок', 'Ставка', 'Заметка']];
   for (const s of [...shifts].sort((a, b) => a.date.localeCompare(b.date))) {
-    rows.push([s.date, s.hours, s.earned, s.rate, (s.note || '').replace(/"/g, '""')]);
+    rows.push([s.date, s.hours, s.earned, s.rate, (s.displayNote || stripUserTag(s.note) || '').replace(/"/g, '""')]);
   }
   const totalE = shifts.reduce((a, s) => a + s.earned, 0);
   const totalH = shifts.reduce((a, s) => a + s.hours, 0);
@@ -5123,7 +5164,7 @@ function render() {
       const dp = s.date.split('-');
       const d = new Date(parseInt(dp[0]), parseInt(dp[1]) - 1, parseInt(dp[2]));
       const dateStr = d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
-      const noteHtml = s.note ? `<div class="shift-note">${escapeHtml(s.note)}</div>` : '';
+      const noteHtml = s.displayNote ? `<div class="shift-note">${escapeHtml(s.displayNote)}</div>` : '';
       // FIX: id кладём в кавычках — у локальных (ещё не синхронизированных) смен он строковый
       // и без кавычек onclick падал с ошибкой.
       const idArg = JSON.stringify(s.id);
