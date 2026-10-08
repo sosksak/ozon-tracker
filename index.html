@@ -933,7 +933,7 @@ body {
   background: rgba(0,0,0,0.8); z-index: 5000;
   display: flex; align-items: center; justify-content: center;
   padding: 20px; opacity: 0; pointer-events: none; transition: opacity 0.3s;
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px); overflow-y: auto;
 }
 .modal-overlay.show { opacity: 1; pointer-events: auto; }
 .modal {
@@ -999,6 +999,8 @@ body {
   padding: 20px; overflow-y: auto;
 }
 .auth-gate.show { display: flex; }
+/* блокируем скролл фона при открытии оверлеев */
+body.modal-open { overflow: hidden !important; touch-action: none; }
 .auth-card {
   width: 100%; max-width: 380px;
   background: linear-gradient(160deg, var(--bg-card2), var(--bg-card));
@@ -1775,11 +1777,13 @@ let authError = '';
 function showAuthGate() {
   const gate = document.getElementById('authGate');
   if (gate) gate.classList.add('show');
+  document.body.classList.add('modal-open');
   renderAuthGate();
 }
 function hideAuthGate() {
   const gate = document.getElementById('authGate');
   if (gate) gate.classList.remove('show');
+  document.body.classList.remove('modal-open');
 }
 
 function authSetView(v, login) {
@@ -2138,6 +2142,7 @@ let askResolver = null;
 function askClose(val) {
   const ov = document.getElementById('askOverlay');
   if (ov) ov.classList.remove('show');
+  document.body.classList.remove('modal-open');
   const r = askResolver;
   askResolver = null;
   if (r) r(val);
@@ -2156,6 +2161,7 @@ function askConfirm(text, opts = {}) {
         <button class="ask-btn ok" onclick="askClose(true)">${escapeHtml(okText)}</button>
       </div>`;
     document.getElementById('askOverlay').classList.add('show');
+    document.body.classList.add('modal-open');
   });
 }
 
@@ -2209,9 +2215,11 @@ function askSubmitForm() {
 function openAccountModal() {
   renderAccountModal();
   document.getElementById('accountModal').classList.add('show');
+  document.body.classList.add('modal-open');
 }
 function closeAccountModal() {
   document.getElementById('accountModal').classList.remove('show');
+  document.body.classList.remove('modal-open');
 }
 
 function renderAccountModal() {
@@ -2495,9 +2503,11 @@ function openManualAdd() {
   const dd = String(now.getDate()).padStart(2, '0');
   document.getElementById('inputDate').value = `${yyyy}-${mm}-${dd}`;
   document.getElementById('manualAddModal').classList.add('show');
+  document.body.classList.add('modal-open');
 }
 function closeManualAdd() {
   document.getElementById('manualAddModal').classList.remove('show');
+  document.body.classList.remove('modal-open');
 }
 
 function toggleFab() {
@@ -2507,9 +2517,11 @@ function toggleFab() {
 function openCalendarModal() {
   calInit();
   document.getElementById('calendarModal').classList.add('show');
+  document.body.classList.add('modal-open');
 }
 function closeCalendarModal() {
   document.getElementById('calendarModal').classList.remove('show');
+  document.body.classList.remove('modal-open');
 }
 
 // Close FAB when clicking outside
@@ -2693,6 +2705,7 @@ function endShift() {
   document.getElementById('endShiftEarned').value = '';
   document.getElementById('endShiftNote').value = breakSummary ? `Перерывы: ${breakSummary}` : '';
   document.getElementById('endShiftModal').classList.add('show');
+  document.body.classList.add('modal-open');
 
   // Focus earned input
   setTimeout(() => document.getElementById('endShiftEarned').focus(), 300);
@@ -2700,6 +2713,7 @@ function endShift() {
 
 function cancelEndShift() {
   document.getElementById('endShiftModal').classList.remove('show');
+  document.body.classList.remove('modal-open');
   pendingEndShift = null;
   // Don't clear activeShift — shift continues
   showToast('Смена продолжается', 'warn');
@@ -2744,6 +2758,7 @@ async function saveEndShift() {
   if (ok) {
     // Close modal
     document.getElementById('endShiftModal').classList.remove('show');
+  document.body.classList.remove('modal-open');
 
     // Clear active shift
     activeShift = null;
@@ -3336,10 +3351,12 @@ function openCategoryPicker(isWeeklyFree = false) {
     modalTitle.textContent = isWeeklyFree ? '🎁 БЕСПЛАТНЫЙ ВЫБОР КАТЕГОРИИ' : '🎯 ВЫБЕРИ КАТЕГОРИЮ';
   }
   document.getElementById('categoryPickerModal').classList.add('show');
+  document.body.classList.add('modal-open');
 }
 
 function closeCategoryPicker() {
   document.getElementById('categoryPickerModal').classList.remove('show');
+  document.body.classList.remove('modal-open');
 }
 
 function pickCategory(cat, source = 'bonus') {
@@ -4467,10 +4484,12 @@ function openEditModal(id) {
   document.getElementById('editEarned').value = shift.earned;
   document.getElementById('editNote').value = shift.note || '';
   document.getElementById('editShiftModal').classList.add('show');
+  document.body.classList.add('modal-open');
 }
 
 function closeEditModal() {
   document.getElementById('editShiftModal').classList.remove('show');
+  document.body.classList.remove('modal-open');
 }
 
 async function saveEditShift() {
