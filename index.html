@@ -12,12 +12,12 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Grind">
-<link rel="manifest" href="manifest.json?v=4">
+<link rel="manifest" href="manifest.json?v=5">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <title>💰 OZON Grind Tracker v4.2</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="config.js?v=3"></script>
+<script src="config.js?v=5"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
 
@@ -766,6 +766,14 @@ body {
 .shift-note { font-size: 11px; color: var(--text-dim); margin-top: 4px; font-style: italic; }
 /* бейдж «ждёт загрузки в облако» */
 .shift-pending { font-size: 11px; opacity: 0.85; }
+/* строка со сборкой и статусом облака */
+.build-row {
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 8px; margin-top: 10px; font-size: 11px; color: var(--text-dim);
+}
+.build-ver b { color: var(--text); font-weight: 700; font-variant-numeric: tabular-nums; }
+.build-sync.ok   { color: #00e676; }
+.build-sync.warn { color: var(--orange, #ffa726); }
 /* кнопки экспорта/бэкапа в стате */
 .data-tools { display: flex; gap: 8px; margin-top: 12px; }
 .data-tool-btn {
@@ -1212,6 +1220,10 @@ body {
     <button class="data-tool-btn" onclick="openImportPicker()">📥 Восстановить</button>
   </div>
   <input type="file" id="importFile" accept="application/json,.json" style="display:none" onchange="handleImportFile(event)">
+  <div class="build-row">
+    <span class="build-ver">сборка <b id="versionTag">—</b></span>
+    <span class="build-sync" id="cloudSyncTag"></span>
+  </div>
 </div>
 
 </div>
@@ -3288,8 +3300,25 @@ async function init() {
   checkAndGrantBonuses();
   loadSavedTheme();
   checkWeeklyFreeChoice();
+  renderVersionTag();
+  renderCloudSyncTag();
   hideLoading();
   schedulePushProgress();
+}
+
+// Честно говорим, работает ли облако. Если таблица app_state не создана,
+// прогресс остаётся только на этом устройстве — и в установленной PWA
+// (у неё отдельное хранилище) XP будет отличаться от браузера.
+function renderCloudSyncTag() {
+  const el = document.getElementById('cloudSyncTag');
+  if (!el) return;
+  if (cloudStateOk) {
+    el.className = 'build-sync ok';
+    el.textContent = '☁️ прогресс в облаке';
+  } else {
+    el.className = 'build-sync warn';
+    el.textContent = '⚠️ только на устройстве';
+  }
 }
 
 // FIX: бесплатный выбор категории раз в неделю никто не показывал — теперь напоминаем
@@ -3304,6 +3333,12 @@ function checkWeeklyFreeChoice() {
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') {
     flushPendingShifts().catch(e => console.error(e));
+    // Досинхронизируем прогресс: в установленной PWA страница живёт долго,
+    // без этого XP, заработанный в браузере, тут бы не появился.
+    pullProgress().then(changed => {
+      if (changed) { renderLifeQuests(); renderLifeStats(); render(); }
+      renderCloudSyncTag();
+    }).catch(e => console.error(e));
     if (activeShift) { updateTimer(); renderQuests(); }
   }
 });
@@ -3735,8 +3770,22 @@ function renderChart() {
 
 // ====== PWA: SERVICE WORKER ======
 // Регистрируем только по http/https — с file:// браузер ругается.
+const APP_VERSION = 'v4.3.0';
+
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
   window.addEventListener('load', () => {
+    // Перезагружаемся ТОЛЬКО после осознанного нажатия «Обновить».
+    // Иначе любой controllerchange (в т.ч. первая установка) дёргал reload,
+    // баннер исчезал и выглядело будто обновление не применяется.
+    let userAskedUpdate = false;
+    let reloaded = false;
+
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!userAskedUpdate || reloaded) return;
+      reloaded = true;
+      location.reload();
+    });
+
     navigator.serviceWorker.register('sw.js').then(reg => {
       // новая версия подъехала и ждёт активации — предлагаем обновиться
       function offerUpdate(worker) {
@@ -3745,12 +3794,22 @@ if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
         if (!banner) return;
         banner.classList.add('show');
         const btn = document.getElementById('updateBtn');
-        if (btn) btn.onclick = () => {
+        if (!btn) return;
+        btn.disabled = false;
+        btn.textContent = 'Обновить';
+        btn.onclick = () => {
+          userAskedUpdate = true;
+          btn.disabled = true;
+          btn.textContent = 'Обновляю…';
           worker.postMessage('SKIP_WAITING');
-          banner.classList.remove('show');
+          // Страховка: если воркер по какой-то причине не сменился
+          // (бывает на iOS), перезагружаем сами.
+          setTimeout(() => { if (!reloaded) { reloaded = true; location.reload(); } }, 2500);
         };
       }
+
       if (reg.waiting) offerUpdate(reg.waiting);
+
       reg.addEventListener('updatefound', () => {
         const nw = reg.installing;
         if (!nw) return;
@@ -3759,19 +3818,22 @@ if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
           if (nw.state === 'installed' && navigator.serviceWorker.controller) offerUpdate(nw);
         });
       });
-      // проверяем обновления при каждом возврате в приложение
-      document.addEventListener('visibilitychange', () => {
-        if (!document.hidden) reg.update().catch(() => {});
-      });
-    }).catch(err => console.warn('SW register failed:', err));
 
-    let reloaded = false;
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-      if (reloaded) return;
-      reloaded = true;
-      location.reload();
-    });
+      // Проверяем обновления при старте, при возврате в приложение и раз в 15 мин.
+      // В установленной PWA страница живёт долго, без этого новая версия
+      // может не искаться сутками.
+      const check = () => reg.update().catch(() => {});
+      check();
+      document.addEventListener('visibilitychange', () => { if (!document.hidden) check(); });
+      setInterval(check, 15 * 60 * 1000);
+    }).catch(err => console.warn('SW register failed:', err));
   });
+}
+
+// Показываем версию в интерфейсе — чтобы было видно, какая сборка реально запущена.
+function renderVersionTag() {
+  const el = document.getElementById('versionTag');
+  if (el) el.textContent = APP_VERSION;
 }
 
 // ====== START ======
