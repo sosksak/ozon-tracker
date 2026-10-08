@@ -122,7 +122,12 @@ body {
 .fab-container {
   position: fixed; bottom: 24px; right: 20px; z-index: 1000;
   display: flex; flex-direction: column-reverse; align-items: flex-end; gap: 10px;
+  /* Закрытое меню остаётся в потоке (opacity:0), поэтому контейнер ~180x168px
+     и своим прозрачным телом перехватывал клики по баннеру обновления.
+     Кликабельны только сами кнопки. */
+  pointer-events: none;
 }
+.fab-toggle, .fab-container.open .fab-menu { pointer-events: auto; }
 .fab-toggle {
   width: 56px; height: 56px; border-radius: 50%; border: none;
   background: linear-gradient(135deg, var(--gold), #e6a800);
@@ -863,7 +868,9 @@ body {
 
 /* ====== БАННЕР «ЕСТЬ ОБНОВЛЕНИЕ» ====== */
 .update-banner {
-  position: fixed; left: 12px; right: 12px; bottom: 76px; z-index: 900;
+  /* z-index выше FAB (1000) и bottom выше шестерёнки (24+56px),
+     чтобы кнопка «Обновить» не оказывалась под ней. */
+  position: fixed; left: 12px; right: 12px; bottom: 92px; z-index: 1100;
   display: none; align-items: center; gap: 10px;
   background: var(--bg-card2); border: 1px solid var(--gold);
   border-radius: 14px; padding: 12px 14px;
@@ -3936,7 +3943,17 @@ function renderChart() {
 
 // ====== PWA: SERVICE WORKER ======
 // Регистрируем только по http/https — с file:// браузер ругается.
-const APP_VERSION = 'v4.4.1';
+const APP_VERSION = 'v4.4.2';
+
+// Страховка: кнопка баннера обязана работать даже если обработчик
+// от service worker по какой-то причине не навесился.
+document.addEventListener('click', (e) => {
+  const btn = e.target && e.target.closest && e.target.closest('#updateBtn');
+  if (!btn || btn.dataset.swBound === '1') return;
+  btn.disabled = true;
+  btn.textContent = 'Обновляю…';
+  location.reload();
+});
 
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
   window.addEventListener('load', () => {
@@ -3963,6 +3980,7 @@ if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
         if (!btn) return;
         btn.disabled = false;
         btn.textContent = 'Обновить';
+        btn.dataset.swBound = '1';
         btn.onclick = () => {
           userAskedUpdate = true;
           btn.disabled = true;
