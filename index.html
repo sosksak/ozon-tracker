@@ -6,68 +6,86 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<meta name="theme-color" content="#0f0f1a">
+<meta name="theme-color" content="#1B3A5C">
 <meta name="description" content="Трекер смен, заработка и квестов">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Grind">
+<meta name="apple-mobile-web-app-title" content="Tracker">
 <link rel="manifest" href="manifest.json?v=5">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
-<title>💰 OZON Grind Tracker v5.0</title>
+<title>📊 OZON Tracker v5.1</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="config.js?v=6"></script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
 :root {
-  --gold: #FFD700;
-  --gold-dark: #DAA520;
-  --gold-light: #FFF4CC;
-  --bg-dark: #0f0f1a;
-  --bg-card: #161625;
-  --bg-card2: #1c1c30;
-  --text: #eee;
-  --text-dim: #7888a0;
-  --green: #00e676;
-  --red: #ff5252;
-  --orange: #ffab40;
-  --purple: #bb86fc;
-  --cyan: #00e5ff;
-  --glass: rgba(255,255,255,0.04);
-  --glass-border: rgba(255,255,255,0.08);
+  --primary: #1B3A5C;
+  --primary-light: #2C5282;
+  --primary-dark: #0F2440;
+  --accent: #3182CE;
+  --accent-hover: #2B6CB0;
+  --bg-main: #F7F8FA;
+  --bg-card: #FFFFFF;
+  --bg-card2: #F0F2F5;
+  --bg-sidebar: #1B3A5C;
+  --text: #1A202C;
+  --text-secondary: #4A5568;
+  --text-dim: #718096;
+  --text-on-dark: #E2E8F0;
+  --border: #E2E8F0;
+  --border-strong: #CBD5E0;
+  --green: #38A169;
+  --green-bg: #F0FFF4;
+  --red: #E53E3E;
+  --red-bg: #FFF5F5;
+  --orange: #DD6B20;
+  --orange-bg: #FFFAF0;
+  --purple: #6B46C1;
+  --purple-bg: #FAF5FF;
+  --cyan: #2B6CB0;
+  --gold: #B7791F;
+  --gold-light: #ECC94B;
+  --gold-bg: #FFFFF0;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.10);
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
 }
 
 * { margin:0; padding:0; box-sizing:border-box; }
 
 body {
-  font-family: 'Nunito', sans-serif;
-  background: var(--bg-dark);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg-main);
   color: var(--text);
   min-height: 100vh;
   overflow-x: hidden;
-  padding-bottom: 100px;
-  background-image: radial-gradient(ellipse at 50% 0%, rgba(100,60,180,0.08) 0%, transparent 60%),
-                    radial-gradient(ellipse at 80% 100%, rgba(255,215,0,0.04) 0%, transparent 50%);
+  padding-bottom: 80px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* LOADING */
 .loading-overlay {
   position: fixed; top:0; left:0; width:100%; height:100%;
-  background: var(--bg-dark);
+  background: var(--bg-main);
   display: flex; align-items: center; justify-content: center;
-  flex-direction: column; gap: 16px;
-  z-index: 9999; transition: opacity 0.5s;
+  flex-direction: column; gap: 12px;
+  z-index: 9999; transition: opacity 0.3s;
   touch-action: none; overflow: hidden;
 }
 .loading-overlay.hidden { opacity: 0; pointer-events: none; }
-.loading-spinner { font-size: 60px; animation: spin 1s linear infinite; }
+.loading-spinner { font-size: 48px; animation: spin 1s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* COIN RAIN */
 .coin-rain { position: fixed; top:0; left:0; width:100%; height:100%; pointer-events: none; z-index: 999; }
-.coin { position: absolute; font-size: 28px; animation: coinFall 1.5s ease-in forwards; opacity: 0; }
+.coin { position: absolute; font-size: 22px; animation: coinFall 1.5s ease-in forwards; opacity: 0; }
 @keyframes coinFall {
   0% { transform: translateY(-50px) rotate(0deg); opacity: 1; }
   100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
@@ -75,108 +93,99 @@ body {
 
 /* HEADER */
 .header {
-  background: linear-gradient(135deg, #0a0a18 0%, #1a1040 50%, #0f0f2a 100%);
-  padding: 20px 16px 16px; text-align: center; position: relative; overflow: hidden;
+  background: var(--primary);
+  padding: 18px 16px 14px; text-align: center; position: relative;
+  border-bottom: 3px solid var(--accent);
 }
-.header::before {
-  content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-  background: conic-gradient(from 0deg, transparent, rgba(255,215,0,0.03), transparent, rgba(187,134,252,0.03), transparent);
-  animation: headerRotate 20s linear infinite;
-}
+.header::before { display: none; }
 @keyframes headerRotate { to { transform: rotate(360deg); } }
-.header::after {
-  content: ''; position: absolute; bottom:0; left:0;
-  width: 100%; height: 3px;
-  background: linear-gradient(90deg, transparent, var(--gold), var(--purple), var(--cyan), transparent);
-}
+.header::after { display: none; }
 .header h1 {
-  font-size: 22px; font-weight: 900; position: relative;
-  background: linear-gradient(135deg, var(--gold), #fff, var(--gold));
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  font-size: 18px; font-weight: 800; position: relative;
+  color: #FFFFFF; letter-spacing: 0.5px;
+  background: none; -webkit-background-clip: unset; -webkit-text-fill-color: unset;
 }
-.header .subtitle { font-size: 13px; color: var(--text-dim); margin-top: 2px; position: relative; }
+.header .subtitle { font-size: 12px; color: rgba(255,255,255,0.6); margin-top: 2px; position: relative; }
 
 /* TAB NAV */
 .tab-nav {
-  display: flex; margin: 12px 12px 0; border-radius: 16px; overflow: hidden;
-  background: var(--bg-card); border: 1px solid var(--glass-border);
-  backdrop-filter: blur(10px);
+  display: flex; margin: 0; overflow: hidden;
+  background: #FFFFFF; border-bottom: 1px solid var(--border);
+  border-radius: 0;
 }
 .tab-btn {
-  flex: 1; padding: 11px 4px; border: none; background: none;
-  color: var(--text-dim); font-family: 'Nunito', sans-serif;
-  font-size: 11px; font-weight: 700; cursor: pointer; transition: all 0.3s;
-  text-align: center; position: relative;
+  flex: 1; padding: 12px 4px; border: none; background: none;
+  color: var(--text-dim); font-family: 'Inter', sans-serif;
+  font-size: 11px; font-weight: 700; cursor: pointer; transition: all 0.2s;
+  text-align: center; position: relative; text-transform: uppercase; letter-spacing: 0.5px;
 }
 .tab-btn.active {
-  background: linear-gradient(135deg, rgba(255,215,0,0.12), rgba(255,215,0,0.06));
-  color: var(--gold);
+  background: transparent;
+  color: var(--primary);
 }
 .tab-btn.active::after {
-  content: ''; position: absolute; bottom: 0; left: 20%; right: 20%; height: 2px;
-  background: var(--gold); border-radius: 2px;
+  content: ''; position: absolute; bottom: 0; left: 20%; right: 20%; height: 3px;
+  background: var(--accent); border-radius: 3px 3px 0 0;
 }
-.tab-btn:first-child { border-radius: 16px 0 0 16px; }
-.tab-btn:last-child { border-radius: 0 16px 16px 0; }
+.tab-btn:first-child { border-radius: 0; }
+.tab-btn:last-child { border-radius: 0; }
 
 /* FLOATING ACTION BUTTON */
 .fab-container {
-  position: fixed; bottom: 24px; right: 20px; z-index: 1000;
-  display: flex; flex-direction: column-reverse; align-items: flex-end; gap: 10px;
-  /* Закрытое меню остаётся в потоке (opacity:0), поэтому контейнер ~180x168px
-     и своим прозрачным телом перехватывал клики по баннеру обновления.
-     Кликабельны только сами кнопки. */
+  position: fixed; bottom: 20px; right: 16px; z-index: 1000;
+  display: flex; flex-direction: column-reverse; align-items: flex-end; gap: 8px;
   pointer-events: none;
 }
 .fab-toggle, .fab-container.open .fab-menu { pointer-events: auto; }
 .fab-toggle {
-  width: 56px; height: 56px; border-radius: 50%; border: none;
-  background: linear-gradient(135deg, var(--gold), #e6a800);
-  font-size: 24px; cursor: pointer; box-shadow: 0 4px 20px rgba(255,215,0,0.4);
-  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  width: 52px; height: 52px; border-radius: var(--radius-md); border: none;
+  background: var(--primary);
+  font-size: 22px; cursor: pointer; box-shadow: var(--shadow-lg);
+  transition: all 0.2s;
   display: flex; align-items: center; justify-content: center;
+  color: #fff;
 }
-.fab-toggle:hover { transform: scale(1.1); }
-.fab-container.open .fab-toggle { transform: rotate(90deg); background: linear-gradient(135deg, #ff4444, #cc0000); }
+.fab-toggle:hover { background: var(--primary-light); }
+.fab-container.open .fab-toggle { transform: rotate(90deg); background: var(--red); }
 .fab-menu {
-  display: flex; flex-direction: column-reverse; gap: 8px;
-  opacity: 0; transform: translateY(20px) scale(0.8); pointer-events: none;
-  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  display: flex; flex-direction: column-reverse; gap: 6px;
+  opacity: 0; transform: translateY(10px); pointer-events: none;
+  transition: all 0.2s ease;
 }
 .fab-container.open .fab-menu {
-  opacity: 1; transform: translateY(0) scale(1); pointer-events: auto;
+  opacity: 1; transform: translateY(0); pointer-events: auto;
 }
 .fab-item {
-  display: flex; align-items: center; gap: 10px; padding: 10px 16px;
-  background: linear-gradient(145deg, #1e1e3a, #161630);
-  border: 1px solid var(--glass-border); border-radius: 14px;
-  color: var(--text); font-size: 14px; font-family: 'Nunito', sans-serif;
+  display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+  background: #FFFFFF;
+  border: 1px solid var(--border); border-radius: var(--radius-md);
+  color: var(--text); font-size: 13px; font-family: 'Inter', sans-serif;
   font-weight: 600; cursor: pointer; white-space: nowrap;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-  transition: all 0.2s; min-width: 180px;
+  box-shadow: var(--shadow-md);
+  transition: all 0.15s; min-width: 180px;
 }
-.fab-item:hover { border-color: var(--gold); transform: translateX(-4px); }
-.fab-icon { font-size: 18px; }
+.fab-item:hover { border-color: var(--accent); background: #F7FAFC; }
+.fab-icon { font-size: 16px; }
 .fab-label { flex: 1; }
 
 /* CALENDAR */
 .cal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
-.cal-header h3 { font-size:16px; color:var(--gold); }
-.cal-nav { display:flex; gap:8px; }
-.cal-nav-btn { background:rgba(255,255,255,0.06); border:none; color:var(--text); font-size:18px; width:36px; height:36px; border-radius:12px; cursor:pointer; transition:all 0.2s; backdrop-filter:blur(4px); }
-.cal-nav-btn:hover { background:rgba(255,215,0,0.15); color:var(--gold); }
-.cal-month-title { font-size:15px; font-weight:700; color:var(--text); text-transform:capitalize; text-align:center; }
-.cal-weekdays { display:grid; grid-template-columns:repeat(7,1fr); text-align:center; margin-bottom:6px; }
-.cal-weekday { font-size:11px; font-weight:700; color:var(--text-dim); padding:6px 0; }
-.cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; }
-.cal-day { position:relative; aspect-ratio:1; display:flex; flex-direction:column; align-items:center; justify-content:center; border-radius:12px; background:rgba(255,255,255,0.02); border:2px solid transparent; cursor:pointer; transition:all 0.2s; font-size:13px; font-weight:700; color:var(--text-dim); min-height:44px; }
-.cal-day:hover { background:rgba(255,255,255,0.06); }
+.cal-header h3 { font-size:15px; color:var(--primary); font-weight:700; }
+.cal-nav { display:flex; gap:6px; }
+.cal-nav-btn { background:#F0F2F5; border:1px solid var(--border); color:var(--text); font-size:16px; width:34px; height:34px; border-radius:var(--radius-sm); cursor:pointer; transition:all 0.15s; }
+.cal-nav-btn:hover { background:var(--primary); color:#fff; }
+.cal-month-title { font-size:14px; font-weight:700; color:var(--text); text-transform:capitalize; text-align:center; }
+.cal-weekdays { display:grid; grid-template-columns:repeat(7,1fr); text-align:center; margin-bottom:4px; }
+.cal-weekday { font-size:11px; font-weight:700; color:var(--text-dim); padding:6px 0; text-transform:uppercase; }
+.cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:2px; }
+.cal-day { position:relative; aspect-ratio:1; display:flex; flex-direction:column; align-items:center; justify-content:center; border-radius:var(--radius-sm); background:#F7F8FA; border:2px solid transparent; cursor:pointer; transition:all 0.15s; font-size:13px; font-weight:600; color:var(--text-secondary); min-height:42px; }
+.cal-day:hover { background:#EDF2F7; }
 .cal-day.empty { background:none; cursor:default; }
-.cal-day.today { border-color:var(--gold); color:var(--gold); background:rgba(255,215,0,0.06); box-shadow:0 0 12px rgba(255,215,0,0.1); }
-.cal-day.has-shift { background:rgba(0,230,118,0.1); border-color:rgba(0,230,118,0.25); color:var(--green); }
-.cal-day.is-dayoff { background:rgba(187,134,252,0.1); border-color:rgba(187,134,252,0.25); color:var(--purple); }
-.cal-day.is-planned { background:rgba(255,171,64,0.1); border-color:rgba(255,171,64,0.25); color:var(--orange); }
-.cal-day.selected { box-shadow:0 0 0 2px var(--gold), 0 0 16px rgba(255,215,0,0.2); }
+.cal-day.today { border-color:var(--accent); color:var(--primary); background:#EBF8FF; font-weight:800; }
+.cal-day.has-shift { background:var(--green-bg); border-color:rgba(56,161,105,0.4); color:var(--green); }
+.cal-day.is-dayoff { background:var(--purple-bg); border-color:rgba(107,70,193,0.3); color:var(--purple); }
+.cal-day.is-planned { background:var(--orange-bg); border-color:rgba(221,107,32,0.3); color:var(--orange); }
+.cal-day.selected { box-shadow:0 0 0 2px var(--accent); }
 .cal-day-num { font-size:13px; line-height:1; }
 .cal-day-icon { font-size:10px; line-height:1; margin-top:1px; }
 .cal-day-earned { font-size:7px; line-height:1; margin-top:1px; color:var(--green); font-weight:700; }
@@ -184,64 +193,64 @@ body {
 .cal-legend-item { display:flex; align-items:center; gap:4px; font-size:11px; color:var(--text-dim); }
 .cal-legend-dot { width:10px; height:10px; border-radius:50%; }
 .cal-summary { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin-top:12px; }
-.cal-sum-card { background:rgba(255,255,255,0.04); border-radius:10px; padding:10px; text-align:center; border:1px solid var(--glass-border); }
-.cal-sum-val { font-size:18px; font-weight:800; color:var(--gold); }
+.cal-sum-card { background:#F7F8FA; border-radius:var(--radius-md); padding:10px; text-align:center; border:1px solid var(--border); }
+.cal-sum-val { font-size:18px; font-weight:800; color:var(--primary); }
 .cal-sum-lbl { font-size:10px; color:var(--text-dim); margin-top:2px; }
 .cal-actions { display:flex; gap:8px; margin-top:12px; }
-.cal-action-btn { flex:1; padding:10px; border:none; border-radius:10px; font-family:'Nunito',sans-serif; font-size:13px; font-weight:700; cursor:pointer; transition:all 0.2s; }
-.cal-action-btn.dayoff { background:rgba(187,134,252,0.15); color:var(--purple); }
-.cal-action-btn.planned { background:rgba(255,171,64,0.15); color:var(--orange); }
-.cal-action-btn.clear { background:rgba(255,82,82,0.12); color:var(--red); }
-.cal-action-btn:hover { filter:brightness(1.2); transform:scale(1.02); }
-.cal-selected-info { text-align:center; font-size:12px; color:var(--text-dim); margin-top:8px; padding:10px; background:rgba(255,255,255,0.03); border-radius:10px; border:1px solid var(--glass-border); }
+.cal-action-btn { flex:1; padding:10px; border:1px solid var(--border); border-radius:var(--radius-sm); font-family:'Inter',sans-serif; font-size:12px; font-weight:700; cursor:pointer; transition:all 0.15s; background:#fff; }
+.cal-action-btn.dayoff { color:var(--purple); border-color:rgba(107,70,193,0.3); }
+.cal-action-btn.planned { color:var(--orange); border-color:rgba(221,107,32,0.3); }
+.cal-action-btn.clear { color:var(--red); border-color:rgba(229,62,62,0.3); }
+.cal-action-btn:hover { filter:brightness(0.97); }
+.cal-selected-info { text-align:center; font-size:12px; color:var(--text-dim); margin-top:8px; padding:10px; background:#F7F8FA; border-radius:var(--radius-sm); border:1px solid var(--border); }
 
 /* TAB TRANSITION ANIMATIONS */
-.tab-content { display: none; opacity: 0; transform: translateY(12px); transition: opacity 0.3s ease, transform 0.3s ease; }
+.tab-content { display: none; opacity: 0; transform: translateY(8px); transition: opacity 0.2s ease, transform 0.2s ease; }
 .tab-content.active { display: block; opacity: 1; transform: translateY(0); }
-.tab-content.fade-enter { opacity: 0; transform: translateY(12px); }
+.tab-content.fade-enter { opacity: 0; transform: translateY(8px); }
 
 /* LIVE RATE DISPLAY */
 .live-rate-display { text-align: center; margin-top: -4px; margin-bottom: 12px; }
 .live-rate-amount {
-  font-size: 24px; font-weight: 900; font-variant-numeric: tabular-nums;
-  transition: color 0.5s;
+  font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums;
+  transition: color 0.3s;
 }
-.live-rate-amount.earning { color: var(--green); text-shadow: 0 0 15px rgba(0,230,118,0.2); }
-.live-rate-amount.break-loss { color: var(--red); text-shadow: 0 0 15px rgba(255,82,82,0.2); }
+.live-rate-amount.earning { color: var(--green); }
+.live-rate-amount.break-loss { color: var(--red); }
 .live-rate-label { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
 .live-rate-label .loss { color: var(--red); font-weight: 700; }
 
 /* FOCUS MODE */
 .focus-overlay {
   position: fixed; top:0; left:0; width:100%; height:100%;
-  background: #000; z-index: 8888; display:flex; flex-direction:column;
+  background: var(--primary-dark); z-index: 8888; display:flex; flex-direction:column;
   align-items:center; justify-content:center; gap:12px;
   transition: opacity 0.3s;
 }
 .focus-overlay.hidden { opacity:0; pointer-events:none; }
-.focus-timer { font-size: 72px; font-weight: 900; color: #fff; font-variant-numeric: tabular-nums; letter-spacing: 3px; }
-.focus-earn { font-size: 40px; font-weight: 800; color: var(--green); font-variant-numeric: tabular-nums; }
-.focus-sub { font-size: 14px; color: rgba(255,255,255,0.5); }
-.focus-btns { display: flex; gap: 12px; margin-top: 20px; }
-.focus-btn { padding: 14px 28px; border-radius: 16px; border: none; font-family: 'Nunito',sans-serif; font-size: 15px; font-weight: 800; cursor: pointer; }
-.focus-btn.brk { background: rgba(255,171,64,0.2); color: var(--orange); }
-.focus-btn.end { background: rgba(255,82,82,0.2); color: var(--red); }
-.focus-btn.exit { background: rgba(255,255,255,0.1); color: var(--text-dim); margin-top: 20px; font-size: 13px; }
+.focus-timer { font-size: 64px; font-weight: 900; color: #fff; font-variant-numeric: tabular-nums; letter-spacing: 2px; }
+.focus-earn { font-size: 36px; font-weight: 800; color: #68D391; font-variant-numeric: tabular-nums; }
+.focus-sub { font-size: 13px; color: rgba(255,255,255,0.5); }
+.focus-btns { display: flex; gap: 10px; margin-top: 16px; }
+.focus-btn { padding: 12px 24px; border-radius: var(--radius-md); border: none; font-family: 'Inter',sans-serif; font-size: 14px; font-weight: 700; cursor: pointer; }
+.focus-btn.brk { background: rgba(221,107,32,0.2); color: #F6AD55; }
+.focus-btn.end { background: rgba(229,62,62,0.2); color: #FC8181; }
+.focus-btn.exit { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.5); margin-top: 16px; font-size: 12px; }
 
 /* MILLION PATH */
-.million-path { margin: 0 12px 12px; padding: 14px 16px; background: var(--bg-card); border-radius: 16px; border: 1px solid var(--glass-border); }
-.million-path-title { font-size: 12px; color: var(--text-dim); margin-bottom: 8px; text-align: center; }
-.million-bar-wrap { position: relative; height: 10px; background: rgba(255,255,255,0.06); border-radius: 5px; overflow: visible; }
-.million-bar-fill { height: 100%; border-radius: 5px; background: linear-gradient(90deg, #4CAF50, #FFD700); transition: width 0.8s ease; position: relative; }
-.million-bar-fill::after { content:''; position:absolute; right:-4px; top:-3px; width:16px; height:16px; border-radius:50%; background:var(--gold); box-shadow:0 0 10px rgba(255,215,0,0.5); animation: millionPulse 2s ease infinite; }
-@keyframes millionPulse { 0%,100% { transform:scale(1); opacity:1; } 50% { transform:scale(1.3); opacity:0.7; } }
+.million-path { margin: 0 12px 12px; padding: 14px 16px; background: #fff; border-radius: var(--radius-md); border: 1px solid var(--border); box-shadow: var(--shadow-sm); }
+.million-path-title { font-size: 11px; color: var(--text-dim); margin-bottom: 8px; text-align: center; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; }
+.million-bar-wrap { position: relative; height: 8px; background: #EDF2F7; border-radius: 4px; overflow: visible; }
+.million-bar-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--green), var(--accent)); transition: width 0.5s ease; position: relative; }
+.million-bar-fill::after { content:''; position:absolute; right:-4px; top:-4px; width:16px; height:16px; border-radius:50%; background:var(--accent); border: 2px solid #fff; box-shadow: var(--shadow-sm); }
+@keyframes millionPulse { 0%,100% { transform:scale(1); } 50% { transform:scale(1.1); } }
 .million-milestones { display: flex; justify-content: space-between; margin-top: 6px; font-size: 10px; color: var(--text-dim); }
-.million-milestones .reached { color: var(--gold); font-weight: 700; }
-.million-current { text-align: center; margin-top: 8px; font-size: 13px; font-weight: 700; color: var(--gold); }
+.million-milestones .reached { color: var(--green); font-weight: 700; }
+.million-current { text-align: center; margin-top: 8px; font-size: 13px; font-weight: 700; color: var(--primary); }
 
 /* WEEK COMPARISON */
 .week-compare { margin: 0 12px 12px; }
-.week-compare-title { font-size: 14px; font-weight: 800; color: var(--text); margin-bottom: 10px; text-align: center; }
+.week-compare-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 10px; text-align: center; text-transform: uppercase; letter-spacing: 0.5px; }
 .week-compare-grid { display: grid; grid-template-columns: 1fr auto auto auto; gap: 6px 12px; align-items: center; }
 .wc-label { font-size: 12px; color: var(--text-dim); }
 .wc-val { font-size: 13px; font-weight: 700; color: var(--text); text-align: right; }
@@ -253,10 +262,10 @@ body {
 
 /* HEATMAP */
 .heatmap-section { margin: 0 12px 12px; }
-.heatmap-title { font-size: 14px; font-weight: 800; color: var(--text); margin-bottom: 8px; text-align: center; }
-.heatmap-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
-.heatmap-cell { aspect-ratio: 1; border-radius: 4px; cursor: pointer; transition: all 0.2s; position: relative; min-width: 0; }
-.heatmap-cell:hover { transform: scale(1.15); z-index: 1; }
+.heatmap-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 8px; text-align: center; text-transform: uppercase; letter-spacing: 0.5px; }
+.heatmap-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+.heatmap-cell { aspect-ratio: 1; border-radius: 3px; cursor: pointer; transition: all 0.15s; position: relative; min-width: 0; }
+.heatmap-cell:hover { transform: scale(1.1); z-index: 1; }
 .heatmap-cell.empty { background: transparent; cursor: default; }
 .heatmap-cell.empty:hover { transform: none; }
 .heatmap-weekday { font-size: 10px; color: var(--text-dim); text-align: center; font-weight: 700; }
@@ -264,410 +273,378 @@ body {
 /* INSIGHTS CARD */
 .insight-card {
   margin: 0 12px 12px; padding: 14px 16px;
-  background: linear-gradient(135deg, rgba(255,215,0,0.08), rgba(187,134,252,0.06));
-  border-radius: 16px; border: 1px solid rgba(255,215,0,0.15);
+  background: #EBF8FF;
+  border-radius: var(--radius-md); border: 1px solid #BEE3F8;
 }
-.insight-icon { font-size: 20px; float: left; margin-right: 10px; }
+.insight-icon { font-size: 18px; float: left; margin-right: 10px; }
 .insight-text { font-size: 13px; color: var(--text); line-height: 1.5; }
 .insight-label { font-size: 10px; color: var(--text-dim); margin-top: 6px; }
 
 /* FORTUNE WHEEL */
 .wheel-modal-inner { text-align: center; }
-.wheel-canvas-wrap { position: relative; width: 280px; height: 280px; margin: 0 auto 16px; }
+.wheel-canvas-wrap { position: relative; width: 260px; height: 260px; margin: 0 auto 16px; }
 .wheel-canvas-wrap canvas { width: 100%; height: 100%; }
-.wheel-pointer { position: absolute; top: -8px; left: 50%; transform: translateX(-50%); font-size: 28px; z-index: 2; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
+.wheel-pointer { position: absolute; top: -8px; left: 50%; transform: translateX(-50%); font-size: 24px; z-index: 2; }
 .wheel-spin-btn {
-  padding: 14px 40px; border: none; border-radius: 16px;
-  background: linear-gradient(135deg, var(--gold), #e6a800);
-  color: #1a1a2e; font-family: 'Nunito', sans-serif; font-size: 16px; font-weight: 800;
-  cursor: pointer; transition: all 0.3s;
+  padding: 12px 36px; border: none; border-radius: var(--radius-md);
+  background: var(--primary);
+  color: #fff; font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 700;
+  cursor: pointer; transition: all 0.2s;
 }
 .wheel-spin-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.wheel-spin-btn:hover:not(:disabled) { transform: scale(1.05); box-shadow: 0 4px 20px rgba(255,215,0,0.4); }
-.wheel-result { font-size: 18px; font-weight: 800; margin-top: 12px; }
+.wheel-spin-btn:hover:not(:disabled) { background: var(--primary-light); }
+.wheel-result { font-size: 16px; font-weight: 800; margin-top: 12px; }
 
 /* WEEKLY CHALLENGE */
 .weekly-challenge {
   margin: 0 12px 12px; padding: 14px 16px;
-  background: linear-gradient(135deg, rgba(255,171,64,0.1), rgba(255,215,0,0.05));
-  border-radius: 16px; border: 1px solid rgba(255,171,64,0.2);
+  background: var(--orange-bg);
+  border-radius: var(--radius-md); border: 1px solid #FEEBC8;
 }
 .wchallenge-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-.wchallenge-title { font-size: 13px; font-weight: 800; color: var(--orange); }
+.wchallenge-title { font-size: 12px; font-weight: 700; color: var(--orange); text-transform: uppercase; letter-spacing: 0.5px; }
 .wchallenge-timer { font-size: 11px; color: var(--text-dim); }
 .wchallenge-desc { font-size: 13px; color: var(--text); margin-bottom: 10px; }
-.wchallenge-bar { height: 8px; background: rgba(255,255,255,0.06); border-radius: 4px; overflow: hidden; }
-.wchallenge-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--orange), var(--gold)); transition: width 0.5s; }
+.wchallenge-bar { height: 6px; background: #E2E8F0; border-radius: 3px; overflow: hidden; }
+.wchallenge-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--orange), #ED8936); transition: width 0.3s; }
 .wchallenge-progress { font-size: 11px; color: var(--text-dim); margin-top: 6px; text-align: center; }
-.wchallenge-reward { font-size: 11px; color: var(--gold); margin-top: 4px; text-align: center; }
+.wchallenge-reward { font-size: 11px; color: var(--gold); margin-top: 4px; text-align: center; font-weight: 600; }
 
 /* SAVINGS GOAL (KOPILKA) */
 .kopilka-card {
   margin: 0 20px 0; padding: 12px 16px;
-  background: rgba(255,215,0,0.04); border-radius: 14px;
-  border: 1px solid rgba(255,215,0,0.1); position: relative;
+  background: #FFFFF0; border-radius: var(--radius-md);
+  border: 1px solid #FEFCBF; position: relative;
 }
 .kopilka-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
 .kopilka-name { font-size: 13px; font-weight: 700; color: var(--text); }
 .kopilka-amount { font-size: 13px; font-weight: 800; color: var(--gold); font-variant-numeric: tabular-nums; }
-.kopilka-bar { height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden; }
-.kopilka-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--gold-dark), var(--gold)); transition: width 0.5s; }
+.kopilka-bar { height: 5px; background: #E2E8F0; border-radius: 3px; overflow: hidden; }
+.kopilka-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, #B7791F, #ECC94B); transition: width 0.3s; }
 .kopilka-sub { font-size: 10px; color: var(--text-dim); margin-top: 4px; text-align: center; }
 .kopilka-edit { position: absolute; top: 10px; right: 12px; background: none; border: none; font-size: 14px; cursor: pointer; color: var(--text-dim); }
 
 /* ACHIEVEMENT UNLOCK ANIMATION */
 .ach-unlock-overlay {
   position: fixed; top:0; left:0; width:100%; height:100%;
-  background: rgba(0,0,0,0.85); z-index: 9000; display:flex;
+  background: rgba(0,0,0,0.7); z-index: 9000; display:flex;
   flex-direction:column; align-items:center; justify-content:center;
-  animation: achFadeIn 0.3s ease;
+  animation: achFadeIn 0.2s ease;
 }
 @keyframes achFadeIn { from { opacity:0; } to { opacity:1; } }
-.ach-unlock-icon { font-size: 72px; animation: achBounce 0.6s cubic-bezier(0.68,-0.55,0.265,1.55); }
-@keyframes achBounce { 0% { transform:scale(0); } 60% { transform:scale(1.3); } 100% { transform:scale(1); } }
-.ach-unlock-title { font-size: 22px; font-weight: 900; color: var(--gold); margin-top: 16px; text-transform: uppercase; letter-spacing: 2px; }
-.ach-unlock-name { font-size: 18px; font-weight: 700; color: var(--text); margin-top: 8px; }
-.ach-unlock-glow { width: 120px; height: 120px; position: absolute; border-radius: 50%; background: radial-gradient(circle, rgba(255,215,0,0.3), transparent); animation: achGlow 1.5s ease infinite; }
-@keyframes achGlow { 0%,100% { transform:scale(1); opacity:0.5; } 50% { transform:scale(1.5); opacity:0; } }
+.ach-unlock-icon { font-size: 60px; animation: achBounce 0.4s ease; }
+@keyframes achBounce { 0% { transform:scale(0); } 60% { transform:scale(1.1); } 100% { transform:scale(1); } }
+.ach-unlock-title { font-size: 20px; font-weight: 800; color: var(--accent); margin-top: 16px; text-transform: uppercase; letter-spacing: 2px; }
+.ach-unlock-name { font-size: 16px; font-weight: 600; color: #fff; margin-top: 8px; }
+.ach-unlock-glow { width: 100px; height: 100px; position: absolute; border-radius: 50%; background: radial-gradient(circle, rgba(49,130,206,0.2), transparent); }
+@keyframes achGlow { 0%,100% { transform:scale(1); opacity:0.5; } 50% { transform:scale(1.3); opacity:0; } }
 
 /* SOCIAL DIARY */
 .diary-section { margin: 0 12px 12px; }
-.diary-title { font-size: 14px; font-weight: 800; color: var(--text); margin-bottom: 8px; text-align: center; }
-.diary-card { background: var(--bg-card); border-radius: 14px; padding: 12px; margin-bottom: 8px; border: 1px solid var(--glass-border); }
+.diary-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 8px; text-align: center; text-transform: uppercase; letter-spacing: 0.5px; }
+.diary-card { background: #fff; border-radius: var(--radius-md); padding: 12px; margin-bottom: 8px; border: 1px solid var(--border); box-shadow: var(--shadow-sm); }
 .diary-card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
 .diary-place { font-size: 13px; font-weight: 700; color: var(--text); }
 .diary-date { font-size: 11px; color: var(--text-dim); }
-.diary-desc { font-size: 12px; color: var(--text-dim); line-height: 1.4; }
+.diary-desc { font-size: 12px; color: var(--text-secondary); line-height: 1.4; }
 .diary-rating { margin-top: 6px; }
 .diary-star { font-size: 16px; cursor: default; }
 .diary-lesson { font-size: 11px; color: var(--purple); margin-top: 4px; font-style: italic; }
 .diary-stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
-.diary-stat-card { background: rgba(255,255,255,0.04); border-radius: 10px; padding: 10px; text-align: center; border: 1px solid var(--glass-border); }
-.diary-stat-val { font-size: 20px; font-weight: 800; color: var(--purple); }
+.diary-stat-card { background: #F7F8FA; border-radius: var(--radius-md); padding: 10px; text-align: center; border: 1px solid var(--border); }
+.diary-stat-val { font-size: 20px; font-weight: 800; color: var(--primary); }
 .diary-stat-lbl { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
 .diary-add-btn {
-  width: 100%; padding: 12px; border: 2px dashed rgba(187,134,252,0.3); border-radius: 14px;
-  background: none; color: var(--purple); font-family: 'Nunito',sans-serif;
-  font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s;
+  width: 100%; padding: 12px; border: 1px dashed var(--border-strong); border-radius: var(--radius-md);
+  background: none; color: var(--primary); font-family: 'Inter',sans-serif;
+  font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s;
 }
-.diary-add-btn:hover { border-color: var(--purple); background: rgba(187,134,252,0.05); }
+.diary-add-btn:hover { border-color: var(--primary); background: #F7FAFC; }
 
 /* DAILY SUMMARY POPUP */
 .summary-overlay {
   position: fixed; top:0; left:0; width:100%; height:100%;
-  background: rgba(0,0,0,0.9); z-index: 9500; display:flex;
-  align-items:center; justify-content:center; animation: achFadeIn 0.3s;
+  background: rgba(0,0,0,0.7); z-index: 9500; display:flex;
+  align-items:center; justify-content:center; animation: achFadeIn 0.2s;
 }
 .summary-card {
-  width: 300px; padding: 24px; border-radius: 20px;
-  background: linear-gradient(145deg, #1a1a35, #12122a);
-  border: 1px solid rgba(255,215,0,0.2); text-align: center;
+  width: 300px; padding: 24px; border-radius: var(--radius-lg);
+  background: #FFFFFF;
+  border: 1px solid var(--border); text-align: center;
+  box-shadow: var(--shadow-lg);
 }
-.summary-title { font-size: 18px; font-weight: 900; color: var(--gold); margin-bottom: 16px; }
+.summary-title { font-size: 16px; font-weight: 800; color: var(--primary); margin-bottom: 16px; }
 .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
 .summary-item { }
-.summary-item-val { font-size: 22px; font-weight: 800; color: var(--text); }
+.summary-item-val { font-size: 20px; font-weight: 800; color: var(--text); }
 .summary-item-lbl { font-size: 11px; color: var(--text-dim); }
 .summary-streak { font-size: 24px; margin: 12px 0; }
 .summary-close-btn {
-  padding: 12px 32px; border: none; border-radius: 14px;
-  background: linear-gradient(135deg, var(--gold), #e6a800);
-  color: #1a1a2e; font-family: 'Nunito',sans-serif; font-size: 14px; font-weight: 800;
-  cursor: pointer; transition: all 0.3s;
+  padding: 12px 28px; border: none; border-radius: var(--radius-md);
+  background: var(--primary);
+  color: #fff; font-family: 'Inter',sans-serif; font-size: 14px; font-weight: 700;
+  cursor: pointer; transition: all 0.2s;
 }
 
 /* WALLET (redesigned vault) */
 .wallet {
-  margin: 16px 12px; padding: 0; border-radius: 20px; overflow: hidden;
-  background: linear-gradient(145deg, #1a1a35, #12122a);
-  border: 1px solid rgba(255,215,0,0.15);
+  margin: 12px; padding: 0; border-radius: var(--radius-lg); overflow: hidden;
+  background: #FFFFFF;
+  border: 1px solid var(--border);
   position: relative;
+  box-shadow: var(--shadow-md);
 }
-.wallet::before {
-  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 100%;
-  background: linear-gradient(135deg, rgba(255,215,0,0.06) 0%, transparent 40%, rgba(187,134,252,0.04) 100%);
-  pointer-events: none;
-}
+.wallet::before { display: none; }
 .wallet-top {
-  padding: 20px 20px 16px; position: relative;
+  padding: 18px 18px 14px; position: relative;
   display: flex; align-items: flex-start; justify-content: space-between;
+  background: var(--primary); color: #fff;
 }
 .wallet-balance { position: relative; }
-.wallet-label { font-size: 11px; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+.wallet-label { font-size: 10px; color: rgba(255,255,255,0.6); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
 .wallet-total {
-  font-size: 34px; font-weight: 900; color: var(--gold);
-  text-shadow: 0 0 30px rgba(255,215,0,0.2);
+  font-size: 30px; font-weight: 900; color: #FFFFFF;
   font-variant-numeric: tabular-nums;
   display: flex; align-items: baseline; gap: 4px;
 }
-.wallet-total .currency { font-size: 18px; color: var(--gold-dark); font-weight: 700; }
+.wallet-total .currency { font-size: 16px; color: rgba(255,255,255,0.7); font-weight: 600; }
 .wallet-badge {
-  background: rgba(255,215,0,0.1); border: 1px solid rgba(255,215,0,0.2);
-  border-radius: 12px; padding: 6px 10px; text-align: center;
+  background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2);
+  border-radius: var(--radius-md); padding: 6px 10px; text-align: center;
 }
-.wallet-badge .wb-icon { font-size: 24px; }
-.wallet-badge .wb-text { font-size: 9px; color: var(--gold); font-weight: 700; margin-top: 2px; }
+.wallet-badge .wb-icon { font-size: 22px; }
+.wallet-badge .wb-text { font-size: 9px; color: rgba(255,255,255,0.8); font-weight: 700; margin-top: 2px; }
 .wallet-stats {
   display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1px;
-  background: rgba(255,255,255,0.04);
-  border-top: 1px solid rgba(255,255,255,0.06);
+  background: var(--border);
 }
 .wallet-stat {
   text-align: center; padding: 12px 6px;
-  background: linear-gradient(180deg, rgba(20,20,40,0.9), rgba(15,15,30,0.9));
+  background: #fff;
 }
-.wallet-stat .ws-icon { font-size: 16px; display: block; margin-bottom: 2px; }
-.wallet-stat .ws-val { font-size: 17px; font-weight: 800; color: var(--text); }
+.wallet-stat .ws-icon { font-size: 14px; display: block; margin-bottom: 2px; }
+.wallet-stat .ws-val { font-size: 16px; font-weight: 800; color: var(--text); }
 .wallet-stat .ws-lbl { font-size: 10px; color: var(--text-dim); }
 .wallet-trend {
-  padding: 0 20px 14px; position: relative;
+  padding: 0 18px 12px; position: relative;
   display: flex; align-items: center; gap: 8px;
+  padding-top: 10px;
 }
 .wallet-trend-tag {
-  font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 6px;
+  font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: var(--radius-sm);
 }
-.wallet-trend-tag.up { background: rgba(0,230,118,0.12); color: var(--green); }
-.wallet-trend-tag.down { background: rgba(255,82,82,0.12); color: var(--red); }
-.wallet-trend-tag.neutral { background: rgba(255,255,255,0.06); color: var(--text-dim); }
+.wallet-trend-tag.up { background: var(--green-bg); color: var(--green); }
+.wallet-trend-tag.down { background: var(--red-bg); color: var(--red); }
+.wallet-trend-tag.neutral { background: #F0F2F5; color: var(--text-dim); }
 .wallet-trend-text { font-size: 11px; color: var(--text-dim); }
 
 /* ACTIVE SHIFT */
 .active-shift {
-  margin: 12px; padding: 20px;
-  background: linear-gradient(145deg, #122a1a, #0f2218);
-  border-radius: 20px; border: 1px solid rgba(0,230,118,0.25);
+  margin: 12px; padding: 18px;
+  background: #FFFFFF;
+  border-radius: var(--radius-lg); border: 1px solid var(--border);
   position: relative; overflow: hidden;
-  backdrop-filter: blur(4px);
+  box-shadow: var(--shadow-sm);
 }
-.active-shift::before {
-  content: ''; position: absolute; top: 0; right: 0; width: 120px; height: 120px;
-  background: radial-gradient(circle, rgba(0,230,118,0.06) 0%, transparent 70%);
-  pointer-events: none;
-}
-.active-shift.inactive { border-color: var(--glass-border); background: var(--bg-card); }
+.active-shift::before { display: none; }
+.active-shift.inactive { border-color: var(--border); background: #fff; }
 .active-shift.inactive::before { display: none; }
-.active-shift h3 { font-size: 14px; margin-bottom: 14px; text-align: center; letter-spacing: 1px; }
+.active-shift h3 { font-size: 12px; margin-bottom: 14px; text-align: center; letter-spacing: 1px; text-transform: uppercase; }
 .active-shift h3.live { color: var(--green); }
 .active-shift h3.off { color: var(--text-dim); }
 
 .shift-timer { text-align: center; margin-bottom: 16px; }
 .timer-display {
-  font-size: 44px; font-weight: 900; color: var(--green);
+  font-size: 40px; font-weight: 900; color: var(--primary);
   font-variant-numeric: tabular-nums; letter-spacing: 2px;
-  text-shadow: 0 0 20px rgba(0,230,118,0.15);
 }
 .timer-sub { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
 
 .shift-controls { display: flex; gap: 8px; margin-bottom: 12px; }
 .shift-ctrl-btn {
-  flex: 1; padding: 13px 8px; border-radius: 14px; border: none;
-  font-family: 'Nunito', sans-serif; font-size: 13px; font-weight: 800;
-  cursor: pointer; transition: all 0.3s;
+  flex: 1; padding: 12px 8px; border-radius: var(--radius-md); border: none;
+  font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 700;
+  cursor: pointer; transition: all 0.15s;
 }
-.btn-start { background: linear-gradient(135deg, #00c853, #00e676); color: #1a1a2e; }
-.btn-break { background: linear-gradient(135deg, #ff8f00, #ffab40); color: #1a1a2e; }
-.btn-resume { background: linear-gradient(135deg, #2196f3, #42a5f5); color: #fff; }
-.btn-end { background: linear-gradient(135deg, #c62828, #ff5252); color: #fff; }
-.shift-ctrl-btn:active { transform: scale(0.95); }
+.btn-start { background: var(--green); color: #fff; }
+.btn-break { background: var(--orange); color: #fff; }
+.btn-resume { background: var(--accent); color: #fff; }
+.btn-end { background: var(--red); color: #fff; }
+.shift-ctrl-btn:active { transform: scale(0.97); }
 .shift-ctrl-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
 .break-log {
-  margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.2);
-  border-radius: 10px; max-height: 120px; overflow-y: auto;
+  margin-top: 10px; padding: 10px; background: #F7F8FA;
+  border-radius: var(--radius-md); max-height: 120px; overflow-y: auto;
+  border: 1px solid var(--border);
 }
-.break-log h4 { font-size: 12px; color: var(--text-dim); margin-bottom: 6px; }
+.break-log h4 { font-size: 11px; color: var(--text-dim); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
 .break-item {
   display: flex; justify-content: space-between; align-items: center;
-  font-size: 12px; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+  font-size: 12px; padding: 4px 0; border-bottom: 1px solid var(--border);
 }
 .break-item:last-child { border: none; }
-.break-item .b-type { color: var(--orange); }
+.break-item .b-type { color: var(--orange); font-weight: 600; }
 .break-item .b-dur { color: var(--text-dim); }
 .break-total { margin-top: 8px; text-align: center; font-size: 13px; font-weight: 700; color: var(--orange); }
 
 /* QUESTS */
 .quests {
   margin: 0 12px 12px; padding: 16px;
-  background: var(--bg-card); border-radius: 16px;
-  border: 1px solid rgba(0,229,255,0.15);
+  background: #FFFFFF; border-radius: var(--radius-md);
+  border: 1px solid var(--border); box-shadow: var(--shadow-sm);
 }
-.quests h3 { font-size: 14px; color: var(--cyan); margin-bottom: 12px; text-align: center; }
+.quests h3 { font-size: 13px; color: var(--primary); margin-bottom: 12px; text-align: center; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; }
 .quest-item {
-  background: rgba(255,255,255,0.03); border-radius: 12px; padding: 12px;
-  margin-bottom: 8px; border-left: 3px solid var(--cyan);
-  transition: all 0.3s;
+  background: #F7F8FA; border-radius: var(--radius-md); padding: 12px;
+  margin-bottom: 8px; border-left: 3px solid var(--accent);
+  transition: all 0.15s;
 }
 .quest-item.completed { border-left-color: var(--green); opacity: 0.6; }
 .quest-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
 .quest-title { font-size: 13px; font-weight: 700; }
-.quest-reward { font-size: 12px; color: var(--gold); }
-.quest-progress { width: 100%; height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden; }
-.quest-fill { height: 100%; border-radius: 3px; transition: width 0.5s; }
-.quest-fill.active { background: linear-gradient(90deg, var(--cyan), #80deea); }
+.quest-reward { font-size: 12px; color: var(--gold); font-weight: 600; }
+.quest-progress { width: 100%; height: 5px; background: #E2E8F0; border-radius: 3px; overflow: hidden; }
+.quest-fill { height: 100%; border-radius: 3px; transition: width 0.3s; }
+.quest-fill.active { background: var(--accent); }
 .quest-fill.done { background: var(--green); }
 .quest-text { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
 
 /* LIFE QUESTS */
 .life-quests {
   margin: 0 12px 12px; padding: 16px;
-  background: var(--bg-card); border-radius: 16px;
-  border: 1px solid rgba(187,134,252,0.15);
+  background: #FFFFFF; border-radius: var(--radius-md);
+  border: 1px solid var(--border); box-shadow: var(--shadow-sm);
 }
-.life-quests h3 { font-size: 14px; color: var(--purple); margin-bottom: 12px; text-align: center; }
+.life-quests h3 { font-size: 13px; color: var(--primary); margin-bottom: 12px; text-align: center; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; }
 .life-quest-item {
   display: flex; align-items: center; gap: 10px;
-  background: rgba(255,255,255,0.03); border-radius: 12px; padding: 12px;
-  margin-bottom: 8px; cursor: pointer; transition: all 0.3s;
-  border-left: 3px solid var(--purple); user-select: none;
+  background: #F7F8FA; border-radius: var(--radius-md); padding: 12px;
+  margin-bottom: 8px; cursor: pointer; transition: all 0.15s;
+  border-left: 3px solid var(--primary-light); user-select: none;
 }
 .life-quest-item.checked { border-left-color: var(--green); opacity: 0.65; }
 .life-quest-item.checked .lq-title { text-decoration: line-through; }
 .life-quest-check {
-  width: 24px; height: 24px; border-radius: 8px;
-  border: 2px solid var(--purple); background: none;
+  width: 22px; height: 22px; border-radius: var(--radius-sm);
+  border: 2px solid var(--border-strong); background: none;
   display: flex; align-items: center; justify-content: center;
-  font-size: 14px; flex-shrink: 0; transition: all 0.3s;
+  font-size: 13px; flex-shrink: 0; transition: all 0.15s;
 }
 .life-quest-item.checked .life-quest-check {
-  border-color: var(--green); background: rgba(0,230,118,0.2);
+  border-color: var(--green); background: var(--green-bg);
 }
 .lq-content { flex: 1; }
 .lq-title { font-size: 13px; font-weight: 700; }
 .lq-desc { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
-.lq-reward { font-size: 11px; color: var(--gold); }
+.lq-reward { font-size: 11px; color: var(--gold); font-weight: 600; }
 .lq-reroll {
-  background: none; border: 1px solid rgba(187,134,252,0.3); border-radius: 8px;
-  color: var(--purple); font-size: 16px; padding: 4px 8px; cursor: pointer;
-  transition: all 0.3s; flex-shrink: 0;
+  background: none; border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
+  color: var(--text-dim); font-size: 14px; padding: 4px 8px; cursor: pointer;
+  transition: all 0.15s; flex-shrink: 0;
 }
-.lq-reroll:active { transform: rotate(180deg) scale(0.9); }
+.lq-reroll:active { transform: rotate(180deg); }
 .lq-reroll:disabled { opacity: 0.2; cursor: not-allowed; }
 .lq-reroll-counter {
   text-align: center; padding: 4px; font-size: 11px; color: var(--text-dim);
   margin-top: 2px;
 }
-.cat-pick-btn:hover { transform: scale(1.05); filter: brightness(1.3); }
-.cat-pick-btn:active { transform: scale(0.95); }
+.cat-pick-btn:hover { filter: brightness(0.95); }
+.cat-pick-btn:active { transform: scale(0.97); }
 
-/* ============ LIFE QUEST STATS — GAME HUD v4.2 ============ */
+/* ============ LIFE QUEST STATS — CORPORATE HUD ============ */
 .life-stats-panel { margin-bottom: 14px; }
 
-/* --- HERO: ранг-карта --- */
+/* --- HERO: rank card --- */
 .lq-hero {
   position: relative; overflow: hidden;
   display: flex; align-items: center; gap: 14px;
   padding: 16px 14px; margin-bottom: 10px;
-  border-radius: 18px;
-  background:
-    radial-gradient(120% 140% at 0% 0%, rgba(187,134,252,0.16), transparent 60%),
-    radial-gradient(120% 140% at 100% 100%, rgba(0,229,255,0.12), transparent 60%),
-    linear-gradient(145deg, #1a1a2e, #13131f);
-  border: 1px solid rgba(187,134,252,0.22);
-  box-shadow: 0 8px 28px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.05);
+  border-radius: var(--radius-lg);
+  background: #FFFFFF;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-md);
 }
-/* бегущий блик по карте */
-.lq-hero::after {
-  content: ''; position: absolute; top: 0; left: -60%; width: 40%; height: 100%;
-  background: linear-gradient(100deg, transparent, rgba(255,255,255,0.07), transparent);
-  transform: skewX(-18deg); animation: lq-hero-sheen 7s ease-in-out infinite;
-  pointer-events: none;
-}
-@keyframes lq-hero-sheen {
-  0%, 72% { left: -60%; }
-  100% { left: 130%; }
-}
+.lq-hero::after { display: none; }
+@keyframes lq-hero-sheen { 0%, 100% { left: -60%; } }
 
-/* --- БЕЙДЖ УРОВНЯ с кольцом прогресса (conic-gradient) --- */
+/* --- LEVEL BADGE --- */
 .lq-badge {
   position: relative; flex-shrink: 0;
-  width: 68px; height: 68px; border-radius: 50%;
+  width: 64px; height: 64px; border-radius: 50%;
   display: grid; place-items: center;
   background:
     conic-gradient(from -90deg,
-      var(--purple) 0turn,
-      var(--cyan) calc(var(--p, 0) * 1turn),
-      rgba(255,255,255,0.07) calc(var(--p, 0) * 1turn),
-      rgba(255,255,255,0.07) 1turn);
-  transition: --p 0.9s ease;
-  filter: drop-shadow(0 0 10px rgba(187,134,252,0.35));
+      var(--accent) 0turn,
+      var(--green) calc(var(--p, 0) * 1turn),
+      #E2E8F0 calc(var(--p, 0) * 1turn),
+      #E2E8F0 1turn);
+  transition: --p 0.6s ease;
 }
 .lq-badge::before {
   content: ''; position: absolute; inset: 5px; border-radius: 50%;
-  background: linear-gradient(150deg, #1d1d33, #141422);
-  border: 1px solid rgba(255,255,255,0.07);
+  background: #FFFFFF;
+  border: 1px solid var(--border);
 }
 .lq-badge-inner {
   position: relative; z-index: 1; text-align: center; line-height: 1;
 }
-.lq-badge-icon { display: block; font-size: 24px; }
+.lq-badge-icon { display: block; font-size: 22px; }
 .lq-badge-lvl {
   display: block; margin-top: 2px;
-  font-size: 11px; font-weight: 800; letter-spacing: 0.5px;
-  color: var(--gold); font-variant-numeric: tabular-nums;
+  font-size: 10px; font-weight: 800; letter-spacing: 0.5px;
+  color: var(--primary); font-variant-numeric: tabular-nums;
 }
-.lq-badge.pop { animation: lq-badge-pop 0.65s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.lq-badge.pop { animation: lq-badge-pop 0.4s ease; }
 @keyframes lq-badge-pop {
-  0%   { transform: scale(1) rotate(0deg); }
-  35%  { transform: scale(1.3) rotate(-8deg); }
-  60%  { transform: scale(0.93) rotate(4deg); }
-  100% { transform: scale(1) rotate(0deg); }
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.1); }
+  100% { transform: scale(1); }
 }
 
-/* --- ПРАВАЯ ЧАСТЬ: ранг + бар --- */
+/* --- RIGHT SIDE: rank + bar --- */
 .lq-hero-main { flex: 1; min-width: 0; }
 .lq-rank-row {
   display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
   margin-bottom: 2px;
 }
 .lq-rank-name {
-  font-size: 15px; font-weight: 800; letter-spacing: 0.3px;
-  background: linear-gradient(90deg, var(--gold-light), var(--gold));
-  -webkit-background-clip: text; background-clip: text;
-  -webkit-text-fill-color: transparent;
+  font-size: 14px; font-weight: 800; letter-spacing: 0.3px;
+  color: var(--primary);
+  background: none; -webkit-background-clip: unset; -webkit-text-fill-color: unset;
   text-transform: uppercase;
 }
 .lq-boost-badge {
-  background: rgba(255,215,0,0.15); color: var(--gold);
-  padding: 2px 7px; border-radius: 6px; font-size: 10px; font-weight: 800;
-  border: 1px solid rgba(255,215,0,0.3);
+  background: #EBF8FF; color: var(--accent);
+  padding: 2px 7px; border-radius: var(--radius-sm); font-size: 10px; font-weight: 700;
+  border: 1px solid #BEE3F8;
 }
 .lq-next-rank {
   font-size: 10px; color: var(--text-dim); margin-bottom: 7px;
 }
-.lq-next-rank b { color: var(--purple); font-weight: 700; }
+.lq-next-rank b { color: var(--primary); font-weight: 700; }
 
-/* XP БАР: трек + заливка + бегущий шайн + сегменты */
+/* XP BAR */
 .lq-xp-track {
-  position: relative; height: 14px; border-radius: 8px;
-  background: rgba(0,0,0,0.45); overflow: hidden;
-  border: 1px solid rgba(255,255,255,0.08);
-  box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
+  position: relative; height: 12px; border-radius: 6px;
+  background: #EDF2F7; overflow: hidden;
+  border: 1px solid var(--border);
 }
 .lq-xp-fill {
-  position: relative; height: 100%; width: 0; border-radius: 8px;
-  background: linear-gradient(90deg, #7c4dff, var(--purple) 55%, var(--cyan));
-  box-shadow: 0 0 12px rgba(187,134,252,0.55);
-  transition: width 0.9s cubic-bezier(0.65, 0, 0.35, 1);
+  position: relative; height: 100%; width: 0; border-radius: 6px;
+  background: linear-gradient(90deg, var(--accent), var(--green));
+  transition: width 0.6s ease;
 }
-/* блик, бегущий внутри заливки */
-.lq-xp-fill::after {
-  content: ''; position: absolute; inset: 0;
-  background: linear-gradient(100deg, transparent 20%, rgba(255,255,255,0.45) 50%, transparent 80%);
-  animation: lq-xp-shine 2.2s linear infinite;
-}
-@keyframes lq-xp-shine {
-  from { transform: translateX(-100%); }
-  to   { transform: translateX(100%); }
-}
-/* насечки поверх трека — делят бар на 10 делений */
+.lq-xp-fill::after { display: none; }
+@keyframes lq-xp-shine { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
 .lq-xp-ticks {
   position: absolute; inset: 0; pointer-events: none;
   background: repeating-linear-gradient(90deg,
-    transparent 0 calc(10% - 1px), rgba(0,0,0,0.33) calc(10% - 1px) 10%);
+    transparent 0 calc(10% - 1px), rgba(255,255,255,0.4) calc(10% - 1px) 10%);
 }
 .lq-xp-caption {
   display: flex; justify-content: space-between; align-items: baseline;
-  margin-top: 5px; font-size: 10px; color: var(--text-dim);
+  margin-top: 4px; font-size: 10px; color: var(--text-dim);
 }
 .lq-xp-caption .lq-xp-now {
   font-weight: 800; color: var(--text); font-variant-numeric: tabular-nums;
@@ -675,70 +652,67 @@ body {
 .lq-total-chip {
   display: inline-flex; align-items: center; gap: 4px;
   padding: 3px 9px; border-radius: 999px;
-  background: rgba(255,215,0,0.1); border: 1px solid rgba(255,215,0,0.28);
-  color: var(--gold); font-size: 11px; font-weight: 800;
+  background: #EBF8FF; border: 1px solid #BEE3F8;
+  color: var(--accent); font-size: 11px; font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
 
-/* --- МИНИ-СТАТЫ --- */
+/* --- MINI STATS --- */
 .lq-stats-grid { display: flex; gap: 8px; margin-bottom: 12px; }
 .lq-mini-stat {
   position: relative; flex: 1; text-align: center;
-  padding: 10px 4px 8px; border-radius: 14px;
-  background: linear-gradient(160deg, rgba(255,255,255,0.055), rgba(255,255,255,0.015));
-  border: 1px solid var(--glass-border);
-  transition: transform 0.2s, border-color 0.2s;
+  padding: 10px 4px 8px; border-radius: var(--radius-md);
+  background: #F7F8FA;
+  border: 1px solid var(--border);
+  transition: transform 0.15s;
 }
-.lq-mini-stat:active { transform: translateY(1px) scale(0.98); }
-.lq-ms-ico { display: block; font-size: 14px; margin-bottom: 2px; opacity: 0.85; }
+.lq-mini-stat:active { transform: translateY(1px); }
+.lq-ms-ico { display: block; font-size: 13px; margin-bottom: 2px; }
 .lq-ms-val {
-  display: block; font-size: 19px; font-weight: 800; color: var(--text);
+  display: block; font-size: 18px; font-weight: 800; color: var(--text);
   line-height: 1.1; font-variant-numeric: tabular-nums;
 }
 .lq-ms-lbl {
   display: block; font-size: 9px; color: var(--text-dim);
-  text-transform: uppercase; letter-spacing: 0.6px; margin-top: 1px;
+  text-transform: uppercase; letter-spacing: 0.5px; margin-top: 1px;
 }
 
-/* --- КАТЕГОРИИ: заголовок + ряды --- */
+/* --- CATEGORIES --- */
 .lq-cat-title {
   display: flex; align-items: center; justify-content: space-between;
-  font-size: 10px; font-weight: 800; color: var(--text-dim);
+  font-size: 10px; font-weight: 700; color: var(--text-dim);
   text-transform: uppercase; letter-spacing: 1px;
   margin: 0 2px 7px;
 }
 .lq-cat-title::before {
   content: ''; flex: 1; height: 1px; margin-right: 8px; order: 2;
-  background: linear-gradient(90deg, var(--glass-border), transparent);
+  background: var(--border);
 }
-.lq-cat-bars { display: flex; flex-direction: column; gap: 6px; }
+.lq-cat-bars { display: flex; flex-direction: column; gap: 5px; }
 .lq-stat-row {
   display: flex; align-items: center; gap: 8px; font-size: 12px;
-  padding: 5px 8px; border-radius: 10px;
-  background: rgba(255,255,255,0.022);
+  padding: 5px 8px; border-radius: var(--radius-sm);
+  background: transparent;
   border: 1px solid transparent;
-  transition: background 0.2s, border-color 0.2s;
+  transition: background 0.15s;
 }
-/* подсветка топовой категории */
 .lq-stat-row.is-top {
-  background: rgba(255,215,0,0.05);
-  border-color: rgba(255,215,0,0.18);
+  background: #F7FAFC;
+  border-color: var(--border);
 }
-.lq-stat-icon { font-size: 15px; width: 20px; text-align: center; flex-shrink: 0; }
+.lq-stat-icon { font-size: 14px; width: 20px; text-align: center; flex-shrink: 0; }
 .lq-stat-name {
   width: 74px; flex-shrink: 0; color: var(--text);
   font-size: 11px; font-weight: 600;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .lq-stat-bar {
-  flex: 1; min-width: 0; height: 9px; border-radius: 5px;
-  background: rgba(0,0,0,0.4); overflow: hidden;
-  box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);
+  flex: 1; min-width: 0; height: 8px; border-radius: 4px;
+  background: #EDF2F7; overflow: hidden;
 }
 .lq-stat-fill {
-  height: 100%; border-radius: 5px; min-width: 3px;
-  transition: width 0.8s cubic-bezier(0.65, 0, 0.35, 1);
-  box-shadow: 0 0 8px currentColor;
+  height: 100%; border-radius: 4px; min-width: 3px;
+  transition: width 0.5s ease;
 }
 .lq-stat-val {
   width: 34px; text-align: right; flex-shrink: 0;
@@ -747,123 +721,120 @@ body {
 }
 .lq-stat-row.is-zero { opacity: 0.4; }
 
-/* --- LEVEL UP тост --- */
+/* --- LEVEL UP TOAST --- */
 .lq-levelup-toast {
   position: fixed; left: 50%; top: 22%; z-index: 999;
-  transform: translate(-50%, -10px) scale(0.9);
-  padding: 14px 26px; border-radius: 16px;
-  background: linear-gradient(145deg, #2a1f4d, #1a1430);
-  border: 1px solid rgba(255,215,0,0.45);
-  box-shadow: 0 10px 40px rgba(187,134,252,0.4);
+  transform: translate(-50%, -10px);
+  padding: 14px 24px; border-radius: var(--radius-md);
+  background: #FFFFFF;
+  border: 2px solid var(--accent);
+  box-shadow: var(--shadow-lg);
   text-align: center; opacity: 0; pointer-events: none;
-  transition: opacity 0.3s, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: opacity 0.2s, transform 0.3s ease;
 }
-.lq-levelup-toast.show { opacity: 1; transform: translate(-50%, 0) scale(1); }
+.lq-levelup-toast.show { opacity: 1; transform: translate(-50%, 0); }
 .lq-lu-title {
-  font-size: 18px; font-weight: 900; letter-spacing: 1px;
-  background: linear-gradient(90deg, var(--gold-light), var(--gold));
-  -webkit-background-clip: text; background-clip: text;
-  -webkit-text-fill-color: transparent;
+  font-size: 16px; font-weight: 900; letter-spacing: 1px;
+  color: var(--primary);
+  background: none; -webkit-background-clip: unset; -webkit-text-fill-color: unset;
 }
-.lq-lu-sub { font-size: 12px; color: var(--purple); font-weight: 700; margin-top: 3px; }
+.lq-lu-sub { font-size: 12px; color: var(--accent); font-weight: 700; margin-top: 3px; }
 
-/* узкие экраны */
+/* narrow screens */
 @media (max-width: 360px) {
-  .lq-badge { width: 58px; height: 58px; }
-  .lq-badge-icon { font-size: 20px; }
-  .lq-rank-name { font-size: 13px; }
+  .lq-badge { width: 54px; height: 54px; }
+  .lq-badge-icon { font-size: 18px; }
+  .lq-rank-name { font-size: 12px; }
   .lq-stat-name { width: 60px; }
-  .lq-ms-val { font-size: 17px; }
+  .lq-ms-val { font-size: 16px; }
 }
-/* уважение к reduce-motion */
 @media (prefers-reduced-motion: reduce) {
-  .lq-hero::after, .lq-xp-fill::after { animation: none; }
   .lq-xp-fill, .lq-stat-fill { transition: none; }
 }
 
 /* MOTIVATION TIP */
 .motivation-tip {
   margin: 0 12px 12px; padding: 14px 16px;
-  background: linear-gradient(135deg, rgba(0,229,255,0.05), rgba(187,134,252,0.05));
-  border-radius: 14px; border: 1px solid rgba(0,229,255,0.1);
+  background: #F7FAFC;
+  border-radius: var(--radius-md); border: 1px solid var(--border);
   text-align: center; font-size: 13px; line-height: 1.5;
 }
-.motivation-tip .tip-icon { font-size: 24px; margin-bottom: 6px; }
+.motivation-tip .tip-icon { font-size: 20px; margin-bottom: 6px; }
 .motivation-tip .tip-text { color: var(--text); font-weight: 600; }
 .motivation-tip .tip-author { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
 
 /* LEVEL */
 .level-section {
   margin: 0 12px 12px; padding: 16px;
-  background: var(--bg-card); border-radius: 16px; border: 1px solid rgba(255,215,0,0.1);
+  background: #fff; border-radius: var(--radius-md); border: 1px solid var(--border); box-shadow: var(--shadow-sm);
 }
 .level-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
 .level-badge { display: flex; align-items: center; gap: 8px; }
-.level-badge .icon { font-size: 30px; }
-.level-badge .info .lvl { font-size: 16px; font-weight: 800; color: var(--gold); }
+.level-badge .icon { font-size: 28px; }
+.level-badge .info .lvl { font-size: 15px; font-weight: 800; color: var(--primary); }
 .level-badge .info .title { font-size: 12px; color: var(--text-dim); }
 .level-xp-text { font-size: 12px; color: var(--text-dim); text-align: right; }
-.xp-bar { width:100%; height:10px; background: rgba(255,255,255,0.08); border-radius: 5px; overflow: hidden; }
-.xp-fill { height:100%; background: linear-gradient(90deg, var(--gold-dark), var(--gold), #fff59d); border-radius: 5px; transition: width 0.8s ease; }
+.xp-bar { width:100%; height:8px; background: #EDF2F7; border-radius: 4px; overflow: hidden; }
+.xp-fill { height:100%; background: linear-gradient(90deg, var(--accent), var(--green)); border-radius: 4px; transition: width 0.5s ease; }
 
 /* STREAK */
 .streak-bar {
   margin: 0 12px 12px; padding: 12px 16px;
-  background: linear-gradient(135deg, rgba(255,152,0,0.1), rgba(255,87,34,0.06));
-  border-radius: 14px; display: flex; align-items: center; gap: 10px;
-  border: 1px solid rgba(255,152,0,0.15);
+  background: var(--orange-bg);
+  border-radius: var(--radius-md); display: flex; align-items: center; gap: 10px;
+  border: 1px solid #FEEBC8;
 }
-.streak-bar .streak-icon { font-size: 28px; }
-.streak-bar .streak-text { font-size: 14px; font-weight: 700; }
+.streak-bar .streak-icon { font-size: 24px; }
+.streak-bar .streak-text { font-size: 13px; font-weight: 700; }
 .streak-bar .streak-text span { color: var(--orange); }
 
 /* DIFFICULTY */
 .difficulty {
   margin: 0 12px 12px; padding: 14px;
-  background: var(--bg-card); border-radius: 16px; border: 1px solid var(--glass-border);
+  background: #fff; border-radius: var(--radius-md); border: 1px solid var(--border); box-shadow: var(--shadow-sm);
 }
-.difficulty h3 { font-size: 14px; margin-bottom: 10px; color: var(--text-dim); text-align: center; }
+.difficulty h3 { font-size: 12px; margin-bottom: 10px; color: var(--text-dim); text-align: center; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; }
 .diff-buttons { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
 .diff-btn {
-  padding: 12px 8px; border-radius: 12px; border: 2px solid transparent;
-  background: rgba(255,255,255,0.04); color: var(--text);
-  font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 13px;
-  cursor: pointer; text-align: center; transition: all 0.3s;
+  padding: 12px 8px; border-radius: var(--radius-md); border: 2px solid transparent;
+  background: #F7F8FA; color: var(--text);
+  font-family: 'Inter', sans-serif; font-weight: 700; font-size: 12px;
+  cursor: pointer; text-align: center; transition: all 0.15s;
 }
-.diff-btn .goal-val { font-size: 18px; font-weight: 900; display: block; margin-top: 2px; }
+.diff-btn .goal-val { font-size: 16px; font-weight: 900; display: block; margin-top: 2px; }
 .diff-btn.easy { border-color: var(--green); }
-.diff-btn.easy.active { background: rgba(0,230,118,0.12); box-shadow: 0 0 15px rgba(0,230,118,0.15); }
+.diff-btn.easy.active { background: var(--green-bg); }
 .diff-btn.normal { border-color: var(--orange); }
-.diff-btn.normal.active { background: rgba(255,171,64,0.12); box-shadow: 0 0 15px rgba(255,171,64,0.15); }
+.diff-btn.normal.active { background: var(--orange-bg); }
 .diff-btn.hard { border-color: var(--red); }
-.diff-btn.hard.active { background: rgba(255,82,82,0.12); box-shadow: 0 0 15px rgba(255,82,82,0.15); }
+.diff-btn.hard.active { background: var(--red-bg); }
 
 /* ADD SHIFT */
 .add-shift {
   margin: 0 12px 12px; padding: 16px;
-  background: var(--bg-card); border-radius: 16px; border: 1px solid rgba(255,215,0,0.1);
+  background: #fff; border-radius: var(--radius-md); border: 1px solid var(--border); box-shadow: var(--shadow-sm);
 }
-.add-shift h3 { font-size: 15px; margin-bottom: 12px; color: var(--gold); text-align: center; }
+.add-shift h3 { font-size: 14px; margin-bottom: 12px; color: var(--primary); text-align: center; font-weight: 700; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
 .form-group { display: flex; flex-direction: column; }
-.form-group label { font-size: 12px; color: var(--text-dim); margin-bottom: 4px; }
+.form-group label { font-size: 11px; color: var(--text-dim); margin-bottom: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
 .form-group input, .form-group select {
-  padding: 10px 12px; background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.1); border-radius: 10px;
-  color: var(--text); font-family: 'Nunito', sans-serif; font-size: 15px; font-weight: 600;
-  outline: none; transition: border 0.3s;
+  padding: 10px 12px; background: #F7F8FA;
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  color: var(--text); font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600;
+  outline: none; transition: border 0.2s;
 }
-.form-group input:focus, .form-group select:focus { border-color: var(--gold); }
-.form-group select option { background: var(--bg-dark); color: var(--text); }
+.form-group input:focus, .form-group select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(49,130,206,0.1); }
+.form-group select option { background: #fff; color: var(--text); }
 .btn-add {
-  width: 100%; padding: 14px;
-  background: linear-gradient(135deg, var(--gold-dark), var(--gold));
-  border: none; border-radius: 12px; color: #1a1a2e;
-  font-family: 'Nunito', sans-serif; font-size: 16px; font-weight: 800;
-  cursor: pointer; transition: transform 0.2s, box-shadow 0.3s; margin-top: 6px;
+  width: 100%; padding: 12px;
+  background: var(--primary);
+  border: none; border-radius: var(--radius-md); color: #fff;
+  font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 700;
+  cursor: pointer; transition: all 0.15s; margin-top: 6px;
 }
-.btn-add:active { transform: scale(0.97); }
-.btn-add:hover { box-shadow: 0 0 25px rgba(255,215,0,0.2); }
+.btn-add:active { transform: scale(0.98); }
+.btn-add:hover { background: var(--primary-light); }
 .btn-add:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* SHOP */
@@ -872,69 +843,68 @@ body {
 }
 .shop-header {
   text-align: center; padding: 16px;
-  background: linear-gradient(145deg, #1a1535, #12102a);
-  border-radius: 16px; margin-bottom: 12px;
-  border: 1px solid rgba(187,134,252,0.15);
+  background: #FFFFFF;
+  border-radius: var(--radius-md); margin-bottom: 12px;
+  border: 1px solid var(--border);
   position: relative; overflow: hidden;
+  box-shadow: var(--shadow-sm);
 }
-.shop-header::before {
-  content: ''; position: absolute; top: -50%; right: -30%; width: 150px; height: 150px;
-  background: radial-gradient(circle, rgba(187,134,252,0.08) 0%, transparent 70%);
-  pointer-events: none;
-}
+.shop-header::before { display: none; }
 .shop-balance { position: relative; }
-.shop-balance-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; }
-.shop-balance-val { font-size: 28px; font-weight: 900; color: var(--purple); margin-top: 2px; }
-.shop-balance-val .xp-unit { font-size: 14px; color: var(--text-dim); font-weight: 700; }
-.shop-grid { display: flex; flex-direction: column; gap: 8px; }
+.shop-balance-label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
+.shop-balance-val { font-size: 26px; font-weight: 900; color: var(--primary); margin-top: 2px; }
+.shop-balance-val .xp-unit { font-size: 13px; color: var(--text-dim); font-weight: 700; }
+.shop-grid { display: flex; flex-direction: column; gap: 6px; }
 .shop-item {
-  background: var(--bg-card); border-radius: 14px; padding: 14px;
-  border: 1px solid var(--glass-border); transition: all 0.3s;
+  background: #FFFFFF; border-radius: var(--radius-md); padding: 12px;
+  border: 1px solid var(--border); transition: all 0.15s;
   display: flex; align-items: center; gap: 12px;
+  box-shadow: var(--shadow-sm);
 }
-.shop-item.owned { border-color: rgba(0,230,118,0.2); opacity: 0.7; }
+.shop-item.owned { border-color: rgba(56,161,105,0.3); }
 .shop-item.locked { opacity: 0.5; }
-.shop-item-icon { font-size: 28px; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.04); border-radius: 12px; flex-shrink: 0; }
+.shop-item-icon { font-size: 24px; width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; background: #F7F8FA; border-radius: var(--radius-md); flex-shrink: 0; border: 1px solid var(--border); }
 .shop-item-info { flex: 1; }
 .shop-item-name { font-size: 13px; font-weight: 700; color: var(--text); }
 .shop-item-desc { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
 .shop-item-price {
-  font-size: 12px; font-weight: 800; padding: 6px 12px; border-radius: 8px;
-  cursor: pointer; border: none; font-family: 'Nunito', sans-serif;
-  transition: all 0.2s; flex-shrink: 0;
+  font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: var(--radius-sm);
+  cursor: pointer; border: none; font-family: 'Inter', sans-serif;
+  transition: all 0.15s; flex-shrink: 0;
 }
-.shop-item-price.buy { background: linear-gradient(135deg, rgba(187,134,252,0.2), rgba(187,134,252,0.1)); color: var(--purple); }
-.shop-item-price.buy:hover { background: rgba(187,134,252,0.3); }
-.shop-item-price.bought { background: rgba(0,230,118,0.1); color: var(--green); cursor: default; }
-.shop-item-price.expensive { background: rgba(255,255,255,0.04); color: var(--text-dim); cursor: not-allowed; }
+.shop-item-price.buy { background: var(--primary); color: #fff; }
+.shop-item-price.buy:hover { background: var(--primary-light); }
+.shop-item-price.bought { background: var(--green-bg); color: var(--green); cursor: default; }
+.shop-item-price.expensive { background: #F0F2F5; color: var(--text-dim); cursor: not-allowed; }
 .shop-category-title {
-  font-size: 12px; font-weight: 700; color: var(--text-dim);
+  font-size: 11px; font-weight: 700; color: var(--text-dim);
   padding: 8px 4px 4px; text-transform: uppercase; letter-spacing: 1px;
 }
 
 /* ACHIEVEMENTS */
 .achievements {
   margin: 12px; padding: 14px;
-  background: var(--bg-card); border-radius: 16px; border: 1px solid rgba(187,134,252,0.15);
+  background: #fff; border-radius: var(--radius-md); border: 1px solid var(--border); box-shadow: var(--shadow-sm);
 }
-.achievements h3 { font-size: 14px; color: var(--purple); margin-bottom: 10px; text-align: center; }
+.achievements h3 { font-size: 13px; color: var(--primary); margin-bottom: 10px; text-align: center; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; }
 .ach-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
 .ach-item {
-  text-align: center; padding: 8px 4px; border-radius: 10px;
-  background: rgba(255,255,255,0.02); transition: all 0.3s;
+  text-align: center; padding: 8px 4px; border-radius: var(--radius-md);
+  background: #F7F8FA; transition: all 0.15s;
 }
-.ach-item.unlocked { background: rgba(187,134,252,0.08); border: 1px solid rgba(187,134,252,0.2); }
+.ach-item.unlocked { background: #EBF8FF; border: 1px solid #BEE3F8; }
 .ach-item.locked { opacity: 0.35; filter: grayscale(1); }
-.ach-item .ach-icon { font-size: 26px; }
+.ach-item .ach-icon { font-size: 24px; }
 .ach-item .ach-name { font-size: 9px; color: var(--text-dim); margin-top: 3px; line-height: 1.2; }
 
 /* HISTORY */
 .history { margin: 0 12px; }
-.history h3 { font-size: 15px; color: var(--text-dim); margin-bottom: 10px; padding-left: 4px; }
+.history h3 { font-size: 14px; color: var(--text-secondary); margin-bottom: 10px; padding-left: 4px; font-weight: 700; }
 .shift-card {
-  background: var(--bg-card2); border-radius: 14px; padding: 14px 16px; margin-bottom: 8px;
+  background: #FFFFFF; border-radius: var(--radius-md); padding: 14px 16px; margin-bottom: 8px;
   display: flex; justify-content: space-between; align-items: center;
-  border-left: 4px solid var(--gold); transition: all 0.3s; position: relative;
+  border-left: 4px solid var(--primary); transition: all 0.15s; position: relative;
+  box-shadow: var(--shadow-sm); border-top: 1px solid var(--border); border-right: 1px solid var(--border); border-bottom: 1px solid var(--border);
 }
 .shift-card.goal-hit { border-left-color: var(--green); }
 .shift-card.goal-miss { border-left-color: var(--red); }
@@ -942,105 +912,99 @@ body {
 .shift-left .shift-date { font-size: 14px; font-weight: 700; }
 .shift-left .shift-hours { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
 .shift-right { text-align: right; }
-.shift-right .shift-earned { font-size: 18px; font-weight: 800; color: var(--gold); }
+.shift-right .shift-earned { font-size: 17px; font-weight: 800; color: var(--primary); }
 .shift-right .shift-rate { font-size: 12px; margin-top: 2px; }
 .shift-right .shift-rate.good { color: var(--green); }
 .shift-right .shift-rate.ok { color: var(--orange); }
 .shift-right .shift-rate.bad { color: var(--red); }
 .shift-note { font-size: 11px; color: var(--text-dim); margin-top: 4px; font-style: italic; }
-/* Перерывы в карточке смены */
 .shift-breaks { font-size: 11px; color: var(--text-dim); margin-top: 4px; font-weight: 600; font-variant-numeric: tabular-nums; }
-/* Цель месяца / прогноз / рекорды */
 .mg-note { font-size: 12px; color: var(--text-dim); font-weight: 600; padding: 2px 0; }
-.mg-forecast { margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.07); padding-top: 8px; }
+.mg-forecast { margin-top: 10px; border-top: 1px solid var(--border); padding-top: 8px; }
 .mg-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 5px 0; font-size: 13px; color: var(--text-dim); font-weight: 600; }
-.mg-row b { color: var(--gold); font-variant-numeric: tabular-nums; font-size: 14px; }
+.mg-row b { color: var(--primary); font-variant-numeric: tabular-nums; font-size: 14px; }
 .rec-date { color: var(--text-dim); font-weight: 600; font-size: 11px; }
-/* Дни недели */
+/* Day of week */
 .dow-row { display: grid; grid-template-columns: 28px 1fr auto 18px; align-items: center; gap: 8px; padding: 4px 0; }
-.dow-name { font-size: 12px; font-weight: 800; color: var(--text-dim); }
-.dow-bar { height: 8px; background: rgba(255,255,255,0.06); border-radius: 20px; overflow: hidden; min-width: 0; }
-.dow-fill { height: 100%; border-radius: 20px; background: linear-gradient(90deg, #4CAF50, #8bc34a); transition: width .5s ease; }
+.dow-name { font-size: 12px; font-weight: 700; color: var(--text-dim); }
+.dow-bar { height: 7px; background: #EDF2F7; border-radius: 4px; overflow: hidden; min-width: 0; }
+.dow-fill { height: 100%; border-radius: 4px; background: var(--accent); transition: width .3s ease; }
 .dow-val { font-size: 12px; font-weight: 800; color: var(--text); font-variant-numeric: tabular-nums; }
 .dow-cnt { font-size: 10px; color: var(--text-dim); text-align: right; font-weight: 700; }
-.dow-row.is-top .dow-fill { background: linear-gradient(90deg, #ffd700, #ffb300); }
-.dow-row.is-top .dow-val { color: var(--gold); }
+.dow-row.is-top .dow-fill { background: var(--primary); }
+.dow-row.is-top .dow-val { color: var(--primary); }
 .dow-row.is-zero { opacity: .45; }
-/* бейдж «ждёт загрузки в облако» */
 .shift-pending { font-size: 11px; opacity: 0.85; }
-/* строка со сборкой и статусом облака */
 .build-row {
   display: flex; justify-content: space-between; align-items: center;
   gap: 8px; margin-top: 10px; font-size: 11px; color: var(--text-dim);
 }
 .build-ver b { color: var(--text); font-weight: 700; font-variant-numeric: tabular-nums; }
-.build-sync.ok   { color: #00e676; }
-.build-sync.warn { color: var(--orange, #ffa726); }
-/* кнопки экспорта/бэкапа в стате */
+.build-sync.ok   { color: var(--green); }
+.build-sync.warn { color: var(--orange); }
 .data-tools { display: flex; gap: 8px; margin-top: 12px; }
 .data-tool-btn {
-  flex: 1; padding: 11px 8px; border-radius: 12px; cursor: pointer;
-  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+  flex: 1; padding: 10px 8px; border-radius: var(--radius-sm); cursor: pointer;
+  background: #F7F8FA; border: 1px solid var(--border);
   color: var(--text); font-family: inherit; font-size: 12px; font-weight: 600;
-  transition: all 0.2s;
+  transition: all 0.15s;
 }
-.data-tool-btn:active { transform: scale(0.97); background: rgba(255,255,255,0.08); }
+.data-tool-btn:active { transform: scale(0.98); background: #EDF2F7; }
 
-/* ====== ГРАФИК ЗАРАБОТКА (СТАТА) ====== */
+/* ====== EARNINGS CHART (STATS) ====== */
 .chart-section { margin: 0 12px 18px; }
 .chart-head {
   display: flex; align-items: center; justify-content: space-between;
   margin-bottom: 10px; padding-left: 4px; gap: 8px;
 }
-.chart-head h3 { font-size: 15px; color: var(--text-dim); }
-.chart-switch { display: flex; gap: 4px; background: rgba(255,255,255,0.04); padding: 3px; border-radius: 10px; }
+.chart-head h3 { font-size: 14px; color: var(--text-secondary); font-weight: 700; }
+.chart-switch { display: flex; gap: 2px; background: #F0F2F5; padding: 3px; border-radius: var(--radius-sm); }
 .chart-switch button {
-  padding: 5px 10px; border: none; border-radius: 8px; cursor: pointer;
+  padding: 5px 10px; border: none; border-radius: var(--radius-sm); cursor: pointer;
   background: transparent; color: var(--text-dim);
-  font-family: inherit; font-size: 11px; font-weight: 700; transition: all 0.2s;
+  font-family: inherit; font-size: 11px; font-weight: 700; transition: all 0.15s;
 }
-.chart-switch button.active { background: var(--gold); color: #0f0f1a; }
+.chart-switch button.active { background: var(--primary); color: #fff; }
 .chart-card {
-  background: var(--glass); border: 1px solid var(--glass-border);
-  border-radius: 16px; padding: 14px 12px 10px;
+  background: #fff; border: 1px solid var(--border);
+  border-radius: var(--radius-md); padding: 14px 12px 10px;
+  box-shadow: var(--shadow-sm);
 }
 .chart-sub {
   display: flex; justify-content: space-between; align-items: baseline;
   margin-bottom: 12px; padding: 0 2px; gap: 8px;
 }
-.chart-sub .big { font-size: 20px; font-weight: 900; color: var(--gold); font-variant-numeric: tabular-nums; }
+.chart-sub .big { font-size: 20px; font-weight: 900; color: var(--primary); font-variant-numeric: tabular-nums; }
 .chart-sub .lbl { font-size: 11px; color: var(--text-dim); font-weight: 600; }
-/* сами столбики */
 .chart-bars {
   display: flex; align-items: flex-end; justify-content: space-between;
   gap: 4px; height: 130px; position: relative;
 }
-/* на 14/30 днях зазор съедает ширину столбиков — ужимаем */
 .chart-bars.dense { gap: 2px; }
 .chart-xaxis.dense { gap: 2px; }
 .chart-goal-line {
   position: absolute; left: 0; right: 0; height: 0;
-  border-top: 1px dashed rgba(0,230,118,0.45); pointer-events: none;
+  border-top: 1px dashed rgba(56,161,105,0.5); pointer-events: none;
 }
 .chart-goal-line span {
   position: absolute; right: 0; top: -14px;
-  font-size: 9px; color: var(--green); font-weight: 700; opacity: 0.85;
+  font-size: 9px; color: var(--green); font-weight: 700;
 }
 .chart-bar-wrap {
   flex: 1; min-width: 0; display: flex; flex-direction: column;
   align-items: center; justify-content: flex-end; height: 100%; gap: 4px;
 }
 .chart-bar {
-  width: 100%; max-width: 34px; border-radius: 6px 6px 3px 3px;
-  background: linear-gradient(180deg, var(--gold) 0%, var(--gold-dark) 100%);
-  min-height: 3px; transition: height 0.35s cubic-bezier(.4,0,.2,1);
+  width: 100%; max-width: 32px; border-radius: 4px 4px 2px 2px;
+  background: var(--primary);
+  min-height: 3px; transition: height 0.25s ease;
   position: relative;
 }
-.chart-bar.miss { background: linear-gradient(180deg, #4a4a5e 0%, #33334a 100%); }
-.chart-bar.hit  { background: linear-gradient(180deg, var(--green) 0%, #00a152 100%); }
-.chart-bar.empty { background: rgba(255,255,255,0.05); }
+.chart-bar.miss { background: #CBD5E0; }
+.chart-bar.hit  { background: var(--green); }
+.chart-bar.empty { background: #F0F2F5; }
 .chart-val {
-  font-size: 9px; font-weight: 800; color: var(--text);
+  font-size: 9px; font-weight: 700; color: var(--text);
   font-variant-numeric: tabular-nums; white-space: nowrap;
 }
 .chart-val.dim { color: var(--text-dim); opacity: 0.5; }
@@ -1048,37 +1012,31 @@ body {
 .chart-xlabel {
   flex: 1; min-width: 0; text-align: center;
   font-size: 9px; color: var(--text-dim); font-weight: 600;
-  white-space: nowrap;
-  /* overflow: visible — на 14/30 днях ячейка уже самой подписи,
-     но соседние подписи прорежены, так что налезать не на что.
-     С overflow:hidden числа резались в «1.» вместо «14». */
-  overflow: visible;
+  white-space: nowrap; overflow: visible;
 }
-.chart-xlabel.today { color: var(--gold); font-weight: 900; }
+.chart-xlabel.today { color: var(--primary); font-weight: 800; }
 .chart-legend {
   display: flex; gap: 12px; justify-content: center;
-  margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.05);
+  margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border);
 }
 .chart-legend span { font-size: 10px; color: var(--text-dim); display: flex; align-items: center; gap: 4px; }
 .chart-legend i { width: 8px; height: 8px; border-radius: 2px; display: inline-block; }
 .chart-empty { text-align: center; padding: 28px 10px; color: var(--text-dim); font-size: 13px; }
 
-/* ====== БАННЕР «ЕСТЬ ОБНОВЛЕНИЕ» ====== */
+/* ====== UPDATE BANNER ====== */
 .update-banner {
-  /* z-index выше FAB (1000) и bottom выше шестерёнки (24+56px),
-     чтобы кнопка «Обновить» не оказывалась под ней. */
-  position: fixed; left: 12px; right: 12px; bottom: 92px; z-index: 1100;
+  position: fixed; left: 12px; right: 12px; bottom: 84px; z-index: 1100;
   display: none; align-items: center; gap: 10px;
-  background: var(--bg-card2); border: 1px solid var(--gold);
-  border-radius: 14px; padding: 12px 14px;
-  box-shadow: 0 8px 28px rgba(0,0,0,0.5);
+  background: #FFFFFF; border: 1px solid var(--accent);
+  border-radius: var(--radius-md); padding: 12px 14px;
+  box-shadow: var(--shadow-lg);
 }
-.update-banner.show { display: flex; animation: slideUp 0.3s ease; }
+.update-banner.show { display: flex; animation: slideUp 0.2s ease; }
 .update-banner .txt { flex: 1; font-size: 12px; font-weight: 700; }
 .update-banner button {
-  padding: 8px 14px; border: none; border-radius: 10px; cursor: pointer;
-  background: var(--gold); color: #0f0f1a; font-family: inherit;
-  font-size: 12px; font-weight: 800;
+  padding: 8px 14px; border: none; border-radius: var(--radius-sm); cursor: pointer;
+  background: var(--primary); color: #fff; font-family: inherit;
+  font-size: 12px; font-weight: 700;
 }
 .shift-actions {
   position: absolute; top: 6px; right: 6px;
@@ -1087,69 +1045,70 @@ body {
 .shift-action-btn {
   background: none; border: none; color: var(--text-dim);
   font-size: 14px; cursor: pointer; opacity: 0.4; padding: 4px 6px;
-  border-radius: 6px; transition: all 0.2s;
+  border-radius: var(--radius-sm); transition: all 0.15s;
 }
 .shift-action-btn:hover { opacity: 1; }
-.shift-action-btn.edit:hover { color: var(--cyan); }
+.shift-action-btn.edit:hover { color: var(--accent); }
 .shift-action-btn.delete:hover { color: var(--red); }
 
 .empty-state { text-align: center; padding: 30px 20px; color: var(--text-dim); }
-.empty-state .emoji { font-size: 50px; margin-bottom: 10px; }
-.empty-state p { font-size: 14px; }
+.empty-state .emoji { font-size: 44px; margin-bottom: 10px; }
+.empty-state p { font-size: 13px; }
 
 @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-.slide-up { animation: slideUp 0.4s ease; }
-@keyframes shake { 25%{transform:translateX(-5px)} 50%{transform:translateX(5px)} 75%{transform:translateX(-3px)} 100%{transform:translateX(0)} }
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+.slide-up { animation: slideUp 0.3s ease; }
+@keyframes shake { 25%{transform:translateX(-4px)} 50%{transform:translateX(4px)} 75%{transform:translateX(-2px)} 100%{transform:translateX(0)} }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
 .pulse { animation: pulse 2s ease infinite; }
-@keyframes glow { 0%,100%{box-shadow:0 0 5px rgba(255,215,0,0.1)} 50%{box-shadow:0 0 20px rgba(255,215,0,0.2)} }
-@keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
-.fade-in { animation: fadeIn 0.3s ease; }
+@keyframes glow { 0%,100%{box-shadow: var(--shadow-sm)} 50%{box-shadow: var(--shadow-md)} }
+@keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+.fade-in { animation: fadeIn 0.2s ease; }
 
 /* MODAL */
 .modal-overlay {
   position: fixed; top:0; left:0; width:100%; height:100%;
-  background: rgba(0,0,0,0.8); z-index: 5000;
+  background: rgba(0,0,0,0.5); z-index: 5000;
   display: flex; align-items: center; justify-content: center;
-  padding: 20px; opacity: 0; pointer-events: none; transition: opacity 0.3s;
+  padding: 20px; opacity: 0; pointer-events: none; transition: opacity 0.2s;
   backdrop-filter: blur(4px); overflow-y: auto;
 }
 .modal-overlay.show { opacity: 1; pointer-events: auto; }
 .modal {
-  background: var(--bg-card); border-radius: 20px; padding: 24px;
-  width: 100%; max-width: 380px; border: 1px solid rgba(255,215,0,0.15);
-  transform: translateY(30px); transition: transform 0.3s;
+  background: #FFFFFF; border-radius: var(--radius-lg); padding: 24px;
+  width: 100%; max-width: 380px; border: 1px solid var(--border);
+  transform: translateY(20px); transition: transform 0.2s;
+  box-shadow: var(--shadow-lg);
 }
 .modal-overlay.show .modal { transform: translateY(0); }
-.modal h3 { font-size: 18px; color: var(--gold); text-align: center; margin-bottom: 16px; }
+.modal h3 { font-size: 17px; color: var(--primary); text-align: center; margin-bottom: 16px; font-weight: 800; }
 .modal .form-group { margin-bottom: 12px; }
-.modal .form-group label { font-size: 13px; color: var(--text-dim); margin-bottom: 4px; display: block; }
+.modal .form-group label { font-size: 12px; color: var(--text-dim); margin-bottom: 4px; display: block; font-weight: 600; }
 .modal .form-group input {
-  width: 100%; padding: 12px; background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.1); border-radius: 10px;
-  color: var(--text); font-family: 'Nunito', sans-serif; font-size: 16px; font-weight: 700;
+  width: 100%; padding: 12px; background: #F7F8FA;
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  color: var(--text); font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 600;
   outline: none;
 }
-.modal .form-group input:focus { border-color: var(--gold); }
+.modal .form-group input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(49,130,206,0.1); }
 .modal-info { font-size: 12px; color: var(--text-dim); text-align: center; margin-bottom: 14px; line-height: 1.5; }
 .modal-buttons { display: flex; gap: 10px; }
 .modal-btn {
-  flex: 1; padding: 14px; border: none; border-radius: 12px;
-  font-family: 'Nunito', sans-serif; font-size: 15px; font-weight: 800;
-  cursor: pointer; transition: all 0.2s;
+  flex: 1; padding: 12px; border: none; border-radius: var(--radius-md);
+  font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 700;
+  cursor: pointer; transition: all 0.15s;
 }
-.modal-btn:active { transform: scale(0.95); }
-.modal-btn.primary { background: linear-gradient(135deg, var(--gold-dark), var(--gold)); color: #1a1a2e; }
-.modal-btn.secondary { background: rgba(255,255,255,0.08); color: var(--text); }
-.modal-btn.danger { background: linear-gradient(135deg, #c62828, #ff5252); color: #fff; }
+.modal-btn:active { transform: scale(0.97); }
+.modal-btn.primary { background: var(--primary); color: #fff; }
+.modal-btn.secondary { background: #F0F2F5; color: var(--text); }
+.modal-btn.danger { background: var(--red); color: #fff; }
 .modal-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* SYNC STATUS */
 .sync-status {
   position: fixed; bottom: 12px; right: 12px;
-  padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 700;
-  background: rgba(0,0,0,0.75); z-index: 100; transition: all 0.3s;
-  backdrop-filter: blur(6px);
+  padding: 6px 12px; border-radius: var(--radius-sm); font-size: 11px; font-weight: 700;
+  background: rgba(255,255,255,0.95); z-index: 100; transition: all 0.2s;
+  border: 1px solid var(--border); box-shadow: var(--shadow-sm);
 }
 .sync-status.ok { color: var(--green); }
 .sync-status.error { color: var(--red); }
@@ -1158,162 +1117,159 @@ body {
 
 /* TOAST */
 .toast {
-  position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px);
-  padding: 10px 20px; border-radius: 12px; font-size: 13px; font-weight: 700;
-  z-index: 10000; transition: transform 0.4s ease; white-space: nowrap;
-  backdrop-filter: blur(8px);
+  position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-80px);
+  padding: 10px 20px; border-radius: var(--radius-md); font-size: 13px; font-weight: 700;
+  z-index: 10000; transition: transform 0.3s ease; white-space: nowrap;
+  box-shadow: var(--shadow-lg);
 }
 .toast.show { transform: translateX(-50%) translateY(0); }
-.toast.success { background: rgba(0,230,118,0.9); color: #1a1a2e; }
-.toast.error { background: rgba(255,82,82,0.9); color: #fff; }
-.toast.warn { background: rgba(255,171,64,0.9); color: #1a1a2e; }
+.toast.success { background: var(--green); color: #fff; }
+.toast.error { background: var(--red); color: #fff; }
+.toast.warn { background: var(--orange); color: #fff; }
 
-/* ====== ДОСТУП: ЭКРАН ВХОДА ====== */
+/* ====== AUTH GATE ====== */
 .auth-gate {
   position: fixed; inset: 0; z-index: 10050;
-  background: var(--bg-dark);
-  background-image: radial-gradient(ellipse at 50% -10%, rgba(255,215,0,0.10) 0%, transparent 60%),
-                    radial-gradient(ellipse at 20% 110%, rgba(100,60,180,0.14) 0%, transparent 55%);
+  background: var(--bg-main);
   display: none; align-items: center; justify-content: center;
   padding: 20px; overflow-y: auto;
 }
 .auth-gate.show { display: flex; }
-/* блокируем скролл фона при открытии оверлеев */
 body.modal-open { overflow: hidden !important; touch-action: none; }
 .auth-card {
   width: 100%; max-width: 380px;
-  background: linear-gradient(160deg, var(--bg-card2), var(--bg-card));
-  border: 1px solid var(--glass-border);
-  border-radius: 24px; padding: 26px 22px;
-  box-shadow: 0 24px 60px rgba(0,0,0,0.55);
-  animation: authIn 0.45s cubic-bezier(.2,.9,.3,1.1);
+  background: #FFFFFF;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 28px 24px;
+  box-shadow: var(--shadow-lg);
+  animation: authIn 0.3s ease;
 }
-@keyframes authIn { from { opacity:0; transform: translateY(24px) scale(0.96); } to { opacity:1; transform:none; } }
-.auth-logo { text-align: center; font-size: 42px; margin-bottom: 6px; }
-.auth-title { text-align: center; font-size: 19px; font-weight: 900; color: var(--gold); letter-spacing: 0.5px; }
+@keyframes authIn { from { opacity:0; transform: translateY(16px); } to { opacity:1; transform:none; } }
+.auth-logo { text-align: center; font-size: 36px; margin-bottom: 6px; }
+.auth-title { text-align: center; font-size: 18px; font-weight: 800; color: var(--primary); letter-spacing: 0.3px; }
 .auth-sub { text-align: center; font-size: 12px; color: var(--text-dim); margin-top: 4px; margin-bottom: 20px; line-height: 1.5; }
 .auth-field { margin-bottom: 12px; }
-.auth-label { display:block; font-size: 11px; font-weight: 800; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 6px; }
+.auth-label { display:block; font-size: 11px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
 .auth-input {
-  width: 100%; padding: 13px 14px; font-family: inherit; font-size: 15px; font-weight: 700;
-  background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border);
-  border-radius: 14px; color: var(--text); transition: border-color 0.2s, box-shadow 0.2s;
+  width: 100%; padding: 12px 14px; font-family: inherit; font-size: 14px; font-weight: 600;
+  background: #F7F8FA; border: 1px solid var(--border);
+  border-radius: var(--radius-md); color: var(--text); transition: border-color 0.2s, box-shadow 0.2s;
 }
-.auth-input:focus { outline: none; border-color: var(--gold-dark); box-shadow: 0 0 0 3px rgba(255,215,0,0.12); }
-.auth-input::placeholder { color: #55607a; font-weight: 600; }
+.auth-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(49,130,206,0.1); }
+.auth-input::placeholder { color: #A0AEC0; font-weight: 500; }
 .auth-btn {
-  width: 100%; padding: 14px; border: none; border-radius: 14px;
-  font-family: inherit; font-size: 15px; font-weight: 900; cursor: pointer;
-  transition: transform 0.15s, filter 0.2s; margin-top: 6px;
+  width: 100%; padding: 13px; border: none; border-radius: var(--radius-md);
+  font-family: inherit; font-size: 14px; font-weight: 800; cursor: pointer;
+  transition: all 0.15s; margin-top: 6px;
 }
-.auth-btn:active { transform: scale(0.97); }
+.auth-btn:active { transform: scale(0.98); }
 .auth-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.auth-btn.primary { background: linear-gradient(135deg, var(--gold-dark), var(--gold)); color: #1a1a2e; }
-.auth-btn.ghost { background: rgba(255,255,255,0.06); color: var(--text); }
-.auth-btn.face { background: linear-gradient(135deg, #2b5cff, #00c6ff); color: #fff; }
+.auth-btn.primary { background: var(--primary); color: #fff; }
+.auth-btn.ghost { background: #F0F2F5; color: var(--text); }
+.auth-btn.face { background: var(--accent); color: #fff; }
 .auth-err {
-  background: rgba(255,82,82,0.12); border: 1px solid rgba(255,82,82,0.35);
-  color: #ff8a8a; font-size: 12px; font-weight: 700; padding: 10px 12px;
-  border-radius: 12px; margin-bottom: 12px; line-height: 1.45;
+  background: var(--red-bg); border: 1px solid rgba(229,62,62,0.3);
+  color: var(--red); font-size: 12px; font-weight: 700; padding: 10px 12px;
+  border-radius: var(--radius-md); margin-bottom: 12px; line-height: 1.45;
 }
 .auth-note { font-size: 11px; color: var(--text-dim); line-height: 1.5; margin-top: 14px; text-align: center; }
 .auth-prof-wrap { position: relative; }
 .auth-prof-del {
   position: absolute; top: 6px; right: 6px; z-index: 2;
-  width: 26px; height: 26px; border-radius: 50%; border: none;
-  background: rgba(255,68,68,0.15); color: #ff6b6b; font-size: 13px; font-weight: 900;
+  width: 24px; height: 24px; border-radius: 50%; border: none;
+  background: var(--red-bg); color: var(--red); font-size: 12px; font-weight: 900;
   cursor: pointer; display: flex; align-items: center; justify-content: center;
-  transition: background 0.2s, transform 0.15s;
+  transition: background 0.15s;
 }
-.auth-prof-del:hover { background: rgba(255,68,68,0.35); }
-.auth-prof-del:active { transform: scale(0.85); }
+.auth-prof-del:hover { background: rgba(229,62,62,0.2); }
+.auth-prof-del:active { transform: scale(0.9); }
 .auth-divider { display:flex; align-items:center; gap:10px; margin: 16px 0 12px; color: var(--text-dim); font-size: 11px; font-weight: 700; }
-.auth-divider::before, .auth-divider::after { content:''; flex:1; height:1px; background: var(--glass-border); }
+.auth-divider::before, .auth-divider::after { content:''; flex:1; height:1px; background: var(--border); }
 
-/* выбор профиля */
-.auth-profiles { display: flex; flex-direction: column; gap: 9px; margin-bottom: 8px; }
+/* profile selection */
+.auth-profiles { display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px; }
 .auth-prof {
   display: flex; align-items: center; gap: 12px; width: 100%;
-  padding: 13px 14px; border-radius: 16px; cursor: pointer;
-  background: var(--glass); border: 1px solid var(--glass-border);
+  padding: 12px 14px; border-radius: var(--radius-md); cursor: pointer;
+  background: #F7F8FA; border: 1px solid var(--border);
   color: var(--text); font-family: inherit; text-align: left;
-  transition: transform 0.15s, border-color 0.2s, background 0.2s;
+  transition: all 0.15s;
 }
-.auth-prof:active { transform: scale(0.98); }
-.auth-prof:hover { border-color: rgba(255,215,0,0.3); background: rgba(255,255,255,0.07); }
-.auth-prof.dev { border-color: rgba(255,215,0,0.28); background: linear-gradient(135deg, rgba(255,215,0,0.09), rgba(255,255,255,0.03)); }
-.ap-ava { width: 42px; height: 42px; flex: 0 0 42px; border-radius: 13px; display:flex; align-items:center; justify-content:center; font-size: 21px; background: rgba(0,0,0,0.3); }
-.auth-prof.dev .ap-ava { background: rgba(255,215,0,0.14); }
+.auth-prof:active { transform: scale(0.99); }
+.auth-prof:hover { border-color: var(--accent); background: #EBF8FF; }
+.auth-prof.dev { border-color: var(--primary); background: #F7FAFC; }
+.ap-ava { width: 40px; height: 40px; flex: 0 0 40px; border-radius: var(--radius-md); display:flex; align-items:center; justify-content:center; font-size: 20px; background: #EDF2F7; }
+.auth-prof.dev .ap-ava { background: #DBEAFE; }
 .ap-meta { min-width: 0; flex: 1; }
-.ap-name { font-size: 14px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.ap-role { font-size: 11px; color: var(--text-dim); font-weight: 700; margin-top: 2px; }
+.ap-name { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ap-role { font-size: 11px; color: var(--text-dim); font-weight: 600; margin-top: 2px; }
 .ap-arrow { color: var(--text-dim); font-size: 16px; }
 
-/* бейджи роли */
+/* role badges */
 .role-badge {
   display: inline-flex; align-items: center; gap: 5px;
   padding: 3px 9px; border-radius: 999px;
-  font-size: 10px; font-weight: 900; letter-spacing: 0.4px; text-transform: uppercase;
+  font-size: 10px; font-weight: 800; letter-spacing: 0.4px; text-transform: uppercase;
 }
-.role-badge.dev { background: rgba(255,215,0,0.15); color: var(--gold); border: 1px solid rgba(255,215,0,0.35); }
-.role-badge.user { background: rgba(0,229,255,0.12); color: var(--cyan); border: 1px solid rgba(0,229,255,0.3); }
+.role-badge.dev { background: #DBEAFE; color: var(--primary); border: 1px solid #90CDF4; }
+.role-badge.user { background: #C6F6D5; color: var(--green); border: 1px solid #9AE6B4; }
 .header-ident { display:flex; align-items:center; justify-content:center; gap:8px; margin-top: 8px; flex-wrap: wrap; }
-.header-ident .hi-name { font-size: 11px; color: var(--text-dim); font-weight: 700; }
+.header-ident .hi-name { font-size: 11px; color: rgba(255,255,255,0.7); font-weight: 600; }
 
-/* панель профиля/системы */
+/* profile/system panel */
 .acc-sec { margin-bottom: 18px; }
 .acc-sec h4 {
-  font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.7px;
-  margin-bottom: 9px; font-weight: 900;
+  font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.7px;
+  margin-bottom: 9px; font-weight: 800;
 }
 .acc-row {
   display: flex; align-items: center; gap: 10px;
-  padding: 11px 13px; border-radius: 14px; margin-bottom: 7px;
-  background: var(--glass); border: 1px solid var(--glass-border);
+  padding: 11px 13px; border-radius: var(--radius-md); margin-bottom: 7px;
+  background: #F7F8FA; border: 1px solid var(--border);
 }
 .acc-row .ar-main { flex: 1; min-width: 0; }
-.acc-row .ar-t { font-size: 13px; font-weight: 800; white-space: nowrap; overflow:hidden; text-overflow: ellipsis; }
+.acc-row .ar-t { font-size: 13px; font-weight: 700; white-space: nowrap; overflow:hidden; text-overflow: ellipsis; }
 .acc-row .ar-s { font-size: 11px; color: var(--text-dim); font-weight: 600; margin-top: 2px; }
 .acc-mini {
-  padding: 7px 12px; border-radius: 10px; border: none; cursor: pointer;
-  font-family: inherit; font-size: 11px; font-weight: 800; white-space: nowrap;
-  background: rgba(255,255,255,0.08); color: var(--text);
+  padding: 7px 12px; border-radius: var(--radius-sm); border: none; cursor: pointer;
+  font-family: inherit; font-size: 11px; font-weight: 700; white-space: nowrap;
+  background: #EDF2F7; color: var(--text);
 }
-.acc-mini.danger { background: rgba(255,82,82,0.15); color: #ff8a8a; }
-.acc-mini.go { background: rgba(0,230,118,0.15); color: var(--green); }
-.acc-mini:active { transform: scale(0.95); }
-.acc-this { border-color: rgba(255,215,0,0.3); background: rgba(255,215,0,0.06); }
+.acc-mini.danger { background: var(--red-bg); color: var(--red); }
+.acc-mini.go { background: var(--green-bg); color: var(--green); }
+.acc-mini:active { transform: scale(0.97); }
+.acc-this { border-color: var(--accent); background: #EBF8FF; }
 .acc-empty { font-size: 12px; color: var(--text-dim); padding: 10px 2px; font-weight: 600; }
 
-/* элементы только для разработчика */
+/* dev-only elements */
 body:not(.role-dev) .dev-only { display: none !important; }
 
-/* универсальная модалка-форма доступа (вместо prompt/confirm) */
+/* ask overlay (universal modal form) */
 .ask-overlay {
   position: fixed; inset: 0; z-index: 10060;
-  background: rgba(8,8,16,0.78); backdrop-filter: blur(6px);
+  background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
   display: none; align-items: center; justify-content: center; padding: 20px;
 }
 .ask-overlay.show { display: flex; }
 .ask-box {
   width: 100%; max-width: 340px;
-  background: linear-gradient(160deg, var(--bg-card2), var(--bg-card));
-  border: 1px solid var(--glass-border); border-radius: 22px; padding: 22px 20px;
-  box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-  animation: authIn 0.3s cubic-bezier(.2,.9,.3,1.1);
+  background: #FFFFFF;
+  border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 22px 20px;
+  box-shadow: var(--shadow-lg);
+  animation: authIn 0.2s ease;
 }
-.ask-ico { text-align: center; font-size: 36px; margin-bottom: 8px; }
-.ask-title { text-align: center; font-size: 16px; font-weight: 900; color: var(--gold); margin-bottom: 6px; }
-.ask-text { text-align: center; font-size: 12.5px; color: var(--text-dim); line-height: 1.5; margin-bottom: 16px; }
+.ask-ico { text-align: center; font-size: 32px; margin-bottom: 8px; }
+.ask-title { text-align: center; font-size: 15px; font-weight: 800; color: var(--primary); margin-bottom: 6px; }
+.ask-text { text-align: center; font-size: 12px; color: var(--text-dim); line-height: 1.5; margin-bottom: 16px; }
 .ask-row { display: flex; gap: 8px; margin-top: 14px; }
 .ask-btn {
-  flex: 1; padding: 13px; border: none; border-radius: 13px;
-  font-family: inherit; font-size: 14px; font-weight: 900; cursor: pointer;
+  flex: 1; padding: 12px; border: none; border-radius: var(--radius-md);
+  font-family: inherit; font-size: 13px; font-weight: 800; cursor: pointer;
 }
-.ask-btn:active { transform: scale(0.96); }
-.ask-btn.ok { background: linear-gradient(135deg, var(--gold-dark), var(--gold)); color: #1a1a2e; }
-.ask-btn.no { background: rgba(255,255,255,0.08); color: var(--text); }
-.ask-err { color: #ff8a8a; font-size: 11.5px; font-weight: 700; margin-top: 8px; text-align: center; min-height: 14px; }
+.ask-btn:active { transform: scale(0.97); }
+.ask-btn.ok { background: var(--primary); color: #fff; }
+.ask-btn.no { background: #F0F2F5; color: var(--text); }
+.ask-err { color: var(--red); font-size: 11px; font-weight: 700; margin-top: 8px; text-align: center; min-height: 14px; }
 </style>
 </head>
 <body>
@@ -1329,23 +1285,23 @@ body:not(.role-dev) .dev-only { display: none !important; }
 </div>
 
 <div class="loading-overlay" id="loadingOverlay">
-  <div class="loading-spinner">🪙</div>
-  <div style="color: var(--gold); font-weight: 700;" id="loadingText">Загрузка хранилища...</div>
+  <div class="loading-spinner">⏳</div>
+  <div style="color: var(--gold); font-weight: 700;" id="loadingText">Загрузка данных...</div>
 </div>
 
 <div class="coin-rain" id="coinRain"></div>
 
 <div class="header">
-  <h1>💰 OZON GRIND TRACKER</h1>
-  <div class="subtitle">Копим как Скрудж МакДак 🦆</div>
+  <h1>📊 OZON WORK TRACKER</h1>
+  <div class="subtitle">Профессиональный учёт рабочего времени</div>
   <div class="header-ident" id="headerIdent"></div>
 </div>
 
 <!-- TAB NAVIGATION -->
 <div class="tab-nav">
-  <button class="tab-btn active" onclick="switchTab('live')" id="tabLive">⚡ СМЕНА</button>
-  <button class="tab-btn" onclick="switchTab('shop')" id="tabShop">🛒 МАГАЗИН</button>
-  <button class="tab-btn" onclick="switchTab('stats')" id="tabStats">📊 СТАТА</button>
+  <button class="tab-btn active" onclick="switchTab('live')" id="tabLive">▶ СМЕНА</button>
+  <button class="tab-btn" onclick="switchTab('shop')" id="tabShop">🏪 МАГАЗИН</button>
+  <button class="tab-btn" onclick="switchTab('stats')" id="tabStats">📊 АНАЛИТИКА</button>
 </div>
 
 <!-- FLOATING ACTION BUTTONS -->
@@ -1371,13 +1327,13 @@ body:not(.role-dev) .dev-only { display: none !important; }
 <div class="wallet" id="wallet">
   <div class="wallet-top">
     <div class="wallet-balance">
-      <div class="wallet-label">Общий заработок</div>
+      <div class="wallet-label">Общий доход</div>
       <div class="wallet-total">
         <span id="totalEarned">0</span> <span class="currency">₽</span>
       </div>
     </div>
     <div class="wallet-badge">
-      <div class="wb-icon" id="walletBadgeIcon">🐣</div>
+      <div class="wb-icon" id="walletBadgeIcon">📈</div>
       <div class="wb-text" id="walletBadgeText">LVL 1</div>
     </div>
   </div>
@@ -1385,42 +1341,42 @@ body:not(.role-dev) .dev-only { display: none !important; }
   <div class="wallet-stats">
     <div class="wallet-stat"><span class="ws-icon">📋</span><span class="ws-val" id="totalShifts">0</span><span class="ws-lbl">смен</span></div>
     <div class="wallet-stat"><span class="ws-icon">⏱</span><span class="ws-val" id="totalHours">0</span><span class="ws-lbl">часов</span></div>
-    <div class="wallet-stat"><span class="ws-icon">💎</span><span class="ws-val" id="avgRate">0</span><span class="ws-lbl">₽/час</span></div>
+    <div class="wallet-stat"><span class="ws-icon">📊</span><span class="ws-val" id="avgRate">0</span><span class="ws-lbl">₽/час</span></div>
   </div>
 </div>
 
 <!-- ACTIVE SHIFT PANEL -->
 <div class="active-shift inactive" id="activeShiftPanel">
-  <h3 class="off" id="shiftStatusTitle">🏠 СМЕНА НЕ НАЧАТА</h3>
+  <h3 class="off" id="shiftStatusTitle">⏸ СМЕНА НЕ НАЧАТА</h3>
 
   <div class="shift-timer">
     <div class="timer-display" id="timerDisplay">00:00:00</div>
-    <div class="timer-sub" id="timerSub">Нажми «Начать смену»</div>
+    <div class="timer-sub" id="timerSub">Нажмите «Начать смену»</div>
   </div>
 
   <div class="live-rate-display" id="liveRateDisplay" style="display:none">
     <div class="live-rate-amount earning" id="liveRateAmount">~0 ₽/час</div>
-    <div class="live-rate-label" id="liveRateLabel">текущий заработок в реальном времени</div>
+    <div class="live-rate-label" id="liveRateLabel">текущая производительность</div>
   </div>
 
   <div class="shift-controls">
     <button class="shift-ctrl-btn btn-start" id="btnStart" onclick="startShift()">▶ НАЧАТЬ СМЕНУ</button>
-    <button class="shift-ctrl-btn btn-break" id="btnBreak" onclick="startBreak()" style="display:none">☕ ПЕРЕРЫВ</button>
-    <button class="shift-ctrl-btn btn-resume" id="btnResume" onclick="endBreak()" style="display:none">▶ РАБОТАЮ</button>
+    <button class="shift-ctrl-btn btn-break" id="btnBreak" onclick="startBreak()" style="display:none">⏸ ПЕРЕРЫВ</button>
+    <button class="shift-ctrl-btn btn-resume" id="btnResume" onclick="endBreak()" style="display:none">▶ ПРОДОЛЖИТЬ</button>
     <button class="shift-ctrl-btn btn-end" id="btnEnd" onclick="endShift()" style="display:none">⏹ ЗАВЕРШИТЬ</button>
   </div>
 
   <!-- Break type selector (hidden by default) -->
   <div id="breakTypeSelector" style="display:none; margin-bottom: 12px;">
     <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;">
-      <button class="shift-ctrl-btn" style="background:rgba(255,171,64,0.15);color:var(--orange);font-size:12px;padding:10px" onclick="confirmBreak('🍔 Обед')">🍔 Обед</button>
-      <button class="shift-ctrl-btn" style="background:rgba(255,171,64,0.15);color:var(--orange);font-size:12px;padding:10px" onclick="confirmBreak('🚬 Курение')">🚬 Курение</button>
-      <button class="shift-ctrl-btn" style="background:rgba(255,171,64,0.15);color:var(--orange);font-size:12px;padding:10px" onclick="confirmBreak('🚶 Другое')">🚶 Другое</button>
+      <button class="shift-ctrl-btn" style="background:rgba(255,171,64,0.15);color:var(--orange);font-size:12px;padding:10px" onclick="confirmBreak('🍽 Обед')">🍽 Обед</button>
+      <button class="shift-ctrl-btn" style="background:rgba(255,171,64,0.15);color:var(--orange);font-size:12px;padding:10px" onclick="confirmBreak('⏸ Личное')">⏸ Личное</button>
+      <button class="shift-ctrl-btn" style="background:rgba(255,171,64,0.15);color:var(--orange);font-size:12px;padding:10px" onclick="confirmBreak('📋 Другое')">📋 Другое</button>
     </div>
   </div>
 
   <div class="break-log" id="breakLog" style="display:none">
-    <h4>☕ Перерывы:</h4>
+    <h4>⏸ Перерывы:</h4>
     <div id="breakList"></div>
     <div class="break-total" id="breakTotal"></div>
   </div>
@@ -1428,7 +1384,7 @@ body:not(.role-dev) .dev-only { display: none !important; }
 
 <!-- MILLION PATH (on live tab) -->
 <div class="million-path" id="millionPath" style="display:none">
-  <div class="million-path-title">🏆 ПУТЬ К МИЛЛИОНУ</div>
+  <div class="million-path-title">📈 ПЛАН ДОХОДА</div>
   <div class="million-bar-wrap"><div class="million-bar-fill" id="millionFill" style="width:0%"></div></div>
   <div class="million-milestones" id="millionMilestones"></div>
   <div class="million-current" id="millionCurrent">0 ₽ / 1 000 000 ₽</div>
@@ -1437,7 +1393,7 @@ body:not(.role-dev) .dev-only { display: none !important; }
 <!-- KOPILKA (wallet savings goal) -->
 <div class="kopilka-card" id="kopilkaCard" style="display:none;">
   <button class="kopilka-edit" onclick="setupKopilka()">✏️</button>
-  <div class="kopilka-row"><span class="kopilka-name" id="kopilkaName">🎯 Цель</span><span class="kopilka-amount" id="kopilkaAmount">0 / 0 ₽</span></div>
+  <div class="kopilka-row"><span class="kopilka-name" id="kopilkaName">📌 Цель</span><span class="kopilka-amount" id="kopilkaAmount">0 / 0 ₽</span></div>
   <div class="kopilka-bar"><div class="kopilka-fill" id="kopilkaFill" style="width:0%"></div></div>
   <div class="kopilka-sub" id="kopilkaSub"></div>
 </div>
@@ -1445,7 +1401,7 @@ body:not(.role-dev) .dev-only { display: none !important; }
 <!-- WEEKLY CHALLENGE -->
 <div class="weekly-challenge" id="weeklyChallenge" style="display:none">
   <div class="wchallenge-head">
-    <span class="wchallenge-title" id="wcTitle">🎯 Челлендж недели</span>
+    <span class="wchallenge-title" id="wcTitle">📌 Задача недели</span>
     <span class="wchallenge-timer" id="wcTimer"></span>
   </div>
   <div class="wchallenge-desc" id="wcDesc"></div>
@@ -1456,27 +1412,27 @@ body:not(.role-dev) .dev-only { display: none !important; }
 
 <!-- INSIGHT CARD -->
 <div class="insight-card" id="insightCard" style="display:none">
-  <span class="insight-icon" id="insightIcon">💡</span>
+  <span class="insight-icon" id="insightIcon">📋</span>
   <div class="insight-text" id="insightText"></div>
-  <div class="insight-label">💡 Умный совет</div>
+  <div class="insight-label">📋 Рекомендация</div>
 </div>
 
 <!-- DAILY QUESTS -->
 <div class="quests" id="questsPanel">
-  <h3>⚔️ КВЕСТЫ ДНЯ</h3>
+  <h3>📋 ЗАДАЧИ СМЕНЫ</h3>
   <div id="questList"></div>
 </div>
 
 <!-- LIFE QUESTS -->
 <div class="life-quests" id="lifeQuestsPanel">
-  <h3>🎒 ЛАЙФ-КВЕСТЫ</h3>
+  <h3>📌 ЛИЧНЫЕ ЗАДАЧИ</h3>
   <div id="lifeStatsPanel" class="life-stats-panel"></div>
   <div id="lifeQuestList"></div>
 </div>
 
 <!-- MOTIVATION TIP -->
 <div class="motivation-tip" id="motivationTip">
-  <div class="tip-icon">💡</div>
+  <div class="tip-icon">📋</div>
   <div class="tip-text" id="tipText"></div>
   <div class="tip-author" id="tipAuthor"></div>
 </div>
@@ -1489,11 +1445,11 @@ body:not(.role-dev) .dev-only { display: none !important; }
     <h3>➕ ДОБАВИТЬ СМЕНУ</h3>
 
     <div class="difficulty" style="margin:0 0 12px;padding:14px;border:none">
-      <h3 style="font-size:13px;margin-bottom:8px">🎯 ЦЕЛЬ ₽/ЧАС</h3>
+      <h3 style="font-size:13px;margin-bottom:8px">📊 ЦЕЛЕВОЙ ₽/ЧАС</h3>
       <div class="diff-buttons">
-        <button class="diff-btn easy" onclick="setDifficulty('easy')" data-diff="easy">😎 ЛАЙТ<span class="goal-val">800₽</span></button>
-        <button class="diff-btn normal active" onclick="setDifficulty('normal')" data-diff="normal">💪 НОРМАЛ<span class="goal-val">850₽</span></button>
-        <button class="diff-btn hard" onclick="setDifficulty('hard')" data-diff="hard">🔥 ХАРД<span class="goal-val">900₽</span></button>
+        <button class="diff-btn easy" onclick="setDifficulty('easy')" data-diff="easy">📉 БАЗОВЫЙ<span class="goal-val">800₽</span></button>
+        <button class="diff-btn normal active" onclick="setDifficulty('normal')" data-diff="normal">📊 СТАНДАРТ<span class="goal-val">850₽</span></button>
+        <button class="diff-btn hard" onclick="setDifficulty('hard')" data-diff="hard">📈 АМБИЦИОЗНЫЙ<span class="goal-val">900₽</span></button>
       </div>
     </div>
 
@@ -1502,10 +1458,10 @@ body:not(.role-dev) .dev-only { display: none !important; }
       <div class="form-group"><label>⏱ Чистые часы</label><input type="number" id="inputHours" placeholder="9" step="0.5" min="0.5" max="24"></div>
     </div>
     <div class="form-row">
-      <div class="form-group"><label>💵 Заработок ₽</label><input type="number" id="inputEarned" placeholder="8600" min="0"></div>
-      <div class="form-group"><label>📝 Заметка</label><input type="text" id="inputNote" placeholder="541 операция..."></div>
+      <div class="form-group"><label>₽ Доход</label><input type="number" id="inputEarned" placeholder="8600" min="0"></div>
+      <div class="form-group"><label>📝 Комментарий</label><input type="text" id="inputNote" placeholder="541 операция..."></div>
     </div>
-    <button class="btn-add" id="btnAdd" onclick="addShift()" style="margin-top:6px">🪙 ДОБАВИТЬ</button>
+    <button class="btn-add" id="btnAdd" onclick="addShift()" style="margin-top:6px">✅ ДОБАВИТЬ</button>
     <div style="margin-top:10px">
       <button class="modal-btn secondary" onclick="closeManualAdd()" style="width:100%">✕ Закрыть</button>
     </div>
@@ -1562,7 +1518,7 @@ body:not(.role-dev) .dev-only { display: none !important; }
 <div class="shop-section">
   <div class="shop-header">
     <div class="shop-balance">
-      <div class="shop-balance-label">✨ Баланс Life XP</div>
+      <div class="shop-balance-label">⭐ Баланс баллов</div>
       <div class="shop-balance-val"><span id="shopXpBalance">0</span> <span class="xp-unit">XP</span></div>
     </div>
   </div>
@@ -1575,17 +1531,17 @@ body:not(.role-dev) .dev-only { display: none !important; }
 <div class="tab-content" id="contentStats">
 
 <div class="streak-bar" id="streakBar" style="display:none;">
-  <div class="streak-icon">🔥</div>
-  <div class="streak-text"><span id="streakCount">0</span> дней подряд в цели!</div>
+  <div class="streak-icon">📈</div>
+  <div class="streak-text"><span id="streakCount">0</span> дней подряд в плане!</div>
 </div>
 
 <div class="level-section">
   <div class="level-header">
     <div class="level-badge">
-      <div class="icon" id="levelIcon">🐣</div>
+      <div class="icon" id="levelIcon">📈</div>
       <div class="info">
-        <div class="lvl" id="levelName">LVL 1 — Новичок</div>
-        <div class="title" id="levelTitle">Начало пути</div>
+        <div class="lvl" id="levelName">LVL 1 — Стажёр</div>
+        <div class="title" id="levelTitle">Начало карьеры</div>
       </div>
     </div>
     <div class="level-xp-text" id="xpText">0 / 50 000 XP</div>
@@ -1613,7 +1569,7 @@ body:not(.role-dev) .dev-only { display: none !important; }
 
 <div class="chart-section">
   <div class="chart-head">
-    <h3>🎯 ЦЕЛЬ МЕСЯЦА</h3>
+    <h3>📌 ПЛАН МЕСЯЦА</h3>
     <button class="data-tool-btn" style="padding:6px 12px" onclick="openMonthGoalPrompt()">✏️ Изменить</button>
   </div>
   <div class="chart-card" id="monthGoalCard"></div>
@@ -1625,13 +1581,13 @@ body:not(.role-dev) .dev-only { display: none !important; }
 </div>
 
 <div class="chart-section">
-  <div class="chart-head"><h3>🏅 ЛИЧНЫЕ РЕКОРДЫ</h3></div>
+  <div class="chart-head"><h3>🏅 ЛУЧШИЕ ПОКАЗАТЕЛИ</h3></div>
   <div class="chart-card" id="recordsCard"></div>
 </div>
 
 <!-- WEEK COMPARISON -->
 <div class="week-compare" id="weekCompare" style="display:none">
-  <div class="week-compare-title">📊 Эта неделя vs прошлая</div>
+  <div class="week-compare-title">📊 Текущая неделя vs предыдущая</div>
   <div class="chart-card">
     <div class="week-compare-grid" id="weekCompareGrid"></div>
   </div>
@@ -1639,7 +1595,7 @@ body:not(.role-dev) .dev-only { display: none !important; }
 
 <!-- HEATMAP -->
 <div class="heatmap-section" id="heatmapSection" style="display:none">
-  <div class="heatmap-title">🔥 Тепловая карта (90 дней)</div>
+  <div class="heatmap-title">📊 Карта активности (90 дней)</div>
   <div class="chart-card">
     <div class="heatmap-grid" id="heatmapGrid"></div>
   </div>
@@ -1654,7 +1610,7 @@ body:not(.role-dev) .dev-only { display: none !important; }
 </div>
 
 <div class="achievements">
-  <h3>🏆 ДОСТИЖЕНИЯ</h3>
+  <h3>🏅 ДОСТИЖЕНИЯ</h3>
   <div class="ach-grid" id="achGrid"></div>
 </div>
 
@@ -1663,12 +1619,12 @@ body:not(.role-dev) .dev-only { display: none !important; }
   <div id="shiftList"></div>
   <div class="data-tools">
     <button class="data-tool-btn" onclick="exportDataCSV()">📤 Экспорт CSV</button>
-    <button class="data-tool-btn" onclick="exportDataJSON()">💾 Бэкап JSON</button>
+    <button class="data-tool-btn" onclick="exportDataJSON()">💾 Резервная копия</button>
     <button class="data-tool-btn dev-only" onclick="openImportPicker()">📥 Восстановить</button>
   </div>
   <input type="file" id="importFile" accept="application/json,.json" style="display:none" onchange="handleImportFile(event)">
   <div class="build-row">
-    <span class="build-ver">сборка <b id="versionTag">—</b></span>
+    <span class="build-ver">версия <b id="versionTag">—</b></span>
     <span class="build-sync" id="cloudSyncTag"></span>
   </div>
 </div>
@@ -1689,19 +1645,19 @@ body:not(.role-dev) .dev-only { display: none !important; }
 <!-- ============ MODAL: END SHIFT ============ -->
 <div class="modal-overlay" id="endShiftModal">
   <div class="modal">
-    <h3>💰 СМЕНА ЗАВЕРШЕНА!</h3>
+    <h3>✅ СМЕНА ЗАВЕРШЕНА</h3>
     <div class="modal-info" id="endShiftInfo"></div>
     <div class="form-group">
-      <label>💵 Сколько заработал? (₽)</label>
+      <label>₽ Итоговый доход (₽)</label>
       <input type="number" id="endShiftEarned" placeholder="8600" min="0" inputmode="numeric">
     </div>
     <div class="form-group">
-      <label>📝 Заметка (необязательно)</label>
+      <label>📝 Комментарий (необязательно)</label>
       <input type="text" id="endShiftNote" placeholder="541 операция...">
     </div>
     <div class="modal-buttons">
       <button class="modal-btn secondary" onclick="cancelEndShift()">✕ Отмена</button>
-      <button class="modal-btn primary" id="btnSaveEndShift" onclick="saveEndShift()">💾 СОХРАНИТЬ</button>
+      <button class="modal-btn primary" id="btnSaveEndShift" onclick="saveEndShift()">✅ СОХРАНИТЬ</button>
     </div>
   </div>
 </div>
@@ -1720,17 +1676,17 @@ body:not(.role-dev) .dev-only { display: none !important; }
       <input type="number" id="editHours" step="0.5" min="0.5" max="24">
     </div>
     <div class="form-group">
-      <label>💵 Заработок ₽</label>
+      <label>₽ Доход</label>
       <input type="number" id="editEarned" min="0">
     </div>
     <div class="form-group">
-      <label>📝 Заметка</label>
+      <label>📝 Комментарий</label>
       <input type="text" id="editNote">
     </div>
     <div class="modal-buttons">
       <button class="modal-btn secondary" onclick="closeEditModal()">✕ Отмена</button>
       <button class="modal-btn danger" onclick="deleteFromEdit()" style="flex:0.6">🗑</button>
-      <button class="modal-btn primary" id="btnSaveEdit" onclick="saveEditShift()">💾 СОХРАНИТЬ</button>
+      <button class="modal-btn primary" id="btnSaveEdit" onclick="saveEditShift()">✅ СОХРАНИТЬ</button>
     </div>
   </div>
 </div>
@@ -1738,8 +1694,8 @@ body:not(.role-dev) .dev-only { display: none !important; }
 <!-- ============ MODAL: CATEGORY PICKER ============ -->
 <div class="modal-overlay" id="categoryPickerModal">
   <div class="modal" style="max-width:380px">
-    <h3>🎯 ВЫБЕРИ КАТЕГОРИЮ</h3>
-    <p style="font-size:12px;color:var(--text-dim);text-align:center;margin-bottom:12px">Завтра лайф-квесты будут из выбранной категории!</p>
+    <h3>📌 ВЫБОР НАПРАВЛЕНИЯ</h3>
+    <p style="font-size:12px;color:var(--text-dim);text-align:center;margin-bottom:12px">Завтра личные задачи будут из выбранного направления</p>
     <div id="categoryPickerList" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"></div>
     <div class="modal-buttons" style="margin-top:12px">
       <button class="modal-btn secondary" onclick="closeCategoryPicker()">✕ Пропустить</button>
@@ -2019,7 +1975,7 @@ async function registerFaceId(login) {
   const cred = await navigator.credentials.create({
     publicKey: {
       challenge,
-      rp: { name: 'OZON Grind Tracker', id: location.hostname },
+      rp: { name: 'OZON Tracker', id: location.hostname },
       user: { id: userId, name: acc.login, displayName: acc.name || acc.login },
       // ES256 и RS256 — покрывают iOS/Android/Windows Hello
       pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }],
@@ -2132,7 +2088,7 @@ function renderAuthGate() {
         <label class="auth-label">Повтори пароль</label>
         <input class="auth-input" id="suPass2" type="password" placeholder="ещё раз" autocomplete="new-password">
       </div>
-      <button class="auth-btn primary" id="suBtn" onclick="authDoSetup()">🚀 СОЗДАТЬ И ВОЙТИ</button>
+      <button class="auth-btn primary" id="suBtn" onclick="authDoSetup()">🚀 Создать и войти</button>
       <div class="auth-note">Пароль хранится только как хеш (PBKDF2-SHA256).<br>Восстановить его нельзя — запомни.</div>
     `;
     setTimeout(() => { const el = document.getElementById('suLogin'); if (el) el.focus(); }, 120);
@@ -2167,7 +2123,7 @@ function renderAuthGate() {
     card.innerHTML = `
       <div class="auth-logo">✨</div>
       <div class="auth-title">НОВЫЙ ПРОФИЛЬ</div>
-      <div class="auth-sub">Обычный доступ: вести смены, квесты, магазин.</div>
+      <div class="auth-sub">Стандартный доступ: смены, задания, магазин.</div>
       ${errHtml}
       <div class="auth-field">
         <label class="auth-label">Логин</label>
@@ -2215,7 +2171,7 @@ function renderAuthGate() {
 
   card.innerHTML = `
     <div class="auth-logo">💰</div>
-    <div class="auth-title">OZON GRIND TRACKER</div>
+    <div class="auth-title">OZON TRACKER</div>
     <div class="auth-sub">${isDevDevice()
       ? '🛠️ Системное устройство разработчика'
       : 'Выбери профиль для входа'}</div>
@@ -2589,7 +2545,7 @@ function renderAccountModal() {
           <div class="ar-t">${currentUser ? escapeHtml(currentUser.name || currentUser.login) : '—'}</div>
           <div class="ar-s">${currentUser && currentUser.role === 'dev'
             ? 'Полные права: правка и удаление смен, импорт, управление профилями'
-            : 'Обычный доступ: смены, квесты, магазин'}</div>
+            : 'Стандартный доступ: смены, задания, магазин'}</div>
         </div>
         <button class="acc-mini danger" onclick="logout()">Выйти</button>
       </div>
@@ -2658,7 +2614,7 @@ async function accMakeDevDevice() {
   applyRoleToUI();
   render();
   renderAccountModal();
-  showToast('🛠️ Устройство стало системным', 'success');
+  showToast('🛠️ Устройство получило системный статус', 'success');
 }
 
 async function accRevokeDevice() {
@@ -2732,52 +2688,52 @@ function calcGrindXP(shiftCount, totalHours) {
 }
 
 const LEVELS = [
-  { lvl:1, name:'Новичок',        icon:'🐣', title:'Начало пути',         xp:0 },
-  { lvl:2, name:'Кладовщик',      icon:'📦', title:'Освоился на складе',   xp:600 },
-  { lvl:3, name:'Грузчик PRO',    icon:'💪', title:'Уже не новичок',       xp:1500 },
-  { lvl:4, name:'Бригадир',       icon:'👷', title:'Опытный работяга',     xp:2900 },
-  { lvl:5, name:'Золотые руки',   icon:'🤲', title:'Мастер своего дела',   xp:4800 },
-  { lvl:6, name:'Менеджер склада',icon:'🏭', title:'Управляешь процессом', xp:7200 },
-  { lvl:7, name:'Бизнесмен',      icon:'💼', title:'Думаешь масштабно',    xp:10000 },
-  { lvl:8, name:'Миллионер',      icon:'🎩', title:'Первый миллион!',      xp:13300 },
-  { lvl:9, name:'Магнат',         icon:'🏰', title:'Империя растёт',       xp:16000 },
-  { lvl:10,name:'Скрудж МакДак',  icon:'🦆', title:'Купаешься в монетах!', xp:19000 },
+  { lvl:1, name:'Стажёр',          icon:'📋', title:'Начало карьеры',       xp:0 },
+  { lvl:2, name:'Специалист',      icon:'📦', title:'Адаптация пройдена',   xp:600 },
+  { lvl:3, name:'Ведущий специалист', icon:'📊', title:'Уверенный профессионал', xp:1500 },
+  { lvl:4, name:'Старший специалист', icon:'👔', title:'Высокая квалификация',  xp:2900 },
+  { lvl:5, name:'Эксперт',         icon:'🏅', title:'Мастер своего дела',   xp:4800 },
+  { lvl:6, name:'Менеджер',        icon:'🏢', title:'Управление процессами', xp:7200 },
+  { lvl:7, name:'Руководитель',    icon:'💼', title:'Стратегическое мышление', xp:10000 },
+  { lvl:8, name:'Директор',        icon:'🎩', title:'Первый миллион',       xp:13300 },
+  { lvl:9, name:'Вице-президент', icon:'🏛️', title:'Масштабирование',      xp:16000 },
+  { lvl:10,name:'CEO',             icon:'👑', title:'Вершина карьеры',      xp:19000 },
 ];
 
 const DIFFICULTIES = { easy:{goal:800}, normal:{goal:850}, hard:{goal:900} };
 
 const ACHIEVEMENTS = [
-  { id:'first',   icon:'⭐',  name:'Первая смена',   check:d=>d.shifts.length>=1 },
+  { id:'first',   icon:'⭐',  name:'Первый рабочий день', check:d=>d.shifts.length>=1 },
   { id:'five',    icon:'🖐️', name:'5 смен',         check:d=>d.shifts.length>=5 },
   { id:'ten',     icon:'🔟',  name:'10 смен',        check:d=>d.shifts.length>=10 },
   { id:'thirty',  icon:'📅',  name:'30 смен',        check:d=>d.shifts.length>=30 },
-  { id:'earn10k', icon:'💵',  name:'10К за смену',   check:d=>d.shifts.some(s=>s.earned>=10000) },
-  { id:'earn50k', icon:'💰',  name:'50К всего',      check:d=>d.totalEarned>=50000 },
-  { id:'earn100k',icon:'🤑',  name:'100К всего',     check:d=>d.totalEarned>=100000 },
-  { id:'earn500k',icon:'🏆',  name:'500К всего',     check:d=>d.totalEarned>=500000 },
+  { id:'earn10k', icon:'💵',  name:'10К за день',    check:d=>d.shifts.some(s=>s.earned>=10000) },
+  { id:'earn50k', icon:'💰',  name:'50К общий доход', check:d=>d.totalEarned>=50000 },
+  { id:'earn100k',icon:'🤑',  name:'100К общий доход', check:d=>d.totalEarned>=100000 },
+  { id:'earn500k',icon:'🏆',  name:'500К общий доход', check:d=>d.totalEarned>=500000 },
   { id:'rate900', icon:'🚀',  name:'900₽/час',       check:d=>d.shifts.some(s=>s.rate>=900) },
   { id:'rate1000',icon:'👑',  name:'1000₽/час',      check:d=>d.shifts.some(s=>s.rate>=1000) },
-  { id:'streak3', icon:'🔥',  name:'3 дня страйк',  check:d=>d.streak>=3 },
-  { id:'streak7', icon:'⚡',  name:'7 дней страйк', check:d=>d.streak>=7 },
+  { id:'streak3', icon:'🔥',  name:'3 дня подряд',   check:d=>d.streak>=3 },
+  { id:'streak7', icon:'⚡',  name:'7 дней подряд',  check:d=>d.streak>=7 },
 ];
 
 // ====== SHOP ITEMS ======
 const SHOP_ITEMS = [
   // Бусты
-  { id:'extra_reroll_1', icon:'🎲', name:'+1 реролл на день', desc:'Добавляет 1 лайф-реролл сегодня', price:40, cat:'boost', consumable:true },
-  { id:'extra_reroll_3', icon:'🎰', name:'+3 реролла на день', desc:'Пак из 3 лайф-реролов на сегодня', price:100, cat:'boost', consumable:true },
-  { id:'double_xp', icon:'⚡', name:'Двойной XP (1 день)', desc:'Все лайф-квесты дают x2 XP сегодня', price:200, cat:'boost', consumable:true },
-  { id:'cat_choice', icon:'🎯', name:'Выбор категории', desc:'Выбери категорию квестов на завтра', price:150, cat:'boost', consumable:true },
+  { id:'extra_reroll_1', icon:'🎲', name:'+1 замена задания', desc:'Замена 1 задания на новое сегодня', price:40, cat:'boost', consumable:true },
+  { id:'extra_reroll_3', icon:'🎰', name:'+3 замены заданий', desc:'Пакет из 3 замен заданий на сегодня', price:100, cat:'boost', consumable:true },
+  { id:'double_xp', icon:'⚡', name:'Двойной XP (1 день)', desc:'Все задания дают x2 XP сегодня', price:200, cat:'boost', consumable:true },
+  { id:'cat_choice', icon:'🎯', name:'Выбор категории', desc:'Выбери категорию заданий на завтра', price:150, cat:'boost', consumable:true },
   // Расходники: покупаются многократно, чтобы XP не обесценивался после
   // выкупа всех тем и титулов (весь остальной магазин — разовый).
-  { id:'streak_shield', icon:'🛡', name:'Защита страйка', desc:'Страйк не сгорит за пропущенный день', price:250, cat:'boost', consumable:true },
-  { id:'mystery_box', icon:'🎁', name:'Мистери-бокс', desc:'Случайный приз: XP, реролы или буст', price:120, cat:'boost', consumable:true },
-  { id:'shift_reroll', icon:'🔄', name:'Реролл квеста смены', desc:'Заменить один квест смены сегодня', price:80, cat:'boost', consumable:true },
+  { id:'streak_shield', icon:'🛡', name:'Защита серии', desc:'Серия не прервётся за пропущенный день', price:250, cat:'boost', consumable:true },
+  { id:'mystery_box', icon:'🎁', name:'Бонусный пакет', desc:'Случайный бонус: XP, замены или усиление', price:120, cat:'boost', consumable:true },
+  { id:'shift_reroll', icon:'🔄', name:'Замена задания смены', desc:'Заменить одно задание смены сегодня', price:80, cat:'boost', consumable:true },
   // Косметика
-  { id:'title_grinder', icon:'💎', name:'Титул: Грайндер', desc:'Отображается в заголовке', price:300, cat:'cosmetic', consumable:false },
-  { id:'title_legend', icon:'👑', name:'Титул: Легенда', desc:'Отображается в заголовке', price:500, cat:'cosmetic', consumable:false },
-  { id:'title_beast', icon:'🦁', name:'Титул: Зверюга', desc:'Отображается в заголовке', price:400, cat:'cosmetic', consumable:false },
-  { id:'title_sigma', icon:'🐺', name:'Титул: Сигма', desc:'Отображается в заголовке', price:600, cat:'cosmetic', consumable:false },
+  { id:'title_grinder', icon:'💎', name:'Статус: Профессионал', desc:'Отображается в заголовке', price:300, cat:'cosmetic', consumable:false },
+  { id:'title_legend', icon:'👑', name:'Статус: Легенда', desc:'Отображается в заголовке', price:500, cat:'cosmetic', consumable:false },
+  { id:'title_beast', icon:'🦁', name:'Статус: Топ-перформер', desc:'Отображается в заголовке', price:400, cat:'cosmetic', consumable:false },
+  { id:'title_sigma', icon:'🐺', name:'Статус: Элита', desc:'Отображается в заголовке', price:600, cat:'cosmetic', consumable:false },
   // Награды
   { id:'golden_border', icon:'✨', name:'Золотая рамка кошелька', desc:'Красивое свечение кошелька', price:250, cat:'reward', consumable:false },
   { id:'rain_upgrade', icon:'🌧️', name:'Усиленный дождь монет', desc:'Больше монет при сохранении смены', price:350, cat:'reward', consumable:false },
@@ -2975,7 +2931,7 @@ function startShift() {
   saveActiveShift();
   renderActiveShift();
   startTimer();
-  showToast('🚀 Смена начата! Погнали!', 'success');
+  showToast('🚀 Смена начата. Продуктивного дня!', 'success');
 }
 
 function startBreak() {
@@ -3001,7 +2957,7 @@ function endBreak() {
   activeShift.status = 'working';
   saveActiveShift();
   renderActiveShift();
-  showToast('💪 Снова в деле!', 'success');
+  showToast('💪 Работа продолжена', 'success');
 }
 
 function endShift() {
@@ -3062,7 +3018,7 @@ async function saveEndShift() {
   if (!pendingEndShift) return;
   const earned = parseFloat(document.getElementById('endShiftEarned').value);
   if (!earned || earned <= 0) {
-    showToast('Впиши заработок!', 'error');
+    showToast('Укажите сумму заработка', 'error');
     document.getElementById('endShiftEarned').focus();
     return;
   }
@@ -3070,7 +3026,7 @@ async function saveEndShift() {
   const note = document.getElementById('endShiftNote').value.trim();
   const btn = document.getElementById('btnSaveEndShift');
   btn.disabled = true;
-  btn.textContent = '⏳ Сохраняю...';
+  btn.textContent = '⏳ Сохранение...';
 
   const ok = await insertShift({
     date: pendingEndShift.date,
@@ -3109,7 +3065,7 @@ async function saveEndShift() {
     const coinCount = getShopOwned('rain_upgrade') ? Math.min(Math.floor(earned / 300), 50) : Math.min(Math.floor(earned / 500), 30);
     rainCoins(coinCount);
     render();
-    showToast(`✅ Смена сохранена! +${earned.toLocaleString('ru-RU')} ₽`, 'success');
+    showToast(`✅ Смена сохранена. +${earned.toLocaleString('ru-RU')} ₽`, 'success');
 
     // Check for bonus rewards from shift quests
     setTimeout(() => checkAndGrantBonuses(), 800);
@@ -3136,7 +3092,7 @@ function updateTimer() {
     const breakDur = now - activeShift.currentBreak.start;
     document.getElementById('timerSub').textContent = `☕ Перерыв: ${activeShift.currentBreak.type} (${formatShortDuration(breakDur)})`;
   } else {
-    document.getElementById('timerSub').textContent = `🟢 Работаешь | Всего: ${formatDuration(totalMs)} | Перерывы: ${formatShortDuration(breakMs)}`;
+    document.getElementById('timerSub').textContent = `🟢 В работе | Всего: ${formatDuration(totalMs)} | Перерывы: ${formatShortDuration(breakMs)}`;
   }
 }
 
@@ -3152,10 +3108,10 @@ function renderActiveShift() {
 
   if (!activeShift) {
     panel.className = 'active-shift inactive';
-    titleEl.textContent = '🏠 СМЕНА НЕ НАЧАТА';
+    titleEl.textContent = '🏠 СМЕНА НЕ АКТИВНА';
     titleEl.className = 'off';
     document.getElementById('timerDisplay').textContent = '00:00:00';
-    document.getElementById('timerSub').textContent = 'Нажми «Начать смену»';
+    document.getElementById('timerSub').textContent = 'Нажмите «Начать смену»';
     btnStart.style.display = '';
     btnBreak.style.display = 'none';
     btnResume.style.display = 'none';
@@ -3170,14 +3126,14 @@ function renderActiveShift() {
   btnEnd.style.display = '';
 
   if (activeShift.status === 'break') {
-    titleEl.textContent = '☕ НА ПЕРЕРЫВЕ';
+    titleEl.textContent = '☕ ПЕРЕРЫВ';
     titleEl.className = 'live';
     titleEl.style.color = 'var(--orange)';
     btnBreak.style.display = 'none';
     btnResume.style.display = '';
     document.getElementById('timerDisplay').style.color = 'var(--orange)';
   } else {
-    titleEl.textContent = '🟢 СМЕНА ИДЁТ';
+    titleEl.textContent = '🟢 СМЕНА АКТИВНА';
     titleEl.className = 'live';
     titleEl.style.color = '';
     btnBreak.style.display = '';
@@ -3290,16 +3246,16 @@ const LQ_CATEGORIES = {
 
 // Life XP levels
 const LQ_LEVELS = [
-  { lvl: 1,  xp: 0,    name: 'Новичок',       icon: '🌱' },
-  { lvl: 2,  xp: 100,  name: 'Практикант',     icon: '🌿' },
+  { lvl: 1,  xp: 0,    name: 'Начинающий',    icon: '🌱' },
+  { lvl: 2,  xp: 100,  name: 'Практик',        icon: '🌿' },
   { lvl: 3,  xp: 300,  name: 'Стабильный',     icon: '🌳' },
-  { lvl: 4,  xp: 600,  name: 'Дисциплина',     icon: '⚡' },
+  { lvl: 4,  xp: 600,  name: 'Дисциплинированный', icon: '⚡' },
   { lvl: 5,  xp: 1000, name: 'Привычка',       icon: '🔥' },
-  { lvl: 6,  xp: 1500, name: 'Мастер рутины',  icon: '🏆' },
-  { lvl: 7,  xp: 2200, name: 'Лайф-грайндер',  icon: '💎' },
-  { lvl: 8,  xp: 3000, name: 'Сверхчеловек',   icon: '🦸' },
+  { lvl: 6,  xp: 1500, name: 'Мастер привычек', icon: '🏆' },
+  { lvl: 7,  xp: 2200, name: 'Лидер развития', icon: '💎' },
+  { lvl: 8,  xp: 3000, name: 'Высший уровень', icon: '🦸' },
   { lvl: 9,  xp: 4000, name: 'Легенда',        icon: '👑' },
-  { lvl: 10, xp: 5500, name: 'БОГ ЛАЙФА',      icon: '🌟' },
+  { lvl: 10, xp: 5500, name: 'Абсолют',        icon: '🌟' },
 ];
 
 // Pick 7 random life quests for today (seeded by date, from pool of 48)
@@ -3478,7 +3434,7 @@ function renderLifeStats() {
   const boostBadge = multiplier > 1 ? `<span class="lq-boost-badge">x${multiplier} XP</span>` : '';
   const nextLine = next
     ? `до <b>${next.name}</b> — ещё ${next.xp - data.total} XP`
-    : 'максимальный ранг достигнут 🌟';
+    : 'максимальный уровень достигнут 🌟';
   const avgPerQuest = data.questsDone > 0 ? Math.round(data.total / data.questsDone) : 0;
 
   container.innerHTML = `
@@ -3486,7 +3442,7 @@ function renderLifeStats() {
       <div class="lq-badge" id="lqBadge" style="--p:${(progressPct / 100).toFixed(3)}">
         <span class="lq-badge-inner">
           <span class="lq-badge-icon">${current.icon}</span>
-          <span class="lq-badge-lvl">LVL ${current.lvl}</span>
+          <span class="lq-badge-lvl">УР. ${current.lvl}</span>
         </span>
       </div>
       <div class="lq-hero-main">
@@ -3509,7 +3465,7 @@ function renderLifeStats() {
       <div class="lq-mini-stat">
         <span class="lq-ms-ico">⚔️</span>
         <span class="lq-ms-val">${data.questsDone || 0}</span>
-        <span class="lq-ms-lbl">квестов</span>
+        <span class="lq-ms-lbl">заданий</span>
       </div>
       <div class="lq-mini-stat">
         <span class="lq-ms-ico">🔥</span>
@@ -3522,7 +3478,7 @@ function renderLifeStats() {
         <span class="lq-ms-lbl">XP/квест</span>
       </div>
     </div>
-    <div class="lq-cat-title"><span>Навыки</span></div>
+    <div class="lq-cat-title"><span>Компетенции</span></div>
     <div class="lq-cat-bars">${catBars}</div>
   `;
 
@@ -3558,7 +3514,7 @@ function celebrateLevelUp(level) {
     toast.className = 'lq-levelup-toast';
     document.body.appendChild(toast);
   }
-  toast.innerHTML = `<div class="lq-lu-title">${level.icon} LEVEL UP!</div>
+  toast.innerHTML = `<div class="lq-lu-title">${level.icon} НОВЫЙ УРОВЕНЬ!</div>
     <div class="lq-lu-sub">LVL ${level.lvl} — ${level.name}</div>`;
   requestAnimationFrame(() => toast.classList.add('show'));
   setTimeout(() => toast.classList.remove('show'), 2600);
@@ -3588,7 +3544,7 @@ function toggleLifeQuest(id) {
     const mult = getXpMultiplier();
     addLifeXP(id, quest.xp, quest.cat);
     const xpGained = quest.xp * mult;
-    showToast(`✅ +${xpGained} XP! ${mult > 1 ? '(x' + mult + '!) ' : ''}Красавчик!`, 'success');
+    showToast(`✅ +${xpGained} XP! ${mult > 1 ? '(x' + mult + '!) ' : ''}Отлично!`, 'success');
     rainCoins(3);
   } else if (!state.checked[id] && quest) {
     removeLifeXP(id, quest.xp, quest.cat);
@@ -3646,7 +3602,7 @@ function checkAndGrantBonuses() {
 
     if (q.bonus.type === 'reroll') {
       newRerolls += q.bonus.amount;
-      messages.push(`🎲 +${q.bonus.amount} реролл за «${q.title}»`);
+      messages.push(`🎲 +${q.bonus.amount} замена за «${q.title}»`);
     } else if (q.bonus.type === 'category_choice') {
       newCategoryChoice = true;
       messages.push(`🎯 Выбор категории за «${q.title}»`);
@@ -3687,7 +3643,7 @@ function openCategoryPicker(isWeeklyFree = false) {
   ).join('');
   const modalTitle = document.querySelector('#categoryPickerModal h3');
   if (modalTitle) {
-    modalTitle.textContent = isWeeklyFree ? '🎁 БЕСПЛАТНЫЙ ВЫБОР КАТЕГОРИИ' : '🎯 ВЫБЕРИ КАТЕГОРИЮ';
+    modalTitle.textContent = isWeeklyFree ? '🎁 БЕСПЛАТНЫЙ ВЫБОР КАТЕГОРИИ' : '🎯 ВЫБОР КАТЕГОРИИ';
   }
   document.getElementById('categoryPickerModal').classList.add('show');
   document.body.classList.add('modal-open');
@@ -3710,9 +3666,9 @@ function pickCategory(cat, source = 'bonus') {
     const wc = getWeeklyCategoryChoice();
     wc.used = true;
     saveWeeklyCategoryChoice(wc);
-    showToast(`🎁 ${catInfo.icon} Завтра квесты из: ${catInfo.name}! (бесплатно)`, 'success');
+    showToast(`🎁 ${catInfo.icon} Завтра задания из: ${catInfo.name} (бесплатно)`, 'success');
   } else {
-    showToast(`${catInfo.icon} Завтра квесты из: ${catInfo.name}!`, 'success');
+    showToast(`${catInfo.icon} Завтра задания из: ${catInfo.name}`, 'success');
   }
   rainCoins(5);
   renderLifeQuests();
@@ -3745,7 +3701,7 @@ function saveWeeklyCategoryChoice(data) {
 function useWeeklyCategoryChoice() {
   const wc = getWeeklyCategoryChoice();
   if (wc.used) {
-    showToast('🎯 Бесплатный выбор уже использован на этой неделе!', 'warn');
+    showToast('🎯 Бесплатный выбор уже использован на этой неделе', 'warn');
     return;
   }
   openCategoryPicker(true);
@@ -3756,7 +3712,7 @@ function rerollLifeQuest(oldId, event) {
   const state = getLifeQuestState();
   const totalRerolls = getTotalRerolls();
   if (state.rerolls >= totalRerolls) {
-    showToast('🎲 Реролы закончились на сегодня!', 'warn');
+    showToast('🎲 Замены заданий исчерпаны на сегодня', 'warn');
     return;
   }
 
@@ -3781,7 +3737,7 @@ function rerollLifeQuest(oldId, event) {
   state.rerolls++;
   saveLifeQuestState(state);
   renderLifeQuests();
-  showToast(`🔄 Квест заменён! (${totalRerolls - state.rerolls} реролов осталось)`, 'success');
+  showToast(`🔄 Задание заменено (${totalRerolls - state.rerolls} замен осталось)`, 'success');
 }
 
 function getResolvedLifeQuests() {
@@ -3813,7 +3769,7 @@ function renderLifeQuests() {
   if (chosenCat && LQ_CATEGORIES[chosenCat]) {
     const ci = LQ_CATEGORIES[chosenCat];
     headerHtml = `<div style="text-align:center;padding:6px 10px;margin-bottom:8px;background:rgba(255,215,0,0.08);border-radius:10px;font-size:12px;color:var(--gold)">
-      🎯 Категория дня: ${ci.icon} <b>${ci.name}</b>
+      🎯 Фокус дня: ${ci.icon} <b>${ci.name}</b>
     </div>`;
   }
 
@@ -3830,36 +3786,36 @@ function renderLifeQuests() {
       <button class="lq-reroll" onclick="rerollLifeQuest('${q.id}', event)" ${canReroll ? '' : 'disabled'} title="Заменить квест">🔄</button>
     </div>`;
   }).join('') +
-    `<div class="lq-reroll-counter">🎲 Реролов: ${rerollsLeft}/${totalRerolls}${bonusRerolls > 0 ? ` <span style="color:var(--gold)">(+${bonusRerolls} бонус)</span>` : ''}${shopExtra > 0 ? ` <span style="color:var(--purple)">(+${shopExtra} магазин)</span>` : ''}</div>` +
+    `<div class="lq-reroll-counter">🎲 Замен: ${rerollsLeft}/${totalRerolls}${bonusRerolls > 0 ? ` <span style="color:var(--gold)">(+${bonusRerolls} бонус)</span>` : ''}${shopExtra > 0 ? ` <span style="color:var(--purple)">(+${shopExtra} магазин)</span>` : ''}</div>` +
     (() => {
       const wc = getWeeklyCategoryChoice();
       if (!wc.used) {
-        return `<div style="text-align:center;margin:6px 0"><button onclick="useWeeklyCategoryChoice()" style="background:linear-gradient(135deg,rgba(255,215,0,0.1),rgba(255,165,0,0.06));border:1px solid rgba(255,215,0,0.2);border-radius:10px;padding:8px 16px;color:var(--gold);font-weight:700;font-size:12px;cursor:pointer;font-family:inherit">🎁 Бесплатный выбор категории (1/нед)</button></div>`;
+        return `<div style="text-align:center;margin:6px 0"><button onclick="useWeeklyCategoryChoice()" style="background:linear-gradient(135deg,rgba(255,215,0,0.1),rgba(255,165,0,0.06));border:1px solid rgba(255,215,0,0.2);border-radius:10px;padding:8px 16px;color:var(--gold);font-weight:700;font-size:12px;cursor:pointer;font-family:inherit">🎁 Бесплатный выбор категории (1/нед.)</button></div>`;
       }
-      return `<div style="text-align:center;margin:4px 0;font-size:10px;color:var(--text-dim)">🎁 Бесплатный выбор категории использован до понедельника</div>`;
+      return `<div style="text-align:center;margin:4px 0;font-size:10px;color:var(--text-dim)">🎁 Выбор категории использован до понедельника</div>`;
     })() +
     (doneCount === quests.length && quests.length > 0
-    ? '<div style="text-align:center;padding:10px;font-size:14px;color:var(--green);font-weight:700">🏆 ВСЕ ЛАЙФ-КВЕСТЫ ВЫПОЛНЕНЫ! 🎉</div>'
+    ? '<div style="text-align:center;padding:10px;font-size:14px;color:var(--green);font-weight:700">🏆 ВСЕ ЗАДАНИЯ ВЫПОЛНЕНЫ! 🎉</div>'
     : `<div style="text-align:center;padding:6px;font-size:11px;color:var(--text-dim)">${doneCount}/${quests.length} выполнено · обновляются каждый день</div>`);
 }
 
 // ====== MOTIVATION TIPS ======
 const TIPS = [
-  { text: 'Дисциплина — это делать то, что нужно, когда не хочется.', author: '🦆 Скрудж МакДак' },
+  { text: 'Дисциплина — это делать то, что нужно, когда не хочется.', author: '📖 Принцип продуктивности' },
   { text: 'Маленькие шаги каждый день дают большие результаты.', author: '📈 Закон прогресса' },
   { text: 'Деньги любят тех, кто их уважает и считает.', author: '💰 Правило богатства' },
   { text: 'Лучший момент начать — вчера. Второй лучший — сейчас.', author: '⏰ Мудрость' },
   { text: 'Не сравнивай себя с другими. Сравнивай себя с собой вчерашним.', author: '🪞 Рост' },
   { text: 'Каждая смена — это кирпич в фундаменте твоего будущего.', author: '🏗 Строитель жизни' },
-  { text: 'Усталость временна, результат — навсегда.', author: '💪 Гринд-философия' },
-  { text: 'Пока другие спят — ты строишь своё будущее.', author: '🌙 Ночная смена' },
+  { text: 'Усталость временна, результат — навсегда.', author: '💪 Философия успеха' },
+  { text: 'Пока другие откладывают — ты строишь своё будущее.', author: '🌙 Вечерняя продуктивность' },
   { text: 'Тело — твой главный инструмент. Заботься о нём.', author: '❤️ Здоровье' },
   { text: '100 смен — и ты уже другой человек.', author: '🔄 Трансформация' },
-  { text: 'Скрудж стал богатым не потому что ему повезло, а потому что он работал каждый день.', author: '🦆 DuckTales' },
+  { text: 'Состояния создаются не везением, а ежедневной работой.', author: '📈 Закон накопления' },
   { text: 'Перерыв — не слабость, а стратегия.', author: '♟ Тактика' },
   { text: 'Твой rate сегодня — это твоя цена завтра.', author: '📊 Аналитика' },
   { text: 'Обед с собой = +300₽ в день = +9000₽ в месяц!', author: '🧮 Математика экономии' },
-  { text: 'Главное — не останавливаться. Страйк не должен прерваться!', author: '🔥 Keep grinding' },
+  { text: 'Главное — не останавливаться. Серия не должна прерваться.', author: '🔥 Принцип непрерывности' },
 ];
 
 function renderMotivationTip() {
@@ -3877,19 +3833,19 @@ const SHIFT_QUEST_POOL = [
     id: 'start_shift', icon: '🚀', title: 'Выйти на смену',
     desc: 'Начни свою смену сегодня',
     calc: (ctx) => ({ progress: (ctx.isOnShift || ctx.todayShifts.length > 0) ? 1 : 0, target: 1 }),
-    reward: '🏅 Просто прийти — уже победа', bonus: null
+    reward: '🏅 Присутствие — основа результата', bonus: null
   },
   {
     id: 'work_2h', icon: '⏳', title: 'Разогрев: 2 часа',
     desc: 'Набей 2 часа чистой работы',
     calc: (ctx) => ({ progress: Math.min(ctx.totalHours, 2), target: 2 }),
-    reward: '🔥 +50 XP к мотивации', bonus: null
+    reward: '🔥 +50 XP к прогрессу', bonus: null
   },
   {
     id: 'work_4h', icon: '⏱', title: 'Отработать 4 часа',
     desc: 'Набей 4 часа чистой работы',
     calc: (ctx) => ({ progress: Math.min(ctx.totalHours, 4), target: 4 }),
-    reward: '🎲 +1 реролл лайф-квеста', bonus: { type: 'reroll', amount: 1 }
+    reward: '🎲 +1 замена задания', bonus: { type: 'reroll', amount: 1 }
   },
   {
     id: 'work_6h', icon: '⚡', title: 'Рабочий ритм: 6 часов',
@@ -3901,13 +3857,13 @@ const SHIFT_QUEST_POOL = [
     id: 'work_8h', icon: '💪', title: 'Марафон: 8 часов',
     desc: 'Полная смена — 8 часов работы',
     calc: (ctx) => ({ progress: Math.min(ctx.totalHours, 8), target: 8 }),
-    reward: '🎲 +1 реролл лайф-квеста', bonus: { type: 'reroll', amount: 1 }
+    reward: '🎲 +1 замена задания', bonus: { type: 'reroll', amount: 1 }
   },
   {
     id: 'work_10h', icon: '🦾', title: 'Железный человек: 10 часов',
     desc: 'Сверхсмена — 10 часов чистой работы!',
     calc: (ctx) => ({ progress: Math.min(ctx.totalHours, 10), target: 10 }),
-    reward: '🎲 +2 реролла лайф-квестов', bonus: { type: 'reroll', amount: 2 }
+    reward: '🎲 +2 замены заданий', bonus: { type: 'reroll', amount: 2 }
   },
 
   // === ЗАРАБОТОК ===
@@ -3915,17 +3871,17 @@ const SHIFT_QUEST_POOL = [
     id: 'earn_2k', icon: '💵', title: 'Первые 2000₽',
     desc: 'Заработай первые 2К за день',
     calc: (ctx) => ({ progress: Math.min(ctx.todayEarned, 2000), target: 2000 }),
-    reward: '🪙 Копейка рубль бережёт', bonus: null
+    reward: '🪙 Каждый рубль на счету', bonus: null
   },
   {
     id: 'earn_5k', icon: '💰', title: 'Заработать 5000₽',
     desc: 'Сегодняшний заработок ≥ 5000₽',
     calc: (ctx) => ({ progress: Math.min(ctx.todayEarned, 5000), target: 5000 }),
-    reward: '🎲 +1 реролл лайф-квеста', bonus: { type: 'reroll', amount: 1 }
+    reward: '🎲 +1 замена задания', bonus: { type: 'reroll', amount: 1 }
   },
   {
     id: 'earn_8k', icon: '🤑', title: 'Заработать 8000₽',
-    desc: 'Погнали на 8K сегодня!',
+    desc: 'Цель дня — 8 000₽',
     calc: (ctx) => ({ progress: Math.min(ctx.todayEarned, 8000), target: 8000 }),
     reward: '🎯 Выбор категории квестов!', bonus: { type: 'category_choice' }
   },
@@ -3933,13 +3889,13 @@ const SHIFT_QUEST_POOL = [
     id: 'earn_10k', icon: '💎', title: 'Десятка! 10 000₽',
     desc: 'Пробей планку в 10К за день',
     calc: (ctx) => ({ progress: Math.min(ctx.todayEarned, 10000), target: 10000 }),
-    reward: '🎲 +2 реролла + 🏆 ачивка', bonus: { type: 'reroll', amount: 2 }
+    reward: '🎲 +2 замены + 🏆 достижение', bonus: { type: 'reroll', amount: 2 }
   },
   {
     id: 'earn_12k', icon: '👑', title: 'Король дня: 12 000₽',
     desc: 'Элитный заработок — 12К за день',
     calc: (ctx) => ({ progress: Math.min(ctx.todayEarned, 12000), target: 12000 }),
-    reward: '🎯 Выбор категории + 🎲 +1 реролл', bonus: { type: 'category_choice' }
+    reward: '🎯 Выбор категории + 🎲 +1 замена', bonus: { type: 'category_choice' }
   },
 
   // === RATE / ЭФФЕКТИВНОСТЬ ===
@@ -3947,19 +3903,19 @@ const SHIFT_QUEST_POOL = [
     id: 'hit_goal', icon: '🎯', title: () => `Выбить ${DIFFICULTIES[difficulty].goal}₽/час`,
     desc: () => `Средний rate за день ≥ ${DIFFICULTIES[difficulty].goal}₽/час`,
     calc: (ctx) => ({ progress: ctx.todayRate >= ctx.goal ? 1 : 0, target: 1 }),
-    reward: '🎲 +1 реролл лайф-квеста', bonus: { type: 'reroll', amount: 1 }
+    reward: '🎲 +1 замена задания', bonus: { type: 'reroll', amount: 1 }
   },
   {
     id: 'rate_1200', icon: '🚀', title: 'Турборежим: 1200₽/час',
     desc: 'Средний rate за день ≥ 1200₽/час',
     calc: (ctx) => ({ progress: ctx.todayRate >= 1200 ? 1 : 0, target: 1 }),
-    reward: '⚡ Скорость — твоя суперсила', bonus: null
+    reward: '⚡ Высокая эффективность', bonus: null
   },
   {
     id: 'rate_1500', icon: '🔥', title: 'На максималках: 1500₽/час',
     desc: 'Средний rate за день ≥ 1500₽/час',
     calc: (ctx) => ({ progress: ctx.todayRate >= 1500 ? 1 : 0, target: 1 }),
-    reward: '🎲 +2 реролла лайф-квестов', bonus: { type: 'reroll', amount: 2 }
+    reward: '🎲 +2 замены заданий', bonus: { type: 'reroll', amount: 2 }
   },
 
   // === ПЕРЕРЫВЫ / ДИСЦИПЛИНА ===
@@ -3972,7 +3928,7 @@ const SHIFT_QUEST_POOL = [
       const longBreak = breaks.some(b => ((b.end || Date.now()) - b.start) > 15 * 60000);
       return { progress: longBreak ? 0 : 1, target: 1 };
     },
-    reward: '🧘 Мастер фокуса', bonus: null
+    reward: '🧘 Мастер концентрации', bonus: null
   },
   {
     id: 'max_2_breaks', icon: '🎖️', title: 'Минимум перерывов',
@@ -3982,15 +3938,15 @@ const SHIFT_QUEST_POOL = [
       const breakCount = activeShift ? activeShift.breaks.length + (activeShift.currentBreak ? 1 : 0) : 0;
       return { progress: breakCount <= 2 ? 1 : 0, target: 1 };
     },
-    reward: '🏆 Железная воля', bonus: null
+    reward: '🏆 Железная дисциплина', bonus: null
   },
 
   // === СМЕНЫ / СЕРИИ ===
   {
-    id: 'two_shifts', icon: '🔄', title: 'Двойной удар',
+    id: 'two_shifts', icon: '🔄', title: 'Двойная смена',
     desc: 'Закрой 2 смены за один день',
     calc: (ctx) => ({ progress: Math.min(ctx.todayShifts.length, 2), target: 2 }),
-    reward: '🎲 +1 реролл лайф-квеста', bonus: { type: 'reroll', amount: 1 }
+    reward: '🎲 +1 замена задания', bonus: { type: 'reroll', amount: 1 }
   },
   {
     id: 'early_bird', icon: '🌅', title: 'Ранняя пташка',
@@ -4000,7 +3956,7 @@ const SHIFT_QUEST_POOL = [
       const hadEarly = ctx.todayShifts.some(s => s.note && s.note.includes('Начало:') && parseInt(s.note.split('Начало:')[1]) < 9);
       return { progress: (startedEarly || hadEarly) ? 1 : 0, target: 1 };
     },
-    reward: '☀️ Утро вечера мудренее', bonus: null
+    reward: '☀️ Ранний старт — результат', bonus: null
   },
   {
     id: 'quick_start', icon: '⚡', title: 'Быстрый старт',
@@ -4010,17 +3966,17 @@ const SHIFT_QUEST_POOL = [
       if (ctx.totalHours > 1.5) return { progress: 0, target: 1 }; // опоздал — квест провален
       return { progress: Math.min(ctx.todayEarned, 1000), target: 1000 };
     },
-    reward: '⚡ Разгон взят!', bonus: null
+    reward: '⚡ Быстрый старт взят', bonus: null
   },
   {
-    id: 'consistent_rate', icon: '📊', title: 'Стабильность',
+    id: 'consistent_rate', icon: '📊', title: 'Стабильная эффективность',
     desc: 'Все смены сегодня с rate ≥ 900₽/час',
     calc: (ctx) => {
       if (ctx.todayShifts.length === 0) return { progress: 0, target: 1 };
       const allGood = ctx.todayShifts.every(s => s.hours > 0 && (s.earned / s.hours) >= 900);
       return { progress: allGood ? 1 : 0, target: 1 };
     },
-    reward: '🎲 +1 реролл лайф-квеста', bonus: { type: 'reroll', amount: 1 }
+    reward: '🎲 +1 замена задания', bonus: { type: 'reroll', amount: 1 }
   },
 ];
 
@@ -4082,7 +4038,7 @@ function renderQuests() {
     const pct = Math.min((q.progress / q.target) * 100, 100);
     const done = pct >= 100;
     const progressText = q.target <= 1
-      ? (done ? '✅ Выполнено' : '⬜ Не выполнено')
+      ? (done ? '✅ Выполнено' : '⬜ В процессе')
       : (q.target >= 1000 ? `${Math.floor(q.progress).toLocaleString('ru-RU')} / ${q.target.toLocaleString('ru-RU')}` : `${q.progress.toFixed(1)} / ${q.target}`);
     return `<div class="quest-item ${done ? 'completed' : ''}">
       <div class="quest-header">
@@ -4117,14 +4073,14 @@ function rollMysteryBox(boosts, today) {
     const amount = Math.random() < 0.5 ? 1 : 2;
     if (boosts.extra_reroll_date !== today) { boosts.extra_reroll_date = today; boosts.extra_reroll_count = 0; }
     boosts.extra_reroll_count = (boosts.extra_reroll_count || 0) + amount;
-    return `+${amount} реролл лайф-квестов!`;
+    return `+${amount} замена заданий!`;
   }
   if (roll < 0.60) {
     const bonus = [30, 50, 80][Math.floor(Math.random() * 3)];
     const xpData = getLifeXP();
     xpData.total += bonus;
     saveLifeXP(xpData);
-    return `+${bonus} XP назад!`;
+    return `+${bonus} XP!`;
   }
   if (roll < 0.80) {
     boosts.double_xp = today;
@@ -4133,12 +4089,12 @@ function rollMysteryBox(boosts, today) {
   if (roll < 0.95) {
     if (boosts.shift_reroll_date !== today) { boosts.shift_reroll_date = today; boosts.shift_reroll_count = 0; }
     boosts.shift_reroll_count = (boosts.shift_reroll_count || 0) + 1;
-    return '+1 реролл квеста смены!';
+    return '+1 замена задания смены!';
   }
   const shields = Array.isArray(boosts.streak_shields) ? boosts.streak_shields : [];
   if (!shields.includes(today)) shields.push(today);
   boosts.streak_shields = shields;
-  return 'ДЖЕКПОТ: защита страйка! 🛡';
+  return 'ДЖЕКПОТ: защита серии! 🛡';
 }
 
 function getShopExtraRerolls() {
@@ -4156,7 +4112,7 @@ function shopBuyItem(itemId) {
 
   const xpData = getLifeXP();
   if (xpData.total < item.price) {
-    showToast('❌ Недостаточно XP!', 'error');
+    showToast('❌ Недостаточно XP', 'error');
     return;
   }
 
@@ -4193,10 +4149,10 @@ function shopBuyItem(itemId) {
         boosts.extra_reroll_count = 0;
       }
       boosts.extra_reroll_count = (boosts.extra_reroll_count || 0) + amount;
-      showToast(`🎲 +${amount} реролл! Используй сегодня`, 'success');
+      showToast(`🎲 +${amount} замена! Используйте сегодня`, 'success');
     } else if (item.id === 'double_xp') {
       boosts.double_xp = today;
-      showToast('⚡ Двойной XP активирован на сегодня!', 'success');
+      showToast('⚡ Двойной XP активирован на сегодня', 'success');
     } else if (item.id === 'cat_choice') {
       openCategoryPicker(false);
     } else if (item.id === 'streak_shield') {
@@ -4204,14 +4160,14 @@ function shopBuyItem(itemId) {
       const shields = Array.isArray(boosts.streak_shields) ? boosts.streak_shields : [];
       if (!shields.includes(today)) shields.push(today);
       boosts.streak_shields = shields;
-      showToast('🛡 Страйк защищён — пропуск не сожжёт серию', 'success');
+      showToast('🛡 Серия защищена — пропуск не прервёт её', 'success');
     } else if (item.id === 'shift_reroll') {
       if (boosts.shift_reroll_date !== today) {
         boosts.shift_reroll_date = today;
         boosts.shift_reroll_count = 0;
       }
       boosts.shift_reroll_count = (boosts.shift_reroll_count || 0) + 1;
-      showToast('🔄 +1 реролл квеста смены на сегодня', 'success');
+      showToast('🔄 +1 замена задания смены на сегодня', 'success');
     } else if (item.id === 'mystery_box') {
       const prize = rollMysteryBox(boosts, today);
       showToast(`🎁 ${prize}`, 'success');
@@ -4233,10 +4189,10 @@ function shopBuyItem(itemId) {
 
 function getActiveTitle() {
   const purchases = getShopPurchases();
-  if (purchases.title_sigma) return '🐺 Сигма';
+  if (purchases.title_sigma) return '🐺 Элита';
   if (purchases.title_legend) return '👑 Легенда';
-  if (purchases.title_beast) return '🦁 Зверюга';
-  if (purchases.title_grinder) return '💎 Грайндер';
+  if (purchases.title_beast) return '🦁 Топ-перформер';
+  if (purchases.title_grinder) return '💎 Профессионал';
   return null;
 }
 
@@ -4289,7 +4245,7 @@ function renderShop() {
   document.getElementById('shopXpBalance').textContent = balance;
 
   const container = document.getElementById('shopGrid');
-  const categories = { boost: '⚡ Бусты', cosmetic: '🎨 Титулы', reward: '🎁 Награды', theme: '🎨 Темы' };
+  const categories = { boost: '⚡ Усиления', cosmetic: '🎨 Статусы', reward: '🎁 Награды', theme: '🎨 Темы' };
   let html = '';
 
   for (const [catKey, catName] of Object.entries(categories)) {
@@ -4406,7 +4362,7 @@ async function insertShift(shift) {
   shifts.sort((a, b) => b.date.localeCompare(a.date));
   backupToLocal();
   setSyncStatus('warn', '📱 Сохранено локально');
-  showToast('Облако недоступно — смена сохранена на телефоне, зальётся позже', 'warn');
+  showToast('Сервер недоступен — смена сохранена локально, синхронизируется позже', 'warn');
   return true;
 }
 
@@ -4448,7 +4404,7 @@ async function flushPendingShifts() {
   }
   uSet('ozon_pending_shifts', stillPending);
   if (synced > 0) {
-    showToast(`☁️ Залито в облако: ${synced} ${synced === 1 ? 'смена' : 'смен'}`, 'success');
+    showToast(`☁️ Синхронизировано: ${synced} ${synced === 1 ? 'смена' : 'смен'}`, 'success');
     await loadShifts();
     render();
   }
@@ -4931,10 +4887,10 @@ function calMarkSelected(type) {
     showToast('✕ Отметка убрана', 'success');
   } else if (type === 'dayoff') {
     plan[calSelectedDate] = 'dayoff';
-    showToast('🌴 Выходной поставлен!', 'success');
+    showToast('🌴 Выходной отмечен', 'success');
   } else if (type === 'planned') {
     plan[calSelectedDate] = 'planned';
-    showToast('📋 Смена запланирована!', 'success');
+    showToast('📋 Смена запланирована', 'success');
   }
   saveCalendarPlan(plan);
   renderCalendar();
@@ -5128,7 +5084,7 @@ function renderCloudSyncTag() {
 function checkWeeklyFreeChoice() {
   const wc = getWeeklyCategoryChoice();
   if (!wc.used) {
-    setTimeout(() => showToast('🎁 Доступен бесплатный выбор категории лайф-квестов!', 'success'), 1800);
+    setTimeout(() => showToast('🎁 Доступен бесплатный выбор категории заданий', 'success'), 1800);
   }
 }
 
@@ -5146,12 +5102,12 @@ document.addEventListener('visibilitychange', () => {
   }
 });
 window.addEventListener('online', () => {
-  showToast('🌐 Сеть вернулась — синхронизирую', 'success');
+  showToast('🌐 Соединение восстановлено — синхронизация', 'success');
   setSyncStatus('syncing', '⏳ Синхронизация...');
   flushPendingShifts().catch(e => console.error(e));
 });
 window.addEventListener('offline', () => {
-  showToast('📴 Нет интернета — работаю в офлайне', 'warn');
+  showToast('📴 Нет подключения — автономный режим', 'warn');
   setSyncStatus('warn', '📴 Офлайн');
 });
 
@@ -5174,7 +5130,7 @@ async function addShift() {
   if (!date || !hours || !earned || hours <= 0 || earned <= 0) {
     document.querySelector('.btn-add').style.animation = 'shake 0.4s ease';
     setTimeout(() => document.querySelector('.btn-add').style.animation = '', 400);
-    showToast('Заполни дату, часы и заработок', 'error');
+    showToast('Заполните дату, часы и заработок', 'error');
     return;
   }
 
@@ -5189,7 +5145,7 @@ async function addShift() {
   const ok = await insertShift({ date, hours, earned, note });
 
   btn.disabled = false;
-  btn.textContent = '🪙 ДОБАВИТЬ';
+  btn.textContent = '➕ ДОБАВИТЬ';
 
   if (ok) {
     document.getElementById('inputHours').value = '';
@@ -5243,7 +5199,7 @@ function exportDataCSV() {
   rows.push(['ИТОГО', totalH.toFixed(1), totalE, totalH > 0 ? Math.round(totalE / totalH) : 0, '']);
   const csv = '\uFEFF' + rows.map(r => r.map(c => `"${c}"`).join(';')).join('\n');
   downloadFile(`ozon_smeny_${todayStr()}.csv`, csv, 'text/csv;charset=utf-8');
-  showToast('📤 CSV скачан', 'success');
+  showToast('📤 CSV-файл скачан', 'success');
 }
 
 function exportDataJSON() {
@@ -5265,7 +5221,7 @@ function exportDataJSON() {
     chartMode: chartMode
   };
   downloadFile(`ozon_backup_${todayStr()}.json`, JSON.stringify(dump, null, 2), 'application/json');
-  showToast('💾 Полный бэкап скачан', 'success');
+  showToast('💾 Резервная копия скачана', 'success');
 }
 
 // FIX: бэкап можно было СКАЧАТЬ, но нельзя было ЗАГРУЗИТЬ обратно —
@@ -5389,7 +5345,7 @@ function render() {
   const activeTitle = getActiveTitle();
   const subtitleEl = document.querySelector('.header .subtitle');
   if (subtitleEl && activeTitle) {
-    subtitleEl.textContent = `${activeTitle} · Копим как Скрудж МакДак 🦆`;
+    subtitleEl.textContent = `${activeTitle} · Трекер продуктивности`;
   }
 
   // Level
@@ -5402,7 +5358,7 @@ function render() {
     document.getElementById('xpText').textContent = `${xp.toLocaleString('ru-RU')} / ${nextLevel.xp.toLocaleString('ru-RU')} XP`;
   } else {
     document.getElementById('xpFill').style.width = '100%';
-    document.getElementById('xpText').textContent = 'MAX LEVEL! 🦆';
+    document.getElementById('xpText').textContent = 'МАКСИМАЛЬНЫЙ УРОВЕНЬ';
   }
 
   // Streak
@@ -5421,7 +5377,7 @@ function render() {
   // History
   const shiftList = document.getElementById('shiftList');
   if (shifts.length === 0) {
-    shiftList.innerHTML = `<div class="empty-state"><div class="emoji">🦆</div><p>Пока пусто — добавь первую смену!</p></div>`;
+    shiftList.innerHTML = `<div class="empty-state"><div class="emoji">📊</div><p>Нет данных — добавьте первую смену</p></div>`;
   } else {
     shiftList.innerHTML = shifts.map(s => {
       const cls = s.rate >= goal ? 'goal-hit' : (s.rate >= goal * 0.9 ? 'goal-close' : 'goal-miss');
@@ -5522,7 +5478,7 @@ function renderMonthGoal() {
     </div>
     <div class="xp-bar" style="margin:4px 0 10px;"><div class="xp-fill" style="width:${pct}%"></div></div>
     ${left > 0 && shiftsLeft ? `<div class="mg-note">≈ ещё ${shiftsLeft} ${pluralShifts(shiftsLeft)} до цели</div>` : ''}
-  ` : `<div class="mg-note">Цель не задана — нажми «Изменить», чтобы поставить план на месяц</div>`;
+  ` : `<div class="mg-note">Цель не задана — нажмите «Изменить», чтобы установить план на месяц</div>`;
 
   el.innerHTML = `
     ${goalBlock}
@@ -5544,7 +5500,7 @@ function pluralShifts(n) {
 function renderDowStats() {
   const el = document.getElementById('dowCard');
   if (!el) return;
-  if (!shifts.length) { el.innerHTML = `<div class="mg-note">Нет данных — отработай первую смену</div>`; return; }
+  if (!shifts.length) { el.innerHTML = `<div class="mg-note">Нет данных — добавьте первую смену</div>`; return; }
   const names = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
   const buckets = names.map(() => ({ earned: 0, hours: 0, count: 0 }));
   for (const s of shifts) {
@@ -5583,7 +5539,7 @@ function renderRecords() {
   const fmtD = d => { const p = d.split('-'); return new Date(parseInt(p[0]), parseInt(p[1]) - 1, parseInt(p[2])).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }); };
   el.innerHTML = `
     <div class="mg-row"><span>💰 Лучшая смена</span><b>${bestEarn.earned.toLocaleString('ru-RU')} ₽ <span class="rec-date">${fmtD(bestEarn.date)}</span></b></div>
-    <div class="mg-row"><span>💎 Лучший rate</span><b>${bestRate.rate.toLocaleString('ru-RU')} ₽/ч <span class="rec-date">${fmtD(bestRate.date)}</span></b></div>
+    <div class="mg-row"><span>💎 Лучшая ставка</span><b>${bestRate.rate.toLocaleString('ru-RU')} ₽/ч <span class="rec-date">${fmtD(bestRate.date)}</span></b></div>
     <div class="mg-row"><span>⏱ Самая долгая смена</span><b>${longest.hours} ч <span class="rec-date">${fmtD(longest.date)}</span></b></div>
     <div class="mg-row"><span>🔥 Лучший страйк</span><b>${bestStreak} ${bestStreak === 1 ? 'день' : 'дней'}</b></div>`;
 }
@@ -5718,7 +5674,7 @@ function renderChart() {
     `за ${days} дн. · смен: ${workedDays}`;
 
   if (total === 0) {
-    body.innerHTML = `<div class="chart-empty">Нет смен за этот период 🦆<br>Выйди на смену — появится график</div>`;
+    body.innerHTML = `<div class="chart-empty">Нет данных за этот период<br>Добавьте смену — появится график</div>`;
     return;
   }
 
@@ -5759,7 +5715,7 @@ function renderChart() {
     <div class="chart-bars${dense}">${barsHtml}</div>
     <div class="chart-xaxis${dense}">${labelsHtml}</div>
     <div class="chart-legend">
-      <span><i style="background:#00e676"></i> цель взята</span>
+      <span><i style="background:#00e676"></i> цель достигнута</span>
       <span><i style="background:#4a4a5e"></i> ниже цели</span>
     </div>
   `;
@@ -5767,7 +5723,7 @@ function renderChart() {
 
 // ====== PWA: SERVICE WORKER ======
 // Регистрируем только по http/https — с file:// браузер ругается.
-const APP_VERSION = 'v5.0.0';
+const APP_VERSION = 'v5.1.0';
 
 // Страховка: кнопка баннера обязана работать даже если обработчик
 // от service worker по какой-то причине не навесился.
@@ -5907,7 +5863,7 @@ function updateLiveRate() {
       el.className = 'live-rate-amount break-loss';
       const breakMin = (activeShift.currentBreak ? (now - activeShift.currentBreak.start) : 0) / 60000;
       const lossPerMin = Math.round(recentRate / 60);
-      lbl.innerHTML = `☕ на перерыве · теряешь <span class="loss">~${lossPerMin} ₽/мин</span>`;
+      lbl.innerHTML = `☕ перерыв · потери <span class="loss">~${lossPerMin} ₽/мин</span>`;
     } else {
       el.className = 'live-rate-amount earning';
       lbl.textContent = `⚡ прогноз по ~${currentRate} ₽/час`;
@@ -5948,7 +5904,7 @@ function updateFocusMode() {
   const recentRate = shifts.length > 0 ? shifts.slice(0, 5).reduce((s, x) => s + x.rate, 0) / Math.min(shifts.length, 5) : 850;
   const estimated = Math.round(recentRate * workMs / 3600000);
   document.getElementById('focusEarn').textContent = `~${estimated.toLocaleString('ru-RU')} ₽`;
-  document.getElementById('focusSub').textContent = activeShift.status === 'break' ? '☕ перерыв' : '💪 работаю';
+  document.getElementById('focusSub').textContent = activeShift.status === 'break' ? '☕ перерыв' : '💪 в работе';
   const brkBtn = document.querySelector('.focus-btn.brk');
   if (brkBtn) brkBtn.textContent = activeShift.status === 'break' ? '▶ Работать' : '☕ Перерыв';
 }
@@ -6034,7 +5990,7 @@ function renderKopilka() {
   const remaining = Math.max(k.goal - total, 0);
   const avgPerShift = shifts.length > 0 ? shifts.reduce((s, x) => s + x.earned, 0) / shifts.length : 0;
   const shiftsLeft = avgPerShift > 0 ? Math.ceil(remaining / avgPerShift) : '∞';
-  document.getElementById('kopilkaSub').textContent = remaining > 0 ? `Осталось ~${shiftsLeft} смен` : '🎉 Цель достигнута!';
+  document.getElementById('kopilkaSub').textContent = remaining > 0 ? `Осталось ~${shiftsLeft} смен` : '🎉 Цель достигнута';
 }
 function setupKopilka() {
   const k = getKopilka() || {};
@@ -6054,17 +6010,17 @@ function saveKopilka() {
   saveKopilkaData({ name: name || 'Цель', goal });
   closeKopilkaModal();
   renderKopilka();
-  showToast(`🎯 Копилка «${name || 'Цель'}» установлена!`, 'success');
+  showToast(`🎯 Цель «${name || 'Цель'}» установлена`, 'success');
 }
 
 // --- Weekly Challenge ---
 const WEEKLY_CHALLENGES = [
-  { id:'wc_5shifts', title:'Марафонец', desc:'Выйди на 5 смен за неделю', target:5, unit:'shifts', reward:300, icon:'🏃' },
-  { id:'wc_40hours', title:'Трудоголик', desc:'Отработай 40 часов за неделю', target:40, unit:'hours', reward:400, icon:'⏰' },
-  { id:'wc_50k', title:'Полтинник', desc:'Заработай 50 000₽ за неделю', target:50000, unit:'earned', reward:500, icon:'💸' },
-  { id:'wc_avg900', title:'Топ-рейтер', desc:'Средний rate ≥ 900₽/час за неделю', target:900, unit:'avg_rate', reward:350, icon:'🚀' },
-  { id:'wc_streak5', title:'Без выходных', desc:'5 дней подряд работай', target:5, unit:'streak', reward:400, icon:'🔥' },
-  { id:'wc_3quests', title:'Квестоман', desc:'Выполни 15+ лайф-квестов за неделю', target:15, unit:'quests', reward:300, icon:'⚔️' },
+  { id:'wc_5shifts', title:'Пятидневка', desc:'Отработать 5 смен за неделю', target:5, unit:'shifts', reward:300, icon:'🏃' },
+  { id:'wc_40hours', title:'Полная загрузка', desc:'Отработать 40 часов за неделю', target:40, unit:'hours', reward:400, icon:'⏰' },
+  { id:'wc_50k', title:'50К за неделю', desc:'Заработать 50 000₽ за неделю', target:50000, unit:'earned', reward:500, icon:'💸' },
+  { id:'wc_avg900', title:'Топ-эффективность', desc:'Средний rate ≥ 900₽/час за неделю', target:900, unit:'avg_rate', reward:350, icon:'🚀' },
+  { id:'wc_streak5', title:'Непрерывная серия', desc:'5 дней подряд в работе', target:5, unit:'streak', reward:400, icon:'🔥' },
+  { id:'wc_3quests', title:'Активист', desc:'Выполнить 15+ заданий за неделю', target:15, unit:'quests', reward:300, icon:'⚔️' },
 ];
 function getWeeklyChallenge() {
   const saved = uGet('weekly_challenge', null);
@@ -6125,7 +6081,7 @@ function renderWeeklyChallenge() {
     wc.completed = true;
     uSet('weekly_challenge', wc);
     addLifeXP('wc_' + wc.id, wc.reward, 'challenge');
-    showToast(`🎉 Челлендж «${wc.title}» выполнен! +${wc.reward} XP`, 'success');
+    showToast(`🎉 Вызов «${wc.title}» выполнен! +${wc.reward} XP`, 'success');
     haptic('success');
   }
 }
@@ -6157,15 +6113,15 @@ function renderInsight() {
     const rate = st.hours > 0 ? st.earned / st.hours : 0;
     if (rate > bestDayRate) { bestDayRate = rate; bestDay = dayNames[dow]; }
   });
-  if (bestDay) insights.push({ icon: '📅', text: `Твой лучший день — <b>${bestDay}</b> со средним rate <b>${Math.round(bestDayRate)} ₽/час</b>. Планируй больше смен на этот день!` });
+  if (bestDay) insights.push({ icon: '📅', text: `Лучший день — <b>${bestDay}</b>, средний rate <b>${Math.round(bestDayRate)} ₽/час</b>. Рекомендуется планировать больше смен на этот день.` });
 
   // Trend
   if (shifts.length >= 5) {
     const last5 = shifts.slice(0, 5).reduce((s, x) => s + x.rate, 0) / 5;
     const prev5 = shifts.length >= 10 ? shifts.slice(5, 10).reduce((s, x) => s + x.rate, 0) / 5 : avgRate;
     const diff = last5 - prev5;
-    if (diff > 20) insights.push({ icon: '📈', text: `Твой rate растёт! Последние 5 смен в среднем <b>${Math.round(last5)} ₽/час</b> — это на <b>+${Math.round(diff)}</b> больше. Держи темп!` });
-    else if (diff < -20) insights.push({ icon: '📉', text: `Rate немного упал. Последние 5 смен — <b>${Math.round(last5)} ₽/час</b>. Попробуй работать в свой лучший день (${bestDay || 'Пн'})!` });
+    if (diff > 20) insights.push({ icon: '📈', text: `Ваш rate растёт! Последние 5 смен в среднем <b>${Math.round(last5)} ₽/час</b> — на <b>+${Math.round(diff)}</b> больше. Отличная динамика.` });
+    else if (diff < -20) insights.push({ icon: '📉', text: `Rate снизился. Последние 5 смен — <b>${Math.round(last5)} ₽/час</b>. Рекомендуется планировать смены на ${bestDay || 'Пн'}.` });
   }
 
   // Hours optimization
@@ -6177,7 +6133,7 @@ function renderInsight() {
     const avgLong = longRate.reduce((s, x) => s + x.rate, 0) / longRate.length;
     const avgShort = shortRate.reduce((s, x) => s + x.rate, 0) / shortRate.length;
     if (avgLong > avgShort + 30) {
-      insights.push({ icon: '⏰', text: `Длинные смены (8+ ч) дают тебе <b>${Math.round(avgLong)} ₽/час</b> vs <b>${Math.round(avgShort)}</b> на коротких. Планируй длиннее!` });
+      insights.push({ icon: '⏰', text: `Длинные смены (8+ ч) дают <b>${Math.round(avgLong)} ₽/час</b> vs <b>${Math.round(avgShort)}</b> на коротких. Рекомендуются длинные смены.` });
     }
   }
 
@@ -6186,7 +6142,7 @@ function renderInsight() {
   if (remaining > 0 && totalEarned > 0) {
     const avgPerShift = totalEarned / shifts.length;
     const shiftsToMillion = Math.ceil(remaining / avgPerShift);
-    insights.push({ icon: '🏆', text: `До миллиона осталось <b>${remaining.toLocaleString('ru-RU')} ₽</b> — ещё ~<b>${shiftsToMillion} смен</b>. Ты сможешь!` });
+    insights.push({ icon: '🏆', text: `До миллиона осталось <b>${remaining.toLocaleString('ru-RU')} ₽</b> — ~<b>${shiftsToMillion} смен</b>. Цель достижима.` });
   }
 
   if (insights.length === 0) { el.style.display = 'none'; return; }
@@ -6412,7 +6368,7 @@ function drawWheel(rotation) {
 function spinWheel() {
   if (wheelSpinning) return;
   const xpData = getLifeXP();
-  if (xpData.total < 120) { showToast('❌ Нужно 120 XP для рулетки', 'error'); return; }
+  if (xpData.total < 120) { showToast('❌ Необходимо 120 XP', 'error'); return; }
   removeLifeXP('wheel_spin', 120, 'wheel');
   renderLifeStats();
 
@@ -6448,13 +6404,13 @@ function spinWheel() {
 // --- Contextual phrases for timer ---
 function getTimerPhrase(workMs) {
   const hours = workMs / 3600000;
-  if (hours < 0.5) return '🚀 Разогреваемся!';
-  if (hours < 1) return '💪 Первый час — настройся!';
-  if (hours < 2) return '⚡ В потоке!';
-  if (hours < 4) return '🔥 Горишь на работе!';
-  if (hours < 6) return '💎 Уже красавчик!';
-  if (hours < 8) return '🦁 Зверь на грайнде!';
-  return '👑 Легенда! 8+ часов!';
+  if (hours < 0.5) return '🚀 Начало работы';
+  if (hours < 1) return '💪 Первый час — настройка';
+  if (hours < 2) return '⚡ Рабочий ритм';
+  if (hours < 4) return '🔥 Продуктивная работа';
+  if (hours < 6) return '💎 Отличный темп';
+  if (hours < 8) return '🦁 Высокая продуктивность';
+  return '👑 Выдающийся результат!';
 }
 
 // --- Enhanced timer update ---
@@ -6531,13 +6487,13 @@ setTimeout(() => {
     const kopilkaBtn = document.createElement('button');
     kopilkaBtn.className = 'fab-item';
     kopilkaBtn.onclick = setupKopilka;
-    kopilkaBtn.innerHTML = '<span class="fab-icon">🎯</span><span class="fab-label">Копилка</span>';
+    kopilkaBtn.innerHTML = '<span class="fab-icon">🎯</span><span class="fab-label">Цель</span>';
     fabMenu.appendChild(kopilkaBtn);
 
     const wheelBtn = document.createElement('button');
     wheelBtn.className = 'fab-item';
     wheelBtn.onclick = openWheelModal;
-    wheelBtn.innerHTML = '<span class="fab-icon">🎡</span><span class="fab-label">Рулетка</span>';
+    wheelBtn.innerHTML = '<span class="fab-icon">🎡</span><span class="fab-label">Бонусы</span>';
     fabMenu.appendChild(wheelBtn);
 
     const focusBtn = document.createElement('button');
@@ -6623,20 +6579,20 @@ setTimeout(function() {
     <div class="summary-title">🏁 ИТОГИ СМЕНЫ</div>
     <div class="summary-grid" id="summaryGrid"></div>
     <div class="summary-streak" id="summaryStreak"></div>
-    <button class="summary-close-btn" onclick="closeSummary()">Красавчик! 🦆</button>
+    <button class="summary-close-btn" onclick="closeSummary()">Отличная работа! ✅</button>
   </div>
 </div>
 
 <!-- FORTUNE WHEEL MODAL -->
 <div class="modal-overlay" id="wheelModal">
   <div class="modal-content" style="max-width:340px">
-    <div class="modal-title">🎡 Колесо Фортуны</div>
+    <div class="modal-title">🎡 Колесо бонусов</div>
     <div class="wheel-modal-inner">
       <div class="wheel-canvas-wrap">
         <div class="wheel-pointer">▼</div>
         <canvas id="wheelCanvas" width="280" height="280"></canvas>
       </div>
-      <button class="wheel-spin-btn" id="wheelSpinBtn" onclick="spinWheel()">🎰 КРУТИТЬ! (120 XP)</button>
+      <button class="wheel-spin-btn" id="wheelSpinBtn" onclick="spinWheel()">🎰 КРУТИТЬ (120 XP)</button>
       <div class="wheel-result" id="wheelResult"></div>
     </div>
     <button class="modal-close-btn" onclick="closeWheelModal()">Закрыть</button>
