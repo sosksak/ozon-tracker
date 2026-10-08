@@ -3015,9 +3015,11 @@ function mergeUnion(localRaw, cloudRaw) {
   return JSON.stringify(Object.assign({}, b, a));
 }
 
-// Главное правило слияния: НИКОГДА не уменьшаем накопленный XP и не теряем
-// историю — берём максимум/объединение, чтобы «пустое» устройство не затёрло облако.
-function mergeLifeXP(localRaw, cloudRaw) {
+// Слияние XP. По умолчанию берём максимум — чтобы устройство с пустым
+// localStorage не затёрло накопленный прогресс.
+// НО если это устройство заведомо свежее облака (preferLocal), доверяем его
+// total: иначе снятая галочка квеста возвращала бы XP назад из облака.
+function mergeLifeXP(localRaw, cloudRaw, preferLocal = false) {
   let a = {}, b = {};
   try { a = JSON.parse(localRaw || '{}'); } catch(e) {}
   try { b = JSON.parse(cloudRaw || '{}'); } catch(e) {}
@@ -3027,11 +3029,15 @@ function mergeLifeXP(localRaw, cloudRaw) {
   for (const src of [a.cats || {}, b.cats || {}]) {
     for (const [k, v] of Object.entries(src)) cats[k] = Math.max(cats[k] || 0, v || 0);
   }
+
+  const hasLocal = localRaw !== null && localRaw !== undefined && a && typeof a.total === 'number';
+  const total = (preferLocal && hasLocal) ? a.total : Math.max(a.total || 0, b.total || 0);
+
   return JSON.stringify({
-    total: Math.max(a.total || 0, b.total || 0),
-    cats,
+    total,
+    cats: (preferLocal && hasLocal && a.cats) ? a.cats : cats,
     history: hist.slice(-500),
-    questsDone: Math.max(a.questsDone || 0, b.questsDone || 0),
+    questsDone: (preferLocal && hasLocal) ? (a.questsDone || 0) : Math.max(a.questsDone || 0, b.questsDone || 0),
     daysDone: Math.max(a.daysDone || 0, b.daysDone || 0),
     lastDay: (a.lastDay || '') > (b.lastDay || '') ? a.lastDay : b.lastDay
   });
@@ -3058,7 +3064,8 @@ function applyProgress(cloud) {
     }
 
     if (k === 'ozon_life_xp') {
-      const merged = mergeLifeXP(localVal, cloudVal);
+      // Локальное свежее облака → доверяем ему (снятие галочки = минус XP).
+      const merged = mergeLifeXP(localVal, cloudVal, !cloudIsNewer);
       if (merged !== localVal) { localStorage.setItem(k, merged); changed = true; }
       continue;
     }
@@ -3929,7 +3936,7 @@ function renderChart() {
 
 // ====== PWA: SERVICE WORKER ======
 // Регистрируем только по http/https — с file:// браузер ругается.
-const APP_VERSION = 'v4.4.0';
+const APP_VERSION = 'v4.4.1';
 
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
   window.addEventListener('load', () => {
