@@ -1888,7 +1888,7 @@ function renderAuthGate() {
     card.innerHTML = `
       <div class="auth-logo">✨</div>
       <div class="auth-title">НОВЫЙ ПРОФИЛЬ</div>
-      <div class="auth-sub">Обычный доступ: вести смены, квесты, магазин.<br>Нужен пароль разработчика — иначе профиль не создать.</div>
+      <div class="auth-sub">Обычный доступ: вести смены, квесты, магазин.</div>
       ${errHtml}
       <div class="auth-field">
         <label class="auth-label">Логин</label>
@@ -1901,11 +1901,6 @@ function renderAuthGate() {
       <div class="auth-field">
         <label class="auth-label">Пароль</label>
         <input class="auth-input" id="nuPass" type="password" placeholder="минимум 4 символа" autocomplete="new-password">
-      </div>
-      <div class="auth-divider">подтверждение владельца</div>
-      <div class="auth-field">
-        <label class="auth-label">Пароль разработчика</label>
-        <input class="auth-input" id="nuOwner" type="password" placeholder="пароль главного профиля" autocomplete="off">
       </div>
       <button class="auth-btn primary" onclick="authDoCreateUser()">СОЗДАТЬ И ВОЙТИ</button>
       <button class="auth-btn ghost" onclick="authSetView('choose')">← Назад</button>
@@ -2008,19 +2003,6 @@ async function authDoCreateUser() {
   const login = (document.getElementById('nuLogin') || {}).value || '';
   const name  = (document.getElementById('nuName')  || {}).value || '';
   const pass  = (document.getElementById('nuPass')  || {}).value || '';
-  const owner = (document.getElementById('nuOwner') || {}).value || '';
-
-  // Регистрация НЕ открытая: без пароля разработчика любой человек со ссылкой
-  // создал бы себе профиль и попал внутрь. Пароль владельца = приглашение.
-  const devAcc = getAccounts().find(a => a.role === 'dev');
-  if (devAcc) {
-    if (!owner) { authError = 'Введи пароль разработчика'; renderAuthGate(); return; }
-    if (!(await verifyPassword(owner, devAcc))) {
-      authError = 'Неверный пароль разработчика';
-      renderAuthGate();
-      return;
-    }
-  }
 
   try {
     const acc = await createAccount(login, pass, 'user', name);
