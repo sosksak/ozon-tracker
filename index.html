@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Tracker">
-<link rel="manifest" href="manifest.json?v=5">
+<link rel="manifest" href="manifest.json?v=6">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -86,8 +86,10 @@ body {
   background: var(--bg-main);
   color: var(--text);
   min-height: 100vh;
+  min-height: 100dvh; /* iOS Safari: 100vh больше видимой области — даёт лишний скролл */
   overflow-x: hidden;
-  padding-bottom: 80px;
+  /* нижний бар + жестовая полоска iPhone, иначе последний блок не доскроллить */
+  padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -143,7 +145,9 @@ body {
 /* HEADER */
 .header {
   background: var(--primary);
-  padding: 18px 16px 14px; text-align: center; position: relative;
+  /* +safe-area сверху: статус-бар iPhone (black-translucent + viewport-fit=cover)
+     иначе часы/батарея накладываются на заголовок */
+  padding: calc(18px + env(safe-area-inset-top, 0px)) 16px 14px; text-align: center; position: relative;
   border-bottom: 3px solid var(--accent);
 }
 .header::before { display: none; }
@@ -181,7 +185,7 @@ body {
 
 /* FLOATING ACTION BUTTON */
 .fab-container {
-  position: fixed; bottom: 20px; right: 16px; z-index: 1000;
+  position: fixed; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); right: 16px; z-index: 1000;
   display: flex; flex-direction: column-reverse; align-items: flex-end; gap: 8px;
   pointer-events: none;
 }
@@ -1074,7 +1078,7 @@ body {
 
 /* ====== UPDATE BANNER ====== */
 .update-banner {
-  position: fixed; left: 12px; right: 12px; bottom: 84px; z-index: 1100;
+  position: fixed; left: 12px; right: 12px; bottom: calc(84px + env(safe-area-inset-bottom, 0px)); z-index: 1100;
   display: none; align-items: center; gap: 10px;
   background: #FFFFFF; border: 1px solid var(--accent);
   border-radius: var(--radius-md); padding: 12px 14px;
@@ -1154,7 +1158,8 @@ body {
 
 /* SYNC STATUS */
 .sync-status {
-  position: fixed; bottom: 12px; right: 12px;
+  /* слева: справа его перекрывала FAB-кнопка (z-index 1000) */
+  position: fixed; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); left: 12px;
   padding: 6px 12px; border-radius: var(--radius-sm); font-size: 11px; font-weight: 700;
   background: rgba(255,255,255,0.95); z-index: 100; transition: all 0.2s;
   border: 1px solid var(--border); box-shadow: var(--shadow-sm);
@@ -1181,7 +1186,7 @@ body {
   position: fixed; inset: 0; z-index: 10050;
   background: var(--bg-main);
   display: none; align-items: center; justify-content: center;
-  padding: 20px; overflow-y: auto;
+  padding: calc(20px + env(safe-area-inset-top, 0px)) 20px calc(20px + env(safe-area-inset-bottom, 0px)); overflow-y: auto;
 }
 .auth-gate.show { display: flex; }
 body.modal-open { overflow: hidden !important; touch-action: none; }
@@ -6887,6 +6892,10 @@ window.addEventListener('offline', () => {
   setSyncStatus('warn', '📴 Офлайн');
 });
 
+// Старт БЕЗ сети: события 'offline' не будет (оно уже случилось до загрузки),
+// и индикатор остался бы на статическом «☁️ Облако». Выставляем явно.
+if (!navigator.onLine) setSyncStatus('warn', '📴 Офлайн');
+
 // ====== DIFFICULTY ======
 function setDifficulty(diff, doRender = true) {
   difficulty = diff;
@@ -7504,7 +7513,7 @@ function renderChart() {
 
 // ====== PWA: SERVICE WORKER ======
 // Регистрируем только по http/https — с file:// браузер ругается.
-const APP_VERSION = 'v6.0.0';
+const APP_VERSION = 'v6.0.1';
 
 // Страховка: кнопка баннера обязана работать даже если обработчик
 // от service worker по какой-то причине не навесился.

@@ -11,7 +11,7 @@
 // раньше, чем пользователь успел нажать кнопку. Активируемся только по команде
 // SKIP_WAITING из страницы.
 
-const VERSION = 'v6.0.0';
+const VERSION = 'v6.0.1';
 const CACHE = 'ozon-tracker-' + VERSION;
 
 const PRECACHE = [

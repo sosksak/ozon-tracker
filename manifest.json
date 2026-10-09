@@ -1,13 +1,13 @@
 {
-  "name": "OZON Grind Tracker",
-  "short_name": "Grind",
-  "description": "Трекер смен, заработка и квестов",
+  "name": "Life & Work Tracker",
+  "short_name": "Tracker",
+  "description": "Учёт смен, заработка, привычек, здоровья и финансов",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#0f0f1a",
-  "theme_color": "#0f0f1a",
+  "background_color": "#F7F8FA",
+  "theme_color": "#1B3A5C",
   "lang": "ru",
   "categories": ["productivity", "utilities"],
   "icons": [
