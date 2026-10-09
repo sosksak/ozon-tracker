@@ -2817,6 +2817,7 @@ function switchTab(tab) {
   document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
   document.getElementById('content' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
   if (tab === 'shop') renderShop();
+  if (tab === 'stats') scheduleRender();
 }
 
 function openManualAdd() {
@@ -2936,11 +2937,7 @@ function putShiftMeta(shift, meta) {
   saveShiftMeta(all);
 }
 
-function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
-}
+function escapeHtml(t) { return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 function formatDuration(ms) {
   const totalSec = Math.floor(ms / 1000);
@@ -3367,13 +3364,22 @@ function restoreLostXPOnce() {
   } catch (e) { console.warn('XP restore skipped:', e); }
 }
 
+// --- localStorage parse cache ---
+const _lsCache = {};
+function _cachedGet(key, fallback) {
+  const raw = localStorage.getItem(uKey(key));
+  if (raw === null) return typeof fallback === 'object' ? JSON.parse(JSON.stringify(fallback)) : fallback;
+  if (_lsCache[key] && _lsCache[key].raw === raw) return JSON.parse(JSON.stringify(_lsCache[key].val));
+  try { const val = JSON.parse(raw); _lsCache[key] = { raw, val }; return JSON.parse(JSON.stringify(val)); } catch(e) { return fallback; }
+}
+function _invalidateCache(key) { delete _lsCache[key]; }
+
 function getLifeXP() {
-  try {
-    return uGet('ozon_life_xp', {"total":0,"cats":{},"history":[],"questsDone":0,"daysDone":0,"lastDay":""});
-  } catch(e) { return { total: 0, cats: {}, history: [], questsDone: 0, daysDone: 0, lastDay: '' }; }
+  return _cachedGet('ozon_life_xp', {"total":0,"cats":{},"history":[],"questsDone":0,"daysDone":0,"lastDay":""});
 }
 
 function saveLifeXP(data) {
+  _invalidateCache('ozon_life_xp');
   uSet('ozon_life_xp', data);
   schedulePushProgress();
 }
@@ -3608,14 +3614,13 @@ const MAX_REROLLS = 3;
 // ====== BONUS SYSTEM ======
 function getShiftBonuses() {
   const today = todayStr();
-  try {
-    const saved = uGet('ozon_shift_bonuses', {});
-    if (saved.date === today) return saved;
-    return { date: today, bonusRerolls: 0, categoryChoice: false, claimedQuests: [] };
-  } catch(e) { return { date: today, bonusRerolls: 0, categoryChoice: false, claimedQuests: [] }; }
+  const saved = _cachedGet('ozon_shift_bonuses', null);
+  if (saved && saved.date === today) return saved;
+  return { date: today, bonusRerolls: 0, categoryChoice: false, claimedQuests: [] };
 }
 
 function saveShiftBonuses(data) {
+  _invalidateCache('ozon_shift_bonuses');
   uSet('ozon_shift_bonuses', data);
   schedulePushProgress();
 }
@@ -4102,9 +4107,10 @@ function renderQuests() {
 
 // ====== SHOP SYSTEM ======
 function getShopPurchases() {
-  try { return uGet('ozon_shop_purchases', {}); } catch(e) { return {}; }
+  return _cachedGet('ozon_shop_purchases', {});
 }
 function saveShopPurchases(data) {
+  _invalidateCache('ozon_shop_purchases');
   uSet('ozon_shop_purchases', data);
   schedulePushProgress();
 }
@@ -5654,33 +5660,35 @@ function calcBestStreak(goal) {
 function getStreakShields() {
   try {
     const b = uGet('ozon_shop_boosts', {});
-    return Array.isArray(b.streak_shields) ? b.streak_shields : [];
-  } catch (e) { return []; }
+    return new Set(Array.isArray(b.streak_shields) ? b.streak_shields : []);
+  } catch (e) { return new Set(); }
 }
 
+let _streakCache = { key: '', val: 0 };
 function calcStreak(goal) {
+  const cacheKey = shifts.length + ':' + goal + ':' + (shifts[0]?.id || '');
+  if (_streakCache.key === cacheKey) return _streakCache.val;
   const shields = getStreakShields();
   const dateMap = {};
   for (const s of shifts) {
     if (!dateMap[s.date] || s.rate > dateMap[s.date]) dateMap[s.date] = s.rate;
   }
   const dates = Object.keys(dateMap).sort((a, b) => b.localeCompare(a));
-  if (dates.length === 0) return 0;
+  if (dates.length === 0) { _streakCache = { key: cacheKey, val: 0 }; return 0; }
   let streak = 0;
   const today = new Date(); today.setHours(0, 0, 0, 0);
   for (let i = 0; i < dates.length; i++) {
     const parts = dates[i].split('-');
     const shiftDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-    // Купленная защита страйка закрывает дыру в серии.
     const gapCovered = (from, to) => {
       for (let d = new Date(from); d > to; d.setDate(d.getDate() - 1)) {
         const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-        if (d.getTime() !== from.getTime() && !shields.includes(key)) return false;
+        if (d.getTime() !== from.getTime() && !shields.has(key)) return false;
       }
       return true;
     };
     if (i === 0) {
-      if (Math.floor((today - shiftDate) / 86400000) > 1 && !gapCovered(today, shiftDate)) return 0;
+      if (Math.floor((today - shiftDate) / 86400000) > 1 && !gapCovered(today, shiftDate)) { _streakCache = { key: cacheKey, val: 0 }; return 0; }
     }
     if (i > 0) {
       const prevParts = dates[i-1].split('-');
@@ -5689,6 +5697,7 @@ function calcStreak(goal) {
     }
     if (dateMap[dates[i]] >= goal) streak++; else break;
   }
+  _streakCache = { key: cacheKey, val: streak };
   return streak;
 }
 
@@ -6278,9 +6287,13 @@ function renderWeekCompare() {
 }
 
 // --- Heatmap ---
+let _heatmapLastKey = '';
 function renderHeatmap() {
   const el = document.getElementById('heatmapSection');
   if (shifts.length < 1) { el.style.display = 'none'; return; }
+  const hKey = shifts.length + ':' + (shifts[0]?.id || '') + ':' + (shifts[shifts.length-1]?.id || '');
+  if (_heatmapLastKey === hKey) return;
+  _heatmapLastKey = hKey;
   el.style.display = 'block';
 
   const grid = document.getElementById('heatmapGrid');
@@ -6518,7 +6531,7 @@ function getShiftTotals() {
   _shiftCache = { len: shifts.length, totalEarned, totalHours, avgRate: totalHours > 0 ? Math.round(totalEarned / totalHours) : 0 };
   return _shiftCache;
 }
-function invalidateShiftCache() { _shiftCache.len = -1; }
+function invalidateShiftCache() { _shiftCache.len = -1; _streakCache.key = ''; _heatmapLastKey = ''; }
 
 // --- Debounced render to avoid rapid re-renders ---
 let _renderTimer = null;
@@ -6533,13 +6546,17 @@ render = function() {
   _origRender();
   const { totalEarned } = getShiftTotals();
   countUp(document.getElementById('totalEarned'), totalEarned);
-  renderMillionPath();
-  renderKopilka();
-  renderWeeklyChallenge();
-  renderInsight();
-  renderWeekCompare();
-  renderHeatmap();
-  renderDiary();
+  // Only render heavy stats widgets when stats tab is active
+  const statsActive = document.getElementById('contentStats')?.classList.contains('active');
+  if (statsActive) {
+    renderMillionPath();
+    renderKopilka();
+    renderWeeklyChallenge();
+    renderInsight();
+    renderWeekCompare();
+    renderHeatmap();
+    renderDiary();
+  }
   checkNewAchievements();
 };
 
