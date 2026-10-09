@@ -19,7 +19,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" onload="this.rel='stylesheet'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"></noscript>
-<title>OZON | Учёт рабочего времени v5.3</title>
+<title>Life &amp; Work Tracker v6.0</title>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="config.js?v=7"></script>
@@ -1358,6 +1358,1619 @@ body:not(.role-dev) .dev-only { display: none !important; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
+
+
+/* ================================================================
+   V6.0 MODULES — Dashboard / Habits / Health / Finance / Crypto
+   ================================================================ */
+/* ================================================================
+   V6 NAVIGATION — 5 вкладок с иконками
+   ================================================================ */
+
+.tab-nav {
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  box-shadow: var(--shadow-sm);
+}
+
+.tab-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 8px 2px 9px;
+  min-height: 52px;
+  font-size: 9px;
+  letter-spacing: 0.3px;
+}
+
+.tab-btn .tab-ico {
+  font-size: 19px;
+  line-height: 1;
+  filter: grayscale(100%) opacity(0.55);
+  transition: filter 0.2s ease, transform 0.2s ease;
+}
+
+.tab-btn.active .tab-ico {
+  filter: none;
+  transform: translateY(-1px) scale(1.08);
+}
+
+.tab-btn .tab-lbl {
+  font-weight: 700;
+  line-height: 1;
+}
+
+.tab-btn:active .tab-ico { transform: scale(0.94); }
+
+/* Контейнер вкладки v6 */
+.v6-tab-content {
+  padding: 0 14px 96px;
+}
+
+.v6-tab-content.active {
+  animation: v6-fade-up 0.28s ease both;
+}
+
+/* Слот отдельного модуля внутри составной вкладки */
+.v6-module-slot { margin-top: 14px; }
+.v6-module-slot:first-child { margin-top: 0; }
+.v6-module-slot:empty { display: none; }
+
+/* Разделитель между модулями в составной вкладке */
+.v6-module-slot + .v6-module-slot {
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+@keyframes v6-fade-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* select внутри модальной формы askForm */
+select.auth-input {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23718096' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 16px;
+  padding-right: 34px;
+  cursor: pointer;
+}
+
+textarea.auth-input {
+  font-family: 'Inter', sans-serif;
+  line-height: 1.45;
+}
+
+@media (max-width: 360px) {
+  .tab-btn { font-size: 8px; }
+  .tab-btn .tab-ico { font-size: 17px; }
+}
+
+
+/* ================================================================
+   LIFE & WORK TRACKER v6.0 — MODULE CSS
+   Modules: DASHBOARD (dash-*) · HABITS (hab-*) · HEALTH (health-*)
+            FINANCE (fin-*) · PORTFOLIO (crypto-*)
+   Design system: corporate light theme, Inter, tokens from :root
+   Append after the last section of the main stylesheet.
+   ================================================================ */
+
+/* ================================================================
+   SHARED MODULE PRIMITIVES
+   ================================================================ */
+
+/* Section wrapper shared by health/fin/crypto panels */
+.health-section,
+.fin-section,
+.crypto-section,
+.hab-analytics {
+  margin: 0 var(--sp-3) var(--sp-3);
+  padding: var(--sp-4);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Section titles shared across modules */
+.dash-section-title,
+.hab-section-title,
+.health-section-title,
+.fin-section-title,
+.crypto-section-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: var(--sp-3);
+}
+
+/* Empty states */
+.fin-empty,
+.crypto-empty {
+  padding: var(--sp-5) var(--sp-4);
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-dim);
+  background: var(--bg-main);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-md);
+}
+
+/* Numeric semantics — used inside fin/crypto value nodes */
+.fin-card-value.positive,
+.crypto-total-pnl.positive,
+.crypto-hold-change.positive,
+.crypto-hold-details .positive {
+  color: var(--green);
+}
+.fin-card-value.negative,
+.crypto-total-pnl.negative,
+.crypto-hold-change.negative,
+.crypto-hold-details .negative {
+  color: var(--red);
+}
+
+/* ================================================================
+   DASHBOARD  (dash-*)
+   ================================================================ */
+
+/* — Greeting header — */
+.dash-greeting {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin: var(--sp-3);
+  padding: var(--sp-4) var(--sp-5);
+  background: var(--primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+.dash-greeting-icon {
+  font-size: 30px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.dash-greeting-text {
+  font-size: 15px;
+  font-weight: 700;
+  color: #FFFFFF;
+  letter-spacing: 0.2px;
+}
+.dash-greeting-text b {
+  font-weight: 900;
+}
+.dash-greeting-date {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.6);
+  margin-top: 2px;
+  text-transform: capitalize;
+}
+
+/* — Alerts — */
+.dash-alerts {
+  margin: 0 var(--sp-3) var(--sp-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+.dash-alert {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 10px var(--sp-3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  border-left-width: 3px;
+  background: var(--bg-card);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  box-shadow: var(--shadow-xs);
+}
+.dash-alert-icon {
+  font-size: 15px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.dash-alert--info {
+  background: var(--accent-soft);
+  border-color: var(--border);
+  border-left-color: var(--accent);
+}
+.dash-alert--warn {
+  background: var(--orange-bg);
+  border-color: var(--orange-border);
+  border-left-color: var(--orange);
+  color: #8A4513;
+}
+.dash-alert--error {
+  background: var(--red-bg);
+  border-color: var(--red-border);
+  border-left-color: var(--red);
+  color: #9B2C2C;
+}
+
+/* — Module cards grid — */
+.dash-cards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--sp-3);
+  margin: 0 var(--sp-3) var(--sp-3);
+}
+.dash-card {
+  padding: var(--sp-4);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition: border-color var(--dur-fast) var(--ease-out),
+              box-shadow var(--dur-fast) var(--ease-out),
+              transform var(--dur-fast) var(--ease-out);
+}
+.dash-card:hover {
+  border-color: var(--accent);
+  box-shadow: var(--shadow-md);
+}
+.dash-card:active {
+  transform: scale(0.985);
+}
+/* The 5th card spans both columns on the 2-col grid */
+.dash-card:nth-child(5):last-child {
+  grid-column: 1 / -1;
+}
+.dash-card-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: var(--sp-2);
+}
+.dash-card-icon {
+  font-size: 16px;
+  line-height: 1;
+}
+.dash-card-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.dash-card-value {
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.15;
+}
+.dash-card-sub {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-top: 3px;
+  line-height: 1.4;
+}
+.dash-card-status {
+  display: inline-block;
+  margin-top: var(--sp-2);
+  padding: 3px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--bg-card2);
+  color: var(--text-dim);
+  font-size: 10px;
+  font-weight: 700;
+}
+.dash-card-status.active {
+  background: var(--green-bg);
+  color: var(--green);
+}
+.dash-card-bar {
+  width: 100%;
+  height: 5px;
+  margin-top: var(--sp-3);
+  background: var(--border);
+  border-radius: var(--radius-xs);
+  overflow: hidden;
+}
+.dash-card-fill {
+  height: 100%;
+  width: 0;
+  border-radius: var(--radius-xs);
+  background: var(--accent);
+  transition: width var(--dur-normal) var(--ease-out);
+}
+
+/* — Quick actions — */
+.dash-quick-actions {
+  margin: 0 var(--sp-3) var(--sp-3);
+  padding: var(--sp-4);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+.dash-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--sp-2);
+}
+.dash-action-btn {
+  padding: var(--sp-3) 10px;
+  background: var(--bg-main);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--dur-fast) var(--ease-out);
+}
+.dash-action-btn:hover {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--primary);
+}
+.dash-action-btn:active {
+  transform: scale(0.97);
+}
+
+/* ================================================================
+   HABITS  (hab-*)
+   ================================================================ */
+
+/* — Today summary with progress ring — */
+.hab-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  margin: 0 var(--sp-3) var(--sp-3);
+  padding: var(--sp-4) var(--sp-5);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+.hab-summary-left {
+  min-width: 0;
+}
+.hab-summary-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.hab-summary-count {
+  font-size: 24px;
+  font-weight: 900;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  margin-top: var(--sp-1);
+}
+/* Conic-gradient ring driven by inline --pct (0..100) */
+.hab-summary-ring {
+  --pct: 0;
+  position: relative;
+  flex-shrink: 0;
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  background: conic-gradient(
+    var(--accent) calc(var(--pct) * 1%),
+    var(--border) 0
+  );
+  display: grid;
+  place-items: center;
+  transition: background var(--dur-normal) var(--ease-out);
+}
+.hab-summary-ring::before {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  background: var(--bg-card);
+  border-radius: 50%;
+}
+.hab-summary-ring > span {
+  position: relative;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--primary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* — Habit list — */
+.hab-list {
+  margin: 0 var(--sp-3) var(--sp-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+.hab-item {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-xs);
+  transition: all var(--dur-fast) var(--ease-out);
+}
+.hab-item:hover {
+  box-shadow: var(--shadow-sm);
+}
+.hab-item.hab-checked {
+  border-left-color: var(--green);
+  background: var(--green-bg);
+}
+.hab-check {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  font-size: 16px;
+  background: var(--bg-main);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--dur-fast) var(--ease-out);
+}
+.hab-check:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.hab-check:active {
+  transform: scale(0.9);
+}
+.hab-checked .hab-check {
+  background: var(--green);
+  border-color: var(--green);
+  color: #FFFFFF;
+}
+.hab-info {
+  flex: 1;
+  min-width: 0;
+}
+.hab-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hab-checked .hab-name {
+  color: var(--text-secondary);
+}
+.hab-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-top: 3px;
+  font-size: 10px;
+  font-weight: 600;
+}
+.hab-cat {
+  font-weight: 700;
+}
+.hab-streak {
+  padding: 2px 6px;
+  border-radius: var(--radius-pill);
+  background: var(--orange-bg);
+  color: var(--orange);
+  font-weight: 700;
+}
+.hab-rate {
+  color: var(--text-dim);
+}
+
+/* — 30-day mini heatmap — */
+.hab-mini-heat {
+  display: flex;
+  gap: 2px;
+  margin-top: 6px;
+}
+.hab-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+  background: var(--border);
+  flex-shrink: 0;
+}
+.hab-dot.done {
+  background: var(--green);
+}
+
+.hab-menu-btn {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-placeholder);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--dur-fast);
+}
+.hab-menu-btn:hover {
+  background: var(--red-bg);
+  color: var(--red);
+}
+
+/* — Inactive habits (collapsible) — */
+.hab-inactive-section {
+  margin: 0 var(--sp-3) var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-xs);
+}
+.hab-inactive-section > .hab-section-title {
+  margin-bottom: 0;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+.hab-inactive-section > .hab-section-title::-webkit-details-marker {
+  display: none;
+}
+.hab-inactive-section[open] > .hab-section-title {
+  margin-bottom: var(--sp-3);
+}
+.hab-inactive-list {
+  margin: 0;
+}
+.hab-item.hab-inactive {
+  border-left-color: var(--border-strong);
+  background: var(--bg-main);
+  opacity: 0.85;
+}
+.hab-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+.hab-name-sm {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hab-activate-btn {
+  flex-shrink: 0;
+  padding: 5px 10px;
+  background: var(--primary);
+  border: none;
+  border-radius: var(--radius-sm);
+  color: #FFFFFF;
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background var(--dur-fast);
+}
+.hab-activate-btn:hover {
+  background: var(--primary-light);
+}
+
+/* — Add habit — */
+.hab-add-row {
+  margin: 0 var(--sp-3) var(--sp-3);
+}
+.hab-add-btn {
+  width: 100%;
+  padding: var(--sp-3);
+  background: var(--bg-card);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-md);
+  color: var(--primary);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--dur-fast) var(--ease-out);
+}
+.hab-add-btn:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.hab-add-btn:active {
+  transform: scale(0.98);
+}
+
+/* — Analytics — */
+.hab-analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--sp-2);
+}
+.hab-analytic-card {
+  padding: var(--sp-3);
+  background: var(--bg-main);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+.hab-analytic-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+.hab-analytic-val {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text);
+  margin-top: var(--sp-1);
+  line-height: 1.3;
+}
+.hab-analytic-sub {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-top: 2px;
+}
+
+/* ================================================================
+   HEALTH  (health-*)
+   ================================================================ */
+
+/* — Mood picker — */
+.health-mood-picker {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+.health-mood-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: var(--sp-2) 4px;
+  background: var(--bg-main);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all var(--dur-fast) var(--ease-out);
+}
+.health-mood-btn:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.health-mood-btn:active {
+  transform: scale(0.95);
+}
+.health-mood-btn.selected {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  box-shadow: var(--focus-ring);
+}
+.health-mood-emoji {
+  font-size: 22px;
+  line-height: 1;
+}
+.health-mood-label {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--text-dim);
+  text-align: center;
+  line-height: 1.2;
+}
+.health-mood-btn.selected .health-mood-label {
+  color: var(--primary);
+}
+
+/* — Mood week strip — */
+.health-mood-week {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin-top: var(--sp-3);
+  padding-top: var(--sp-3);
+  border-top: 1px solid var(--border);
+}
+.health-mood-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 2px;
+  background: var(--bg-main);
+  border-radius: var(--radius-sm);
+}
+.health-mood-icon {
+  font-size: 16px;
+  line-height: 1;
+}
+.health-mood-lbl {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+
+/* — Water tracker — */
+.health-water-track {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+.health-water-glasses {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 5px;
+}
+.health-glass {
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  font-size: 15px;
+  background: var(--bg-main);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  opacity: 0.45;
+  filter: grayscale(1);
+  transition: all var(--dur-fast) var(--ease-out);
+}
+.health-glass:hover {
+  border-color: var(--accent);
+}
+.health-glass:active {
+  transform: scale(0.9);
+}
+.health-glass.filled {
+  opacity: 1;
+  filter: none;
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+.health-water-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-dim);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+/* — Numeric inputs (sleep / exercise / weight) — */
+.health-input-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2);
+}
+.health-input {
+  width: 92px;
+  padding: 10px var(--sp-3);
+  background: var(--bg-input);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  transition: all var(--dur-fast);
+}
+.health-input:focus {
+  outline: none;
+  border-color: var(--border-focus);
+  box-shadow: var(--focus-ring);
+  background: var(--bg-card);
+}
+.health-input::placeholder {
+  color: var(--text-placeholder);
+  font-weight: 600;
+}
+.health-input-unit {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+.health-sleep-quality,
+.health-weight-trend {
+  margin-left: auto;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--bg-card2);
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.health-exercise-btns {
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
+}
+.health-exercise-btns button {
+  padding: 8px 12px;
+  background: var(--bg-main);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  color: var(--primary);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all var(--dur-fast) var(--ease-out);
+}
+.health-exercise-btns button:hover {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+.health-exercise-btns button:active {
+  transform: scale(0.94);
+}
+
+/* — Weekly averages — */
+.health-week-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--sp-2);
+}
+.health-week-card {
+  padding: var(--sp-3);
+  background: var(--bg-main);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  text-align: center;
+}
+.health-week-val {
+  font-size: 19px;
+  font-weight: 900;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+.health-week-lbl {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-dim);
+  margin-top: 3px;
+}
+
+/* ================================================================
+   FINANCE  (fin-*)
+   ================================================================ */
+
+/* — Month header — */
+.fin-month-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  margin: var(--sp-3) var(--sp-3) var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-xs);
+}
+.fin-month-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--primary);
+}
+.fin-budget-btn {
+  padding: 6px 12px;
+  background: var(--bg-main);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all var(--dur-fast);
+}
+.fin-budget-btn:hover {
+  border-color: var(--accent);
+  color: var(--primary);
+  background: var(--accent-soft);
+}
+
+/* — Summary cards — */
+.fin-summary-cards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--sp-2);
+  margin: 0 var(--sp-3) var(--sp-3);
+}
+.fin-card {
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+.fin-card--income {
+  border-left-color: var(--green);
+}
+.fin-card--expense {
+  border-left-color: var(--red);
+}
+.fin-card--balance {
+  grid-column: 1 / -1;
+  border-left-color: var(--accent);
+}
+.fin-card-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.fin-card-value {
+  font-size: 20px;
+  font-weight: 900;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  margin-top: 2px;
+  line-height: 1.15;
+}
+.fin-card-sub {
+  font-size: 10px;
+  color: var(--text-dim);
+  margin-top: 3px;
+  line-height: 1.4;
+}
+.fin-card-bar {
+  width: 100%;
+  height: 5px;
+  margin-top: var(--sp-2);
+  background: var(--border);
+  border-radius: var(--radius-xs);
+  overflow: hidden;
+}
+.fin-card-fill {
+  height: 100%;
+  width: 0;
+  border-radius: var(--radius-xs);
+  background: var(--green);
+  transition: width var(--dur-normal) var(--ease-out);
+}
+.fin-card-fill.warn {
+  background: var(--orange);
+}
+.fin-card-fill.danger {
+  background: var(--red);
+}
+
+/* — Primary actions — */
+.fin-actions {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--sp-2);
+  margin: 0 var(--sp-3) var(--sp-3);
+}
+.fin-action-btn {
+  padding: var(--sp-3);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all var(--dur-fast) var(--ease-out);
+}
+.fin-action-btn:active {
+  transform: scale(0.97);
+}
+.fin-action--expense {
+  background: var(--red-bg);
+  border-color: var(--red-border);
+  color: #9B2C2C;
+}
+.fin-action--expense:hover {
+  background: #FFEAEA;
+}
+.fin-action--income {
+  background: var(--green-bg);
+  border-color: var(--green-border);
+  color: #22683F;
+}
+.fin-action--income:hover {
+  background: #E6FFEF;
+}
+
+/* — Category breakdown — */
+.fin-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.fin-cat-row {
+  display: grid;
+  grid-template-columns: 18px minmax(60px, 1fr) 2fr auto 34px;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 6px 0;
+}
+.fin-cat-row + .fin-cat-row {
+  border-top: 1px solid var(--border);
+}
+.fin-cat-icon {
+  font-size: 14px;
+  line-height: 1;
+}
+.fin-cat-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fin-cat-bar {
+  height: 6px;
+  background: var(--border);
+  border-radius: var(--radius-xs);
+  overflow: hidden;
+}
+.fin-cat-fill {
+  height: 100%;
+  width: 0;
+  border-radius: var(--radius-xs);
+  background: var(--accent);
+  transition: width var(--dur-normal) var(--ease-out);
+}
+.fin-cat-amount {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.fin-cat-pct {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-dim);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* — Savings goals — */
+.fin-goal {
+  padding: var(--sp-3);
+  margin-bottom: var(--sp-2);
+  background: var(--bg-main);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+.fin-goal-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  margin-bottom: 6px;
+}
+.fin-goal-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fin-goal-amount {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.fin-goal-bar {
+  width: 100%;
+  height: 7px;
+  background: var(--border);
+  border-radius: var(--radius-xs);
+  overflow: hidden;
+}
+.fin-goal-fill {
+  height: 100%;
+  width: 0;
+  border-radius: var(--radius-xs);
+  background: var(--accent);
+  transition: width var(--dur-normal) var(--ease-out);
+}
+.fin-goal-fill.complete {
+  background: var(--green);
+}
+.fin-goal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  margin-top: var(--sp-2);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-dim);
+}
+.fin-goal-footer > div {
+  display: flex;
+  gap: 6px;
+}
+.fin-goal-btn {
+  padding: 5px 10px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  color: var(--primary);
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all var(--dur-fast);
+}
+.fin-goal-btn:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.fin-goal-btn:active {
+  transform: scale(0.95);
+}
+.fin-goal-btn--del {
+  color: var(--red);
+}
+.fin-goal-btn--del:hover {
+  background: var(--red-bg);
+  border-color: var(--red-border);
+}
+.fin-add-goal-btn {
+  width: 100%;
+  margin-top: var(--sp-2);
+  padding: 10px;
+  background: var(--bg-card);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-md);
+  color: var(--primary);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--dur-fast) var(--ease-out);
+}
+.fin-add-goal-btn:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.fin-add-goal-btn:active {
+  transform: scale(0.98);
+}
+
+/* — Transaction list — */
+.fin-tx-list {
+  display: flex;
+  flex-direction: column;
+}
+.fin-tx-item {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: 10px 0;
+}
+.fin-tx-item + .fin-tx-item {
+  border-top: 1px solid var(--border);
+}
+.fin-tx-icon {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  font-size: 15px;
+  background: var(--bg-main);
+  border-radius: var(--radius-sm);
+}
+.fin-tx-info {
+  flex: 1;
+  min-width: 0;
+}
+.fin-tx-cat {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+}
+.fin-tx-note {
+  font-size: 10px;
+  color: var(--text-dim);
+  margin-top: 1px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fin-tx-right {
+  text-align: right;
+  flex-shrink: 0;
+}
+.fin-tx-amount {
+  font-size: 13px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.fin-tx-amount.expense {
+  color: var(--red);
+}
+.fin-tx-amount.income {
+  color: var(--green);
+}
+.fin-tx-date {
+  font-size: 10px;
+  color: var(--text-dim);
+  margin-top: 1px;
+}
+.fin-tx-del {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-placeholder);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--dur-fast);
+}
+.fin-tx-del:hover {
+  background: var(--red-bg);
+  color: var(--red);
+}
+
+/* ================================================================
+   PORTFOLIO / CRYPTO  (crypto-*)
+   ================================================================ */
+
+/* — Portfolio summary — */
+.crypto-summary {
+  margin: var(--sp-3);
+  padding: var(--sp-5);
+  background: var(--primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  text-align: center;
+}
+.crypto-total-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.55);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.crypto-total-value {
+  font-size: 32px;
+  font-weight: 900;
+  color: #FFFFFF;
+  font-variant-numeric: tabular-nums;
+  margin-top: var(--sp-1);
+  line-height: 1.1;
+}
+.crypto-total-pnl {
+  display: inline-block;
+  margin-top: var(--sp-2);
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.12);
+  font-size: 13px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.crypto-total-pnl.positive {
+  color: #9AE6B4;
+}
+.crypto-total-pnl.negative {
+  color: #FEB2B2;
+}
+.crypto-total-cost {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.6);
+  margin-top: var(--sp-2);
+  font-variant-numeric: tabular-nums;
+}
+
+/* — Allocation bars — */
+.crypto-alloc {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.crypto-alloc-row {
+  display: grid;
+  grid-template-columns: 52px 1fr 48px;
+  align-items: center;
+  gap: var(--sp-2);
+}
+.crypto-alloc-sym {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--text-secondary);
+  letter-spacing: 0.3px;
+}
+.crypto-alloc-bar {
+  height: 7px;
+  background: var(--border);
+  border-radius: var(--radius-xs);
+  overflow: hidden;
+}
+.crypto-alloc-fill {
+  height: 100%;
+  width: 0;
+  border-radius: var(--radius-xs);
+  background: var(--accent);
+  transition: width var(--dur-normal) var(--ease-out);
+}
+.crypto-alloc-pct {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-dim);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* — Holdings — */
+.crypto-holdings {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+.crypto-holding {
+  padding: var(--sp-3);
+  background: var(--bg-main);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  transition: box-shadow var(--dur-fast) var(--ease-out);
+}
+.crypto-holding:hover {
+  box-shadow: var(--shadow-sm);
+}
+.crypto-hold-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+.crypto-hold-left {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-width: 0;
+}
+.crypto-hold-icon {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  font-size: 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+}
+.crypto-hold-symbol {
+  font-size: 13px;
+  font-weight: 900;
+  color: var(--text);
+  letter-spacing: 0.3px;
+}
+.crypto-hold-name {
+  font-size: 10px;
+  color: var(--text-dim);
+  margin-top: 1px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.crypto-hold-right {
+  text-align: right;
+  flex-shrink: 0;
+}
+.crypto-hold-value {
+  font-size: 15px;
+  font-weight: 900;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.crypto-hold-change {
+  font-size: 10px;
+  font-weight: 700;
+  margin-top: 1px;
+  font-variant-numeric: tabular-nums;
+}
+.crypto-hold-details {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 3px var(--sp-3);
+  margin-top: var(--sp-3);
+  padding-top: var(--sp-3);
+  border-top: 1px solid var(--border);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+.crypto-hold-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: var(--sp-3);
+}
+.crypto-hold-actions button {
+  flex: 1;
+  padding: 7px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--dur-fast) var(--ease-out);
+}
+.crypto-hold-actions button:hover {
+  border-color: var(--accent);
+  color: var(--primary);
+  background: var(--accent-soft);
+}
+.crypto-hold-actions button:active {
+  transform: scale(0.96);
+}
+.crypto-hold-actions button:last-child:hover {
+  border-color: var(--red-border);
+  background: var(--red-bg);
+  color: var(--red);
+}
+
+/* — Add asset — */
+.crypto-add-btn {
+  width: 100%;
+  margin-top: var(--sp-3);
+  padding: var(--sp-3);
+  background: var(--bg-card);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-md);
+  color: var(--primary);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--dur-fast) var(--ease-out);
+}
+.crypto-add-btn:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.crypto-add-btn:active {
+  transform: scale(0.98);
+}
+
+/* — Refresh row — */
+.crypto-refresh {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin: 0 var(--sp-3) var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-xs);
+}
+.crypto-refresh-btn {
+  padding: 8px 14px;
+  background: var(--primary);
+  border: none;
+  border-radius: var(--radius-sm);
+  color: #FFFFFF;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--dur-fast);
+}
+.crypto-refresh-btn:hover {
+  background: var(--primary-light);
+}
+.crypto-refresh-btn:active {
+  transform: scale(0.96);
+}
+.crypto-refresh-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+.crypto-refresh-info {
+  font-size: 10px;
+  color: var(--text-dim);
+  line-height: 1.4;
+}
+
+/* ================================================================
+   RESPONSIVE — narrow phones (≤ 360px)
+   ================================================================ */
+@media (max-width: 360px) {
+  .dash-cards,
+  .hab-analytics-grid,
+  .health-week-grid,
+  .dash-actions-grid {
+    grid-template-columns: 1fr;
+  }
+  .dash-card-value { font-size: 20px; }
+  .crypto-total-value { font-size: 27px; }
+  .fin-summary-cards { grid-template-columns: 1fr; }
+  .fin-cat-row {
+    grid-template-columns: 18px 1fr auto;
+    row-gap: 5px;
+  }
+  .fin-cat-icon  { grid-area: 1 / 1; }
+  .fin-cat-name  { grid-area: 1 / 2; }
+  .fin-cat-amount{ grid-area: 1 / 3; }
+  .fin-cat-bar   { grid-area: 2 / 1 / 3 / 4; }
+  .fin-cat-pct   { display: none; }
+  .health-mood-picker { gap: 4px; }
+  .health-mood-emoji { font-size: 19px; }
+  .health-water-glasses { grid-template-columns: repeat(4, 1fr); }
+  .health-exercise-btns { margin-left: 0; width: 100%; }
+  .health-exercise-btns button { flex: 1; }
+  .crypto-hold-details { grid-template-columns: 1fr; }
+}
+
+/* ================================================================
+   RESPONSIVE — tablets and wide viewports (≥ 600px)
+   ================================================================ */
+@media (min-width: 600px) {
+  .dash-cards { grid-template-columns: repeat(3, 1fr); }
+  .dash-card:nth-child(5):last-child { grid-column: auto; }
+  .dash-actions-grid { grid-template-columns: repeat(4, 1fr); }
+  .fin-summary-cards { grid-template-columns: repeat(3, 1fr); }
+  .fin-card--balance { grid-column: auto; }
+  .health-week-grid { grid-template-columns: repeat(4, 1fr); }
+  .hab-analytics-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ================================================================
+   REDUCED MOTION — module overrides
+   ================================================================ */
+@media (prefers-reduced-motion: reduce) {
+  .dash-card-fill,
+  .fin-card-fill,
+  .fin-cat-fill,
+  .fin-goal-fill,
+  .crypto-alloc-fill,
+  .hab-summary-ring {
+    transition: none;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -2538,14 +4151,39 @@ function askForm(fields, opts = {}) {
   const { icon = '✏️', title = 'Введи данные', text = '', okText = 'OK' } = opts;
   return new Promise(resolve => {
     askResolver = resolve;
-    const inputs = fields.map(f => `
+    const inputs = fields.map(f => {
+      // v6: поддержка select и textarea, а не только input
+      if (f.type === 'select') {
+        const opts = (f.options || []).map(o => {
+          const val = (o && typeof o === 'object') ? o.value : o;
+          const lbl = (o && typeof o === 'object') ? (o.label != null ? o.label : o.value) : o;
+          const sel = String(val) === String(f.value || '') ? ' selected' : '';
+          return `<option value="${escapeHtml(String(val))}"${sel}>${escapeHtml(String(lbl))}</option>`;
+        }).join('');
+        return `
+      <div class="auth-field">
+        <label class="auth-label">${escapeHtml(f.label)}</label>
+        <select class="auth-input" id="ask_${f.key}">${opts}</select>
+      </div>`;
+      }
+      if (f.type === 'textarea') {
+        return `
+      <div class="auth-field">
+        <label class="auth-label">${escapeHtml(f.label)}</label>
+        <textarea class="auth-input" id="ask_${f.key}" rows="${f.rows || 3}"
+                  placeholder="${escapeHtml(f.placeholder || '')}"
+                  style="resize:vertical">${escapeHtml(f.value || '')}</textarea>
+      </div>`;
+      }
+      return `
       <div class="auth-field">
         <label class="auth-label">${escapeHtml(f.label)}</label>
         <input class="auth-input" id="ask_${f.key}" type="${f.type || 'text'}"
                placeholder="${escapeHtml(f.placeholder || '')}"
                value="${escapeHtml(f.value || '')}"
                ${f.type === 'password' ? 'autocomplete="new-password"' : 'spellcheck="false"'}>
-      </div>`).join('');
+      </div>`;
+    }).join('');
     document.getElementById('askBox').innerHTML = `
       <div class="ask-ico">${icon}</div>
       <div class="ask-title">${escapeHtml(title)}</div>
@@ -3734,7 +5372,7 @@ function openCategoryPicker(isWeeklyFree = false) {
   const container = document.getElementById('categoryPickerList');
   const source = isWeeklyFree ? 'weekly' : 'bonus';
   container.innerHTML = Object.entries(LQ_CATEGORIES).map(([key, cat]) =>
-    `<button class="cat-pick-btn" onclick="pickCategory('${key}', '${source}')" style="background:#F7F8FA;border:2px solid ${cat.color};border-radius:12px;padding:12px 8px;cursor:pointer;text-align:center;transition:all 0.2s;color:var(--text);font-family:inherit">`
+    `<button class="cat-pick-btn" onclick="pickCategory('${key}', '${source}')" style="background:#F7F8FA;border:2px solid ${cat.color};border-radius:12px;padding:12px 8px;cursor:pointer;text-align:center;transition:all 0.2s;color:var(--text);font-family:inherit">
       <div style="font-size:24px;margin-bottom:4px">${cat.icon}</div>
       <div style="font-size:12px;font-weight:700;color:${cat.color}">${cat.name}</div>
       <div style="font-size:10px;color:var(--text-dim)">${LIFE_QUESTS.filter(q => q.cat === key).length} квестов</div>
@@ -5866,7 +7504,7 @@ function renderChart() {
 
 // ====== PWA: SERVICE WORKER ======
 // Регистрируем только по http/https — с file:// браузер ругается.
-const APP_VERSION = 'v5.3.0';
+const APP_VERSION = 'v6.0.0';
 
 // Страховка: кнопка баннера обязана работать даже если обработчик
 // от service worker по какой-то причине не навесился.
@@ -6735,6 +8373,1742 @@ document.addEventListener('click', function(e) {
 
 // Update quests every 30 seconds (for timer-based ones)
 setInterval(() => { if (activeShift) renderQuests(); }, 30000);
+
+
+// ╔══════════════════════════════════════════════════════════════════════╗
+// ║  LIFE & WORK TRACKER v6.0 — PART 1: NEW MODULES                   ║
+// ║  Dashboard · Habits · Health · Finance · Crypto                    ║
+// ║                                                                    ║
+// ║  Интеграция: uGet/uSet (профиль-изоляция), schedulePushProgress,  ║
+// ║  markLocalChange, showToast, haptic, escapeHtml, todayStr,         ║
+// ║  localDateStr, parseLocalDate, askConfirm, askForm, countUp        ║
+// ╚══════════════════════════════════════════════════════════════════════╝
+
+// ============================================================
+//  MODULE 1: DASHBOARD — Сводная панель
+// ============================================================
+// Единая точка входа: обзор всех модулей, ключевые метрики,
+// уведомления и быстрые действия. Отображается как первый экран.
+
+const DASHBOARD = (() => {
+  'use strict';
+
+  // --- Виджеты ---
+  function getGreeting() {
+    const h = new Date().getHours();
+    if (h < 6)  return { text: 'Доброй ночи', icon: '🌙' };
+    if (h < 12) return { text: 'Доброе утро', icon: '☀️' };
+    if (h < 18) return { text: 'Добрый день', icon: '🌤' };
+    return { text: 'Добрый вечер', icon: '🌆' };
+  }
+
+  function getUserDisplayName() {
+    if (!currentUser) return 'Пользователь';
+    return currentUser.name || currentUser.login || 'Пользователь';
+  }
+
+  // Собирает данные из всех модулей для виджетов
+  function collectMetrics() {
+    const today = todayStr();
+    const { totalEarned, totalHours, avgRate } = getShiftTotals();
+    const streak = typeof calcStreak === 'function'
+      ? calcStreak(DIFFICULTIES[difficulty].goal)
+      : 0;
+
+    // Привычки
+    const habitsToday = HABITS.getTodayProgress();
+
+    // Здоровье
+    const healthToday = HEALTH.getTodayData();
+
+    // Финансы
+    const finToday = FINANCE.getMonthSummary();
+
+    // Крипто
+    const cryptoTotal = CRYPTO.getPortfolioValue();
+
+    return {
+      today,
+      // Работа
+      shiftActive: !!activeShift,
+      shiftCount: shifts.length,
+      totalEarned, totalHours, avgRate, streak,
+      // Модули
+      habitsToday,
+      healthToday,
+      finToday,
+      cryptoTotal,
+    };
+  }
+
+  // Генерация уведомлений / напоминаний
+  function getAlerts() {
+    const alerts = [];
+    const today = todayStr();
+
+    // Не начата смена
+    if (!activeShift) {
+      const now = new Date();
+      if (now.getHours() >= 8 && now.getHours() < 20) {
+        alerts.push({ icon: '📋', text: 'Смена ещё не начата', type: 'info' });
+      }
+    }
+
+    // Привычки
+    const hp = HABITS.getTodayProgress();
+    if (hp.total > 0 && hp.done < hp.total) {
+      alerts.push({ icon: '📌', text: `Привычки: ${hp.done}/${hp.total} выполнено`, type: hp.done === 0 ? 'warn' : 'info' });
+    }
+
+    // Вода
+    const hd = HEALTH.getTodayData();
+    if (hd.water < 6) {
+      alerts.push({ icon: '💧', text: `Вода: ${hd.water}/8 стаканов`, type: 'warn' });
+    }
+
+    // Бюджет
+    const fin = FINANCE.getMonthSummary();
+    if (fin.budgetPct > 90) {
+      alerts.push({ icon: '⚠️', text: `Бюджет израсходован на ${fin.budgetPct}%`, type: 'error' });
+    }
+
+    return alerts;
+  }
+
+  // --- Рендер ---
+  function render() {
+    const el = document.getElementById('dashboardContent');
+    if (!el) return;
+
+    const m = collectMetrics();
+    const greet = getGreeting();
+    const alerts = getAlerts();
+
+    // Мини-карточки
+    const alertsHtml = alerts.length > 0
+      ? `<div class="dash-alerts">${alerts.map(a =>
+          `<div class="dash-alert dash-alert--${a.type}"><span class="dash-alert-icon">${a.icon}</span><span>${a.text}</span></div>`
+        ).join('')}</div>`
+      : '';
+
+    el.innerHTML = `
+      <div class="dash-greeting">
+        <span class="dash-greeting-icon">${greet.icon}</span>
+        <div>
+          <div class="dash-greeting-text">${greet.text}, <b>${escapeHtml(getUserDisplayName())}</b></div>
+          <div class="dash-greeting-date">${new Date().toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' })}</div>
+        </div>
+      </div>
+
+      ${alertsHtml}
+
+      <div class="dash-cards">
+        <div class="dash-card" onclick="switchTab('shift')">
+          <div class="dash-card-header">
+            <span class="dash-card-icon">💼</span>
+            <span class="dash-card-title">Работа</span>
+          </div>
+          <div class="dash-card-value">${m.totalEarned.toLocaleString('ru-RU')} ₽</div>
+          <div class="dash-card-sub">${m.shiftCount} смен · ${m.avgRate} ₽/ч${m.streak > 0 ? ' · 📈 ' + m.streak + ' дн.' : ''}</div>
+          <div class="dash-card-status ${m.shiftActive ? 'active' : ''}">${m.shiftActive ? '▶ Смена активна' : '⏸ Нет активной смены'}</div>
+        </div>
+
+        <div class="dash-card" onclick="HABITS.openPanel()">
+          <div class="dash-card-header">
+            <span class="dash-card-icon">📋</span>
+            <span class="dash-card-title">Привычки</span>
+          </div>
+          <div class="dash-card-value">${m.habitsToday.done}/${m.habitsToday.total}</div>
+          <div class="dash-card-sub">выполнено сегодня</div>
+          <div class="dash-card-bar"><div class="dash-card-fill" style="width:${m.habitsToday.total > 0 ? Math.round(m.habitsToday.done / m.habitsToday.total * 100) : 0}%"></div></div>
+        </div>
+
+        <div class="dash-card" onclick="HEALTH.openPanel()">
+          <div class="dash-card-header">
+            <span class="dash-card-icon">❤️</span>
+            <span class="dash-card-title">Здоровье</span>
+          </div>
+          <div class="dash-card-value">${m.healthToday.mood ? m.healthToday.mood : '—'}</div>
+          <div class="dash-card-sub">💧 ${m.healthToday.water}/8 · 😴 ${m.healthToday.sleep > 0 ? m.healthToday.sleep + 'ч' : '—'}</div>
+        </div>
+
+        <div class="dash-card" onclick="FINANCE.openPanel()">
+          <div class="dash-card-header">
+            <span class="dash-card-icon">📊</span>
+            <span class="dash-card-title">Финансы</span>
+          </div>
+          <div class="dash-card-value">${m.finToday.balance.toLocaleString('ru-RU')} ₽</div>
+          <div class="dash-card-sub">расход: ${m.finToday.expenses.toLocaleString('ru-RU')} ₽ / мес</div>
+        </div>
+
+        <div class="dash-card" onclick="CRYPTO.openPanel()">
+          <div class="dash-card-header">
+            <span class="dash-card-icon">📈</span>
+            <span class="dash-card-title">Портфель</span>
+          </div>
+          <div class="dash-card-value">${m.cryptoTotal.totalUSD > 0 ? '$' + m.cryptoTotal.totalUSD.toLocaleString('en-US', {maximumFractionDigits:2}) : '—'}</div>
+          <div class="dash-card-sub">${m.cryptoTotal.assets} активов${m.cryptoTotal.changePct !== 0 ? ' · ' + (m.cryptoTotal.changePct > 0 ? '+' : '') + m.cryptoTotal.changePct.toFixed(1) + '%' : ''}</div>
+        </div>
+      </div>
+
+      <div class="dash-quick-actions">
+        <div class="dash-section-title">📌 Быстрые действия</div>
+        <div class="dash-actions-grid">
+          ${!m.shiftActive ? '<button class="dash-action-btn" onclick="startShift();DASHBOARD.render()">▶ Начать смену</button>' : '<button class="dash-action-btn" onclick="endShift()">⏹ Завершить смену</button>'}
+          <button class="dash-action-btn" onclick="HABITS.quickCheck()">✅ Отметить привычку</button>
+          <button class="dash-action-btn" onclick="HEALTH.quickWater()">💧 +1 стакан воды</button>
+          <button class="dash-action-btn" onclick="FINANCE.quickExpense()">📝 Записать расход</button>
+        </div>
+      </div>
+    `;
+  }
+
+  return { render, collectMetrics, getAlerts };
+})();
+
+
+// ============================================================
+//  MODULE 2: HABITS — Трекер привычек
+// ============================================================
+// Пользовательские привычки с ежедневным/недельным отслеживанием,
+// сериями, аналитикой. Отдельно от Life Quests (те — разовые задания).
+
+const HABITS = (() => {
+  'use strict';
+
+  const STORAGE_KEY = 'v6_habits';
+  const LOG_KEY = 'v6_habits_log';
+
+  const DEFAULT_HABITS = [
+    { id: 'h_water',    name: 'Выпить 8 стаканов воды', icon: '💧', freq: 'daily',  category: 'health',       active: true, createdAt: Date.now() },
+    { id: 'h_exercise', name: 'Тренировка 30+ мин',     icon: '🏃', freq: 'daily',  category: 'health',       active: true, createdAt: Date.now() },
+    { id: 'h_read',     name: 'Читать 20 минут',        icon: '📖', freq: 'daily',  category: 'learning',     active: true, createdAt: Date.now() },
+    { id: 'h_meditate', name: 'Медитация 10 мин',       icon: '🧘', freq: 'daily',  category: 'health',       active: true, createdAt: Date.now() },
+    { id: 'h_nosugar',  name: 'День без сахара',         icon: '🚫', freq: 'daily',  category: 'health',       active: false, createdAt: Date.now() },
+    { id: 'h_journal',  name: 'Дневник / рефлексия',     icon: '📓', freq: 'daily',  category: 'productivity', active: false, createdAt: Date.now() },
+    { id: 'h_sleep8',   name: 'Лечь до 23:00',          icon: '😴', freq: 'daily',  category: 'health',       active: true, createdAt: Date.now() },
+    { id: 'h_budget',   name: 'Записать расходы',        icon: '📊', freq: 'daily',  category: 'finance',      active: false, createdAt: Date.now() },
+  ];
+
+  const CATEGORIES = {
+    health:       { name: 'Здоровье',       icon: '❤️', color: '#38A169' },
+    productivity: { name: 'Продуктивность', icon: '⚡', color: '#3182CE' },
+    learning:     { name: 'Обучение',       icon: '📖', color: '#D69E2E' },
+    social:       { name: 'Социальное',     icon: '👥', color: '#9F7AEA' },
+    finance:      { name: 'Финансы',        icon: '📊', color: '#E53E3E' },
+  };
+
+  function getHabits() {
+    const saved = uGet(STORAGE_KEY, null);
+    if (saved && Array.isArray(saved)) return saved;
+    // Первый запуск — записываем дефолтные
+    uSet(STORAGE_KEY, DEFAULT_HABITS);
+    return DEFAULT_HABITS;
+  }
+
+  function saveHabits(list) {
+    uSet(STORAGE_KEY, list);
+    markLocalChange();
+    schedulePushProgress();
+  }
+
+  function getLog() {
+    return uGet(LOG_KEY, {});
+  }
+
+  function saveLog(log) {
+    uSet(LOG_KEY, log);
+    markLocalChange();
+    schedulePushProgress();
+  }
+
+  // Ключ записи: YYYY-MM-DD_habitId
+  function logKey(habitId, dateStr) {
+    return `${dateStr || todayStr()}_${habitId}`;
+  }
+
+  function isChecked(habitId, dateStr) {
+    const log = getLog();
+    return !!log[logKey(habitId, dateStr)];
+  }
+
+  function toggle(habitId) {
+    const log = getLog();
+    const key = logKey(habitId);
+    if (log[key]) {
+      delete log[key];
+    } else {
+      log[key] = { ts: Date.now(), date: todayStr() };
+    }
+    saveLog(log);
+    haptic('light');
+    render();
+    // Синхронизируем Dashboard
+    if (typeof DASHBOARD !== 'undefined') DASHBOARD.render();
+  }
+
+  // Серия для привычки
+  function getStreak(habitId) {
+    const log = getLog();
+    let streak = 0;
+    const d = new Date();
+    // Проверяем сегодня — если не отмечено, начинаем со вчера
+    if (!log[logKey(habitId, localDateStr(d))]) {
+      d.setDate(d.getDate() - 1);
+    }
+    for (let i = 0; i < 365; i++) {
+      if (log[logKey(habitId, localDateStr(d))]) {
+        streak++;
+        d.setDate(d.getDate() - 1);
+      } else {
+        break;
+      }
+    }
+    return streak;
+  }
+
+  // Процент выполнения за последние N дней
+  function getCompletionRate(habitId, days = 30) {
+    const log = getLog();
+    let done = 0;
+    const d = new Date();
+    for (let i = 0; i < days; i++) {
+      if (log[logKey(habitId, localDateStr(d))]) done++;
+      d.setDate(d.getDate() - 1);
+    }
+    return days > 0 ? Math.round((done / days) * 100) : 0;
+  }
+
+  function getTodayProgress() {
+    const habits = getHabits().filter(h => h.active);
+    const done = habits.filter(h => isChecked(h.id)).length;
+    return { done, total: habits.length };
+  }
+
+  // --- CRUD ---
+  async function addHabit() {
+    const res = await askForm([
+      { key: 'name', label: 'Название', placeholder: 'Например: Утренняя зарядка' },
+      { key: 'icon', label: 'Иконка (эмодзи)', placeholder: '🏃' },
+      { key: 'category', label: 'Категория', type: 'select', options: Object.entries(CATEGORIES).map(([k, v]) => ({ value: k, label: v.icon + ' ' + v.name })) },
+    ], { icon: '📋', title: 'Новая привычка', okText: 'Создать' });
+    if (!res || !res.name) return;
+
+    const habits = getHabits();
+    habits.push({
+      id: 'h_' + Date.now(),
+      name: res.name.trim(),
+      icon: res.icon || '📌',
+      freq: 'daily',
+      category: res.category || 'productivity',
+      active: true,
+      createdAt: Date.now(),
+    });
+    saveHabits(habits);
+    showToast('✅ Привычка добавлена', 'success');
+    render();
+  }
+
+  async function removeHabit(id) {
+    const habits = getHabits();
+    const h = habits.find(x => x.id === id);
+    if (!h) return;
+    const ok = await askConfirm(`Удалить привычку «${escapeHtml(h.name)}»?`, {
+      icon: '🗑', title: 'Удаление', okText: 'Удалить', noText: 'Отмена'
+    });
+    if (!ok) return;
+    saveHabits(habits.filter(x => x.id !== id));
+    showToast('Привычка удалена', 'warn');
+    render();
+  }
+
+  function toggleActive(id) {
+    const habits = getHabits();
+    const h = habits.find(x => x.id === id);
+    if (h) h.active = !h.active;
+    saveHabits(habits);
+    render();
+  }
+
+  // --- Быстрая отметка (для Dashboard) ---
+  function quickCheck() {
+    const habits = getHabits().filter(h => h.active && !isChecked(h.id));
+    if (habits.length === 0) {
+      showToast('✅ Все привычки отмечены', 'success');
+      return;
+    }
+    // Отмечаем первую невыполненную
+    toggle(habits[0].id);
+    showToast(`✅ ${habits[0].icon} ${habits[0].name}`, 'success');
+  }
+
+  // --- Рендер ---
+  function render() {
+    const container = document.getElementById('habitsContent');
+    if (!container) return;
+
+    const habits = getHabits();
+    const active = habits.filter(h => h.active);
+    const inactive = habits.filter(h => !h.active);
+    const today = todayStr();
+
+    const todayProgress = getTodayProgress();
+    const pct = todayProgress.total > 0 ? Math.round(todayProgress.done / todayProgress.total * 100) : 0;
+
+    let html = `
+      <div class="hab-summary">
+        <div class="hab-summary-left">
+          <div class="hab-summary-title">📋 Привычки на сегодня</div>
+          <div class="hab-summary-count">${todayProgress.done} из ${todayProgress.total}</div>
+        </div>
+        <div class="hab-summary-ring" style="--pct:${pct}">
+          <span>${pct}%</span>
+        </div>
+      </div>
+    `;
+
+    // Активные привычки
+    if (active.length > 0) {
+      html += `<div class="hab-list">`;
+      for (const h of active) {
+        const checked = isChecked(h.id);
+        const streak = getStreak(h.id);
+        const rate = getCompletionRate(h.id);
+        const cat = CATEGORIES[h.category] || CATEGORIES.productivity;
+
+        // Мини-хитмап за 7 дней
+        let miniHeat = '';
+        const d = new Date();
+        for (let i = 6; i >= 0; i--) {
+          const dd = new Date(d);
+          dd.setDate(dd.getDate() - i);
+          const done = isChecked(h.id, localDateStr(dd));
+          miniHeat += `<span class="hab-dot ${done ? 'done' : ''}" title="${localDateStr(dd)}"></span>`;
+        }
+
+        html += `
+          <div class="hab-item ${checked ? 'hab-checked' : ''}" data-id="${h.id}">
+            <button class="hab-check" onclick="HABITS.toggle('${h.id}')">
+              ${checked ? '✅' : '⬜'}
+            </button>
+            <div class="hab-info">
+              <div class="hab-name">${h.icon} ${escapeHtml(h.name)}</div>
+              <div class="hab-meta">
+                <span class="hab-cat" style="color:${cat.color}">${cat.icon} ${cat.name}</span>
+                ${streak > 0 ? `<span class="hab-streak">📈 ${streak} дн.</span>` : ''}
+                <span class="hab-rate">${rate}% за 30д</span>
+              </div>
+              <div class="hab-mini-heat">${miniHeat}</div>
+            </div>
+            <button class="hab-menu-btn" onclick="HABITS.removeHabit('${h.id}')" title="Удалить">✕</button>
+          </div>
+        `;
+      }
+      html += `</div>`;
+    }
+
+    // Неактивные (свёрнутые)
+    if (inactive.length > 0) {
+      html += `
+        <details class="hab-inactive-section">
+          <summary class="hab-section-title">📁 Неактивные (${inactive.length})</summary>
+          <div class="hab-list hab-inactive-list">
+            ${inactive.map(h => `
+              <div class="hab-item hab-inactive">
+                <span class="hab-icon">${h.icon}</span>
+                <span class="hab-name-sm">${escapeHtml(h.name)}</span>
+                <button class="hab-activate-btn" onclick="HABITS.toggleActive('${h.id}')">Включить</button>
+              </div>
+            `).join('')}
+          </div>
+        </details>
+      `;
+    }
+
+    // Кнопка добавления
+    html += `
+      <div class="hab-add-row">
+        <button class="hab-add-btn" onclick="HABITS.addHabit()">＋ Добавить привычку</button>
+      </div>
+    `;
+
+    // Аналитика
+    if (active.length > 0) {
+      const bestHabit = active.reduce((best, h) => {
+        const r = getCompletionRate(h.id);
+        return r > (best.rate || 0) ? { habit: h, rate: r } : best;
+      }, { rate: 0 });
+
+      const worstHabit = active.reduce((worst, h) => {
+        const r = getCompletionRate(h.id);
+        return r < (worst.rate || 101) ? { habit: h, rate: r } : worst;
+      }, { rate: 101 });
+
+      html += `
+        <div class="hab-analytics">
+          <div class="hab-section-title">📊 Аналитика за 30 дней</div>
+          <div class="hab-analytics-grid">
+            ${bestHabit.habit ? `<div class="hab-analytic-card">
+              <div class="hab-analytic-label">Лучшая привычка</div>
+              <div class="hab-analytic-val">${bestHabit.habit.icon} ${escapeHtml(bestHabit.habit.name)}</div>
+              <div class="hab-analytic-sub">${bestHabit.rate}% выполнения</div>
+            </div>` : ''}
+            ${worstHabit.habit ? `<div class="hab-analytic-card">
+              <div class="hab-analytic-label">Требует внимания</div>
+              <div class="hab-analytic-val">${worstHabit.habit.icon} ${escapeHtml(worstHabit.habit.name)}</div>
+              <div class="hab-analytic-sub">${worstHabit.rate}% выполнения</div>
+            </div>` : ''}
+          </div>
+        </div>
+      `;
+    }
+
+    container.innerHTML = html;
+  }
+
+  function openPanel() {
+    // Переключаемся на вкладку привычек (v6 tab system)
+    if (typeof switchV6Tab === 'function') switchV6Tab('habits');
+    render();
+  }
+
+  return {
+    getHabits, saveHabits, toggle, isChecked, getStreak,
+    getCompletionRate, getTodayProgress, addHabit, removeHabit,
+    toggleActive, quickCheck, render, openPanel,
+  };
+})();
+
+
+// ============================================================
+//  MODULE 3: HEALTH — Здоровье и самочувствие
+// ============================================================
+// Вода, сон, настроение, вес, упражнения. Ежедневный трекинг
+// с историей и мини-графиками.
+
+const HEALTH = (() => {
+  'use strict';
+
+  const STORAGE_KEY = 'v6_health';
+
+  const MOODS = [
+    { id: 'great',   icon: '😄', label: 'Отлично',     value: 5, color: '#38A169' },
+    { id: 'good',    icon: '🙂', label: 'Хорошо',      value: 4, color: '#68D391' },
+    { id: 'neutral', icon: '😐', label: 'Нормально',   value: 3, color: '#ECC94B' },
+    { id: 'bad',     icon: '😕', label: 'Не очень',     value: 2, color: '#ED8936' },
+    { id: 'awful',   icon: '😫', label: 'Плохо',        value: 1, color: '#E53E3E' },
+  ];
+
+  function getData() {
+    return uGet(STORAGE_KEY, {});
+  }
+
+  function saveData(data) {
+    uSet(STORAGE_KEY, data);
+    markLocalChange();
+    schedulePushProgress();
+  }
+
+  function dayKey(dateStr) {
+    return dateStr || todayStr();
+  }
+
+  function getDayData(dateStr) {
+    const all = getData();
+    const key = dayKey(dateStr);
+    return all[key] || { water: 0, sleep: 0, mood: null, weight: null, exercise: 0, notes: '' };
+  }
+
+  function saveDayData(dateStr, dayData) {
+    const all = getData();
+    all[dayKey(dateStr)] = { ...dayData, updatedAt: Date.now() };
+    // Очистка старых записей (>180 дней)
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - 180);
+    const cutoffStr = localDateStr(cutoff);
+    for (const k of Object.keys(all)) {
+      if (k < cutoffStr && k.match(/^\d{4}-\d{2}-\d{2}$/)) delete all[k];
+    }
+    saveData(all);
+  }
+
+  function getTodayData() {
+    const d = getDayData();
+    return {
+      water: d.water || 0,
+      sleep: d.sleep || 0,
+      mood: d.mood ? (MOODS.find(m => m.id === d.mood)?.icon || '—') : null,
+      moodId: d.mood,
+      weight: d.weight,
+      exercise: d.exercise || 0,
+    };
+  }
+
+  // --- Быстрые действия ---
+  function quickWater() {
+    const d = getDayData();
+    d.water = (d.water || 0) + 1;
+    saveDayData(null, d);
+    showToast(`💧 Вода: ${d.water}/8 стаканов`, 'success');
+    haptic('light');
+    render();
+    if (typeof DASHBOARD !== 'undefined') DASHBOARD.render();
+  }
+
+  function setWater(amount) {
+    const d = getDayData();
+    d.water = Math.max(0, Math.min(20, amount));
+    saveDayData(null, d);
+    render();
+  }
+
+  function setMood(moodId) {
+    const d = getDayData();
+    d.mood = moodId;
+    saveDayData(null, d);
+    showToast(`Настроение: ${MOODS.find(m => m.id === moodId)?.icon || ''}`, 'success');
+    haptic('light');
+    render();
+  }
+
+  function setSleep(hours) {
+    const d = getDayData();
+    d.sleep = Math.max(0, Math.min(24, parseFloat(hours) || 0));
+    saveDayData(null, d);
+    render();
+  }
+
+  function setWeight(kg) {
+    const d = getDayData();
+    d.weight = parseFloat(kg) || null;
+    saveDayData(null, d);
+    render();
+  }
+
+  function setExercise(minutes) {
+    const d = getDayData();
+    d.exercise = Math.max(0, parseInt(minutes) || 0);
+    saveDayData(null, d);
+    render();
+  }
+
+  // --- Статистика за период ---
+  function getWeekStats() {
+    const stats = { water: 0, sleepTotal: 0, sleepDays: 0, exerciseTotal: 0, moodSum: 0, moodDays: 0 };
+    const d = new Date();
+    for (let i = 0; i < 7; i++) {
+      const dd = getDayData(localDateStr(d));
+      stats.water += dd.water || 0;
+      if (dd.sleep > 0) { stats.sleepTotal += dd.sleep; stats.sleepDays++; }
+      stats.exerciseTotal += dd.exercise || 0;
+      if (dd.mood) {
+        const mv = MOODS.find(m => m.id === dd.mood);
+        if (mv) { stats.moodSum += mv.value; stats.moodDays++; }
+      }
+      d.setDate(d.getDate() - 1);
+    }
+    return {
+      avgWater: Math.round(stats.water / 7 * 10) / 10,
+      avgSleep: stats.sleepDays > 0 ? Math.round(stats.sleepTotal / stats.sleepDays * 10) / 10 : 0,
+      totalExercise: stats.exerciseTotal,
+      avgMood: stats.moodDays > 0 ? Math.round(stats.moodSum / stats.moodDays * 10) / 10 : 0,
+    };
+  }
+
+  // --- Тренд веса за 30 дней ---
+  function getWeightHistory(days = 30) {
+    const data = getData();
+    const points = [];
+    const d = new Date();
+    for (let i = days - 1; i >= 0; i--) {
+      const dd = new Date(d);
+      dd.setDate(dd.getDate() - i);
+      const key = localDateStr(dd);
+      if (data[key] && data[key].weight) {
+        points.push({ date: key, weight: data[key].weight });
+      }
+    }
+    return points;
+  }
+
+  // --- Рендер ---
+  function render() {
+    const container = document.getElementById('healthContent');
+    if (!container) return;
+
+    const d = getDayData();
+    const week = getWeekStats();
+    const weightHist = getWeightHistory();
+
+    // Мини-график настроения за 7 дней
+    let moodWeek = '';
+    const dt = new Date();
+    for (let i = 6; i >= 0; i--) {
+      const dd = new Date(dt);
+      dd.setDate(dd.getDate() - i);
+      const dayD = getDayData(localDateStr(dd));
+      const moodObj = dayD.mood ? MOODS.find(m => m.id === dayD.mood) : null;
+      const dayLabel = dd.toLocaleDateString('ru-RU', { weekday: 'short' });
+      moodWeek += `<div class="health-mood-day">
+        <span class="health-mood-icon">${moodObj ? moodObj.icon : '·'}</span>
+        <span class="health-mood-lbl">${dayLabel}</span>
+      </div>`;
+    }
+
+    container.innerHTML = `
+      <div class="health-section">
+        <div class="health-section-title">😊 Настроение</div>
+        <div class="health-mood-picker">
+          ${MOODS.map(m => `
+            <button class="health-mood-btn ${d.mood === m.id ? 'selected' : ''}"
+                    onclick="HEALTH.setMood('${m.id}')"
+                    style="--mood-color:${m.color}">
+              <span class="health-mood-emoji">${m.icon}</span>
+              <span class="health-mood-label">${m.label}</span>
+            </button>
+          `).join('')}
+        </div>
+        <div class="health-mood-week">${moodWeek}</div>
+      </div>
+
+      <div class="health-section">
+        <div class="health-section-title">💧 Вода</div>
+        <div class="health-water-track">
+          <div class="health-water-glasses">
+            ${Array.from({length: 8}, (_, i) => `
+              <button class="health-glass ${i < d.water ? 'filled' : ''}"
+                      onclick="HEALTH.setWater(${i + 1 <= d.water ? i : i + 1})">
+                💧
+              </button>
+            `).join('')}
+          </div>
+          <div class="health-water-label">${d.water}/8 стаканов</div>
+        </div>
+      </div>
+
+      <div class="health-section">
+        <div class="health-section-title">😴 Сон</div>
+        <div class="health-input-row">
+          <input type="number" class="health-input" id="healthSleepInput"
+                 value="${d.sleep || ''}" min="0" max="24" step="0.5"
+                 placeholder="часов"
+                 onchange="HEALTH.setSleep(this.value)">
+          <span class="health-input-unit">часов</span>
+          ${d.sleep > 0 ? `<span class="health-sleep-quality">${d.sleep >= 7 ? '✅ Норма' : d.sleep >= 5 ? '⚠️ Мало' : '❌ Критично мало'}</span>` : ''}
+        </div>
+      </div>
+
+      <div class="health-section">
+        <div class="health-section-title">🏃 Активность</div>
+        <div class="health-input-row">
+          <input type="number" class="health-input" id="healthExerciseInput"
+                 value="${d.exercise || ''}" min="0" max="600" step="5"
+                 placeholder="минут"
+                 onchange="HEALTH.setExercise(this.value)">
+          <span class="health-input-unit">минут</span>
+          <div class="health-exercise-btns">
+            <button onclick="HEALTH.setExercise(${(d.exercise||0)+15})">+15</button>
+            <button onclick="HEALTH.setExercise(${(d.exercise||0)+30})">+30</button>
+            <button onclick="HEALTH.setExercise(${(d.exercise||0)+60})">+60</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="health-section">
+        <div class="health-section-title">⚖️ Вес</div>
+        <div class="health-input-row">
+          <input type="number" class="health-input" id="healthWeightInput"
+                 value="${d.weight || ''}" min="30" max="300" step="0.1"
+                 placeholder="кг"
+                 onchange="HEALTH.setWeight(this.value)">
+          <span class="health-input-unit">кг</span>
+          ${weightHist.length >= 2 ? (() => {
+            const diff = weightHist[weightHist.length - 1].weight - weightHist[0].weight;
+            const sign = diff > 0 ? '+' : '';
+            return `<span class="health-weight-trend">${sign}${diff.toFixed(1)} кг за ${weightHist.length} записей</span>`;
+          })() : ''}
+        </div>
+      </div>
+
+      <div class="health-section">
+        <div class="health-section-title">📊 Средние за неделю</div>
+        <div class="health-week-grid">
+          <div class="health-week-card">
+            <div class="health-week-val">${week.avgWater}</div>
+            <div class="health-week-lbl">💧 стаканов/день</div>
+          </div>
+          <div class="health-week-card">
+            <div class="health-week-val">${week.avgSleep > 0 ? week.avgSleep + 'ч' : '—'}</div>
+            <div class="health-week-lbl">😴 сон</div>
+          </div>
+          <div class="health-week-card">
+            <div class="health-week-val">${week.totalExercise}</div>
+            <div class="health-week-lbl">🏃 мин активности</div>
+          </div>
+          <div class="health-week-card">
+            <div class="health-week-val">${week.avgMood > 0 ? week.avgMood + '/5' : '—'}</div>
+            <div class="health-week-lbl">😊 настроение</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function openPanel() {
+    if (typeof switchV6Tab === 'function') switchV6Tab('health');
+    render();
+  }
+
+  return {
+    getTodayData, getDayData, quickWater, setWater, setMood,
+    setSleep, setWeight, setExercise, getWeekStats, getWeightHistory,
+    render, openPanel, MOODS,
+  };
+})();
+
+
+// ============================================================
+//  MODULE 4: FINANCE — Личные финансы
+// ============================================================
+// Доходы / расходы, категории, бюджет, цели накоплений.
+// Дополняет данные о заработке из смен. Полностью локальный учёт.
+
+const FINANCE = (() => {
+  'use strict';
+
+  const TX_KEY = 'v6_finance_tx';        // массив транзакций
+  const BUDGET_KEY = 'v6_finance_budget'; // месячный бюджет
+  const GOALS_KEY = 'v6_finance_goals';   // цели накоплений
+
+  const EXPENSE_CATEGORIES = {
+    food:      { name: 'Еда',           icon: '🍽', color: '#E53E3E' },
+    transport: { name: 'Транспорт',     icon: '🚌', color: '#3182CE' },
+    housing:   { name: 'Жильё',         icon: '🏠', color: '#D69E2E' },
+    health:    { name: 'Здоровье',       icon: '💊', color: '#38A169' },
+    clothes:   { name: 'Одежда',         icon: '👔', color: '#9F7AEA' },
+    fun:       { name: 'Развлечения',   icon: '🎬', color: '#ED8936' },
+    education: { name: 'Обучение',       icon: '📚', color: '#4299E1' },
+    subscr:    { name: 'Подписки',       icon: '📱', color: '#667EEA' },
+    other:     { name: 'Прочее',         icon: '📋', color: '#718096' },
+  };
+
+  const INCOME_CATEGORIES = {
+    salary:   { name: 'Зарплата / смены', icon: '💼', color: '#38A169' },
+    freelance: { name: 'Фриланс',        icon: '💻', color: '#4299E1' },
+    gift:      { name: 'Подарки',         icon: '🎁', color: '#D69E2E' },
+    invest:    { name: 'Инвестиции',      icon: '📈', color: '#9F7AEA' },
+    other_inc: { name: 'Прочее',          icon: '📋', color: '#718096' },
+  };
+
+  function getTransactions() {
+    return uGet(TX_KEY, []);
+  }
+
+  function saveTransactions(list) {
+    uSet(TX_KEY, list);
+    markLocalChange();
+    schedulePushProgress();
+  }
+
+  function getBudget() {
+    return uGet(BUDGET_KEY, { monthly: 0, categories: {} });
+  }
+
+  function saveBudget(b) {
+    uSet(BUDGET_KEY, b);
+    markLocalChange();
+    schedulePushProgress();
+  }
+
+  function getGoals() {
+    return uGet(GOALS_KEY, []);
+  }
+
+  function saveGoals(g) {
+    uSet(GOALS_KEY, g);
+    markLocalChange();
+    schedulePushProgress();
+  }
+
+  // --- Добавление транзакций ---
+  async function addTransaction(type) {
+    const isExpense = type === 'expense';
+    const cats = isExpense ? EXPENSE_CATEGORIES : INCOME_CATEGORIES;
+    const catOptions = Object.entries(cats).map(([k, v]) => ({
+      value: k, label: v.icon + ' ' + v.name
+    }));
+
+    const res = await askForm([
+      { key: 'amount', label: 'Сумма ₽', type: 'number', placeholder: '0' },
+      { key: 'category', label: 'Категория', type: 'select', options: catOptions },
+      { key: 'note', label: 'Комментарий', placeholder: 'необязательно' },
+    ], {
+      icon: isExpense ? '📝' : '💰',
+      title: isExpense ? 'Записать расход' : 'Записать доход',
+      okText: 'Сохранить'
+    });
+    if (!res || !res.amount) return;
+
+    const tx = getTransactions();
+    tx.unshift({
+      id: 'tx_' + Date.now(),
+      type,
+      amount: Math.abs(parseFloat(res.amount)),
+      category: res.category || (isExpense ? 'other' : 'other_inc'),
+      note: res.note || '',
+      date: todayStr(),
+      ts: Date.now(),
+    });
+    // Лимит записей
+    if (tx.length > 5000) tx.length = 5000;
+    saveTransactions(tx);
+    showToast(`${isExpense ? '📝' : '💰'} ${isExpense ? 'Расход' : 'Доход'} записан: ${Math.abs(res.amount).toLocaleString('ru-RU')} ₽`, 'success');
+    haptic('light');
+    render();
+    if (typeof DASHBOARD !== 'undefined') DASHBOARD.render();
+  }
+
+  async function quickExpense() {
+    await addTransaction('expense');
+  }
+
+  async function deleteTransaction(id) {
+    const ok = await askConfirm('Удалить эту запись?', {
+      icon: '🗑', title: 'Удаление', okText: 'Удалить', noText: 'Отмена'
+    });
+    if (!ok) return;
+    const tx = getTransactions().filter(t => t.id !== id);
+    saveTransactions(tx);
+    showToast('Запись удалена', 'warn');
+    render();
+  }
+
+  // --- Аналитика ---
+  function getMonthTransactions(monthOffset = 0) {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth() + monthOffset;
+    const d = new Date(year, month, 1);
+    const prefix = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    return getTransactions().filter(t => t.date.startsWith(prefix));
+  }
+
+  function getMonthSummary(monthOffset = 0) {
+    const txs = getMonthTransactions(monthOffset);
+    const income = txs.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+    const expenses = txs.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+
+    // Добавляем заработок со смен за этот месяц
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth() + monthOffset;
+    const d = new Date(year, month, 1);
+    const prefix = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    const shiftIncome = (typeof shifts !== 'undefined' ? shifts : [])
+      .filter(s => s.date.startsWith(prefix))
+      .reduce((s, x) => s + x.earned, 0);
+
+    const totalIncome = income + shiftIncome;
+    const balance = totalIncome - expenses;
+    const budget = getBudget();
+    const budgetPct = budget.monthly > 0 ? Math.round(expenses / budget.monthly * 100) : 0;
+
+    return { income: totalIncome, shiftIncome, manualIncome: income, expenses, balance, budgetPct };
+  }
+
+  function getCategoryBreakdown(monthOffset = 0) {
+    const txs = getMonthTransactions(monthOffset).filter(t => t.type === 'expense');
+    const breakdown = {};
+    for (const t of txs) {
+      if (!breakdown[t.category]) breakdown[t.category] = 0;
+      breakdown[t.category] += t.amount;
+    }
+    return Object.entries(breakdown)
+      .map(([cat, amount]) => ({
+        cat,
+        ...(EXPENSE_CATEGORIES[cat] || { name: cat, icon: '📋', color: '#718096' }),
+        amount,
+      }))
+      .sort((a, b) => b.amount - a.amount);
+  }
+
+  // --- Бюджет ---
+  async function setupBudget() {
+    const current = getBudget();
+    const res = await askForm([
+      { key: 'monthly', label: 'Месячный бюджет ₽', type: 'number', placeholder: '50000', value: current.monthly || '' },
+    ], { icon: '📊', title: 'Установить бюджет', okText: 'Сохранить' });
+    if (!res) return;
+    const monthly = parseInt(res.monthly) || 0;
+    saveBudget({ ...current, monthly });
+    showToast(`📊 Бюджет: ${monthly.toLocaleString('ru-RU')} ₽/мес`, 'success');
+    render();
+  }
+
+  // --- Цели накоплений ---
+  async function addGoal() {
+    const res = await askForm([
+      { key: 'name', label: 'Название цели', placeholder: 'Новый ноутбук' },
+      { key: 'target', label: 'Сумма ₽', type: 'number', placeholder: '100000' },
+    ], { icon: '🎯', title: 'Новая цель', okText: 'Создать' });
+    if (!res || !res.name || !res.target) return;
+
+    const goals = getGoals();
+    goals.push({
+      id: 'goal_' + Date.now(),
+      name: res.name.trim(),
+      target: parseInt(res.target),
+      saved: 0,
+      createdAt: Date.now(),
+    });
+    saveGoals(goals);
+    showToast('🎯 Цель добавлена', 'success');
+    render();
+  }
+
+  async function addToGoal(goalId) {
+    const goals = getGoals();
+    const goal = goals.find(g => g.id === goalId);
+    if (!goal) return;
+    const res = await askForm([
+      { key: 'amount', label: 'Сумма пополнения ₽', type: 'number', placeholder: '1000' },
+    ], { icon: '💰', title: `Пополнить «${escapeHtml(goal.name)}»`, okText: 'Добавить' });
+    if (!res || !res.amount) return;
+    goal.saved = (goal.saved || 0) + parseInt(res.amount);
+    saveGoals(goals);
+    showToast(`💰 +${parseInt(res.amount).toLocaleString('ru-RU')} ₽ к цели`, 'success');
+    render();
+  }
+
+  async function removeGoal(goalId) {
+    const ok = await askConfirm('Удалить эту цель?', {
+      icon: '🗑', title: 'Удаление', okText: 'Удалить', noText: 'Отмена'
+    });
+    if (!ok) return;
+    saveGoals(getGoals().filter(g => g.id !== goalId));
+    showToast('Цель удалена', 'warn');
+    render();
+  }
+
+  // --- Рендер ---
+  function render() {
+    const container = document.getElementById('financeContent');
+    if (!container) return;
+
+    const summary = getMonthSummary();
+    const budget = getBudget();
+    const breakdown = getCategoryBreakdown();
+    const goals = getGoals();
+    const recentTx = getTransactions().slice(0, 15);
+
+    const now = new Date();
+    const monthName = now.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' });
+
+    let html = `
+      <div class="fin-month-header">
+        <span class="fin-month-title">📊 ${monthName.charAt(0).toUpperCase() + monthName.slice(1)}</span>
+        <button class="fin-budget-btn" onclick="FINANCE.setupBudget()">
+          ${budget.monthly > 0 ? '✏️ Бюджет: ' + budget.monthly.toLocaleString('ru-RU') + ' ₽' : '📌 Установить бюджет'}
+        </button>
+      </div>
+
+      <div class="fin-summary-cards">
+        <div class="fin-card fin-card--income">
+          <div class="fin-card-label">Доход</div>
+          <div class="fin-card-value">${summary.income.toLocaleString('ru-RU')} ₽</div>
+          <div class="fin-card-sub">смены: ${summary.shiftIncome.toLocaleString('ru-RU')} · прочее: ${summary.manualIncome.toLocaleString('ru-RU')}</div>
+        </div>
+        <div class="fin-card fin-card--expense">
+          <div class="fin-card-label">Расходы</div>
+          <div class="fin-card-value">${summary.expenses.toLocaleString('ru-RU')} ₽</div>
+          ${budget.monthly > 0 ? `<div class="fin-card-bar"><div class="fin-card-fill ${summary.budgetPct > 90 ? 'danger' : summary.budgetPct > 70 ? 'warn' : ''}" style="width:${Math.min(summary.budgetPct, 100)}%"></div></div>
+          <div class="fin-card-sub">${summary.budgetPct}% бюджета</div>` : ''}
+        </div>
+        <div class="fin-card fin-card--balance">
+          <div class="fin-card-label">Баланс</div>
+          <div class="fin-card-value ${summary.balance >= 0 ? 'positive' : 'negative'}">${summary.balance >= 0 ? '+' : ''}${summary.balance.toLocaleString('ru-RU')} ₽</div>
+        </div>
+      </div>
+
+      <div class="fin-actions">
+        <button class="fin-action-btn fin-action--expense" onclick="FINANCE.addTransaction('expense')">📝 Записать расход</button>
+        <button class="fin-action-btn fin-action--income" onclick="FINANCE.addTransaction('income')">💰 Записать доход</button>
+      </div>
+    `;
+
+    // Разбивка по категориям
+    if (breakdown.length > 0) {
+      const maxCat = breakdown[0].amount;
+      html += `
+        <div class="fin-section">
+          <div class="fin-section-title">📋 Расходы по категориям</div>
+          <div class="fin-breakdown">
+            ${breakdown.map(b => {
+              const pct = maxCat > 0 ? Math.round(b.amount / maxCat * 100) : 0;
+              const totalPct = summary.expenses > 0 ? Math.round(b.amount / summary.expenses * 100) : 0;
+              return `<div class="fin-cat-row">
+                <span class="fin-cat-icon">${b.icon}</span>
+                <span class="fin-cat-name">${b.name}</span>
+                <div class="fin-cat-bar"><div class="fin-cat-fill" style="width:${pct}%;background:${b.color}"></div></div>
+                <span class="fin-cat-amount">${b.amount.toLocaleString('ru-RU')} ₽</span>
+                <span class="fin-cat-pct">${totalPct}%</span>
+              </div>`;
+            }).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    // Цели накоплений
+    html += `
+      <div class="fin-section">
+        <div class="fin-section-title">🎯 Цели накоплений</div>
+        ${goals.length > 0 ? goals.map(g => {
+          const pct = g.target > 0 ? Math.min(Math.round(g.saved / g.target * 100), 100) : 0;
+          return `<div class="fin-goal">
+            <div class="fin-goal-header">
+              <span class="fin-goal-name">${escapeHtml(g.name)}</span>
+              <span class="fin-goal-amount">${g.saved.toLocaleString('ru-RU')} / ${g.target.toLocaleString('ru-RU')} ₽</span>
+            </div>
+            <div class="fin-goal-bar"><div class="fin-goal-fill ${pct >= 100 ? 'complete' : ''}" style="width:${pct}%"></div></div>
+            <div class="fin-goal-footer">
+              <span>${pct}%${pct >= 100 ? ' ✅ Достигнута!' : ''}</span>
+              <span>
+                <button class="fin-goal-btn" onclick="FINANCE.addToGoal('${g.id}')">+ Пополнить</button>
+                <button class="fin-goal-btn fin-goal-btn--del" onclick="FINANCE.removeGoal('${g.id}')">✕</button>
+              </span>
+            </div>
+          </div>`;
+        }).join('') : '<div class="fin-empty">Нет целей — добавьте первую</div>'}
+        <button class="fin-add-goal-btn" onclick="FINANCE.addGoal()">＋ Новая цель</button>
+      </div>
+    `;
+
+    // Последние транзакции
+    if (recentTx.length > 0) {
+      html += `
+        <div class="fin-section">
+          <div class="fin-section-title">📝 Последние операции</div>
+          <div class="fin-tx-list">
+            ${recentTx.map(t => {
+              const isExp = t.type === 'expense';
+              const cats = isExp ? EXPENSE_CATEGORIES : INCOME_CATEGORIES;
+              const cat = cats[t.category] || { icon: '📋', name: t.category };
+              const dp = t.date.split('-');
+              const dateObj = new Date(parseInt(dp[0]), parseInt(dp[1]) - 1, parseInt(dp[2]));
+              const dateStr = dateObj.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+              return `<div class="fin-tx-item">
+                <span class="fin-tx-icon">${cat.icon}</span>
+                <div class="fin-tx-info">
+                  <div class="fin-tx-cat">${cat.name}</div>
+                  ${t.note ? `<div class="fin-tx-note">${escapeHtml(t.note)}</div>` : ''}
+                </div>
+                <div class="fin-tx-right">
+                  <div class="fin-tx-amount ${isExp ? 'expense' : 'income'}">${isExp ? '-' : '+'}${t.amount.toLocaleString('ru-RU')} ₽</div>
+                  <div class="fin-tx-date">${dateStr}</div>
+                </div>
+                <button class="fin-tx-del" onclick="FINANCE.deleteTransaction('${t.id}')" title="Удалить">✕</button>
+              </div>`;
+            }).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    container.innerHTML = html;
+  }
+
+  function openPanel() {
+    if (typeof switchV6Tab === 'function') switchV6Tab('finance');
+    render();
+  }
+
+  return {
+    getTransactions, addTransaction, deleteTransaction, quickExpense,
+    getMonthSummary, getCategoryBreakdown, setupBudget,
+    addGoal, addToGoal, removeGoal, getGoals,
+    render, openPanel,
+  };
+})();
+
+
+// ============================================================
+//  MODULE 5: CRYPTO — Крипто-портфель
+// ============================================================
+// Учёт криптовалютных активов, отслеживание цен (CoinGecko API),
+// P&L, распределение портфеля. Полностью клиентский.
+
+const CRYPTO = (() => {
+  'use strict';
+
+  const HOLDINGS_KEY = 'v6_crypto_holdings';
+  const PRICES_KEY = 'v6_crypto_prices';
+  const PRICE_TTL = 5 * 60 * 1000; // 5 минут кеш цен
+
+  // Популярные монеты для быстрого выбора
+  const POPULAR_COINS = [
+    { id: 'bitcoin',  symbol: 'BTC',  name: 'Bitcoin',  icon: '₿' },
+    { id: 'ethereum', symbol: 'ETH',  name: 'Ethereum', icon: 'Ξ' },
+    { id: 'tether',   symbol: 'USDT', name: 'Tether',   icon: '₮' },
+    { id: 'binancecoin', symbol: 'BNB', name: 'BNB',    icon: '◈' },
+    { id: 'solana',   symbol: 'SOL',  name: 'Solana',   icon: '◎' },
+    { id: 'ripple',   symbol: 'XRP',  name: 'XRP',      icon: '✕' },
+    { id: 'cardano',  symbol: 'ADA',  name: 'Cardano',  icon: '₳' },
+    { id: 'dogecoin', symbol: 'DOGE', name: 'Dogecoin', icon: 'Ð' },
+    { id: 'polkadot', symbol: 'DOT',  name: 'Polkadot', icon: '●' },
+    { id: 'the-open-network', symbol: 'TON', name: 'Toncoin', icon: '◆' },
+    { id: 'avalanche-2', symbol: 'AVAX', name: 'Avalanche', icon: '▲' },
+    { id: 'tron',     symbol: 'TRX',  name: 'TRON',     icon: '⬡' },
+  ];
+
+  function getHoldings() {
+    return uGet(HOLDINGS_KEY, []);
+  }
+
+  function saveHoldings(list) {
+    uSet(HOLDINGS_KEY, list);
+    markLocalChange();
+    schedulePushProgress();
+  }
+
+  function getCachedPrices() {
+    const cached = uGet(PRICES_KEY, null);
+    if (cached && cached.ts && Date.now() - cached.ts < PRICE_TTL) {
+      return cached.prices;
+    }
+    return null;
+  }
+
+  function savePricesCache(prices) {
+    uSet(PRICES_KEY, { prices, ts: Date.now() });
+  }
+
+  // --- Получение цен ---
+  async function fetchPrices(coinIds) {
+    if (!coinIds || coinIds.length === 0) return {};
+
+    // Проверяем кеш
+    const cached = getCachedPrices();
+    if (cached) {
+      const allCached = coinIds.every(id => cached[id] !== undefined);
+      if (allCached) return cached;
+    }
+
+    try {
+      const ids = coinIds.join(',');
+      const resp = await fetch(
+        `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`,
+        { signal: AbortSignal.timeout(8000) }
+      );
+      if (!resp.ok) throw new Error('API error');
+      const data = await resp.json();
+
+      const prices = {};
+      for (const [id, val] of Object.entries(data)) {
+        prices[id] = {
+          usd: val.usd || 0,
+          change24h: val.usd_24h_change || 0,
+        };
+      }
+
+      // Объединяем с кешем
+      const merged = { ...(cached || {}), ...prices };
+      savePricesCache(merged);
+      return merged;
+    } catch (e) {
+      console.warn('CoinGecko fetch error:', e);
+      // Возвращаем кеш если есть
+      return cached || {};
+    }
+  }
+
+  // --- CRUD ---
+  async function addHolding() {
+    const coinOptions = POPULAR_COINS.map(c => ({
+      value: c.id, label: `${c.icon} ${c.symbol} — ${c.name}`
+    }));
+    coinOptions.push({ value: '_custom', label: '📝 Другая монета...' });
+
+    const res = await askForm([
+      { key: 'coin', label: 'Монета', type: 'select', options: coinOptions },
+      { key: 'amount', label: 'Количество', type: 'number', placeholder: '0.5' },
+      { key: 'buyPrice', label: 'Цена покупки (USD)', type: 'number', placeholder: '45000' },
+    ], { icon: '📈', title: 'Добавить актив', okText: 'Добавить' });
+    if (!res || !res.coin || !res.amount) return;
+
+    let coinId = res.coin;
+    let coinSymbol = '';
+    let coinName = '';
+
+    if (coinId === '_custom') {
+      const custom = await askForm([
+        { key: 'id', label: 'CoinGecko ID', placeholder: 'например: sui' },
+        { key: 'symbol', label: 'Тикер', placeholder: 'SUI' },
+        { key: 'name', label: 'Название', placeholder: 'Sui' },
+      ], { icon: '📝', title: 'Ручной ввод', okText: 'OK' });
+      if (!custom || !custom.id) return;
+      coinId = custom.id.toLowerCase().trim();
+      coinSymbol = (custom.symbol || coinId).toUpperCase();
+      coinName = custom.name || coinSymbol;
+    } else {
+      const popular = POPULAR_COINS.find(c => c.id === coinId);
+      coinSymbol = popular ? popular.symbol : coinId.toUpperCase();
+      coinName = popular ? popular.name : coinId;
+    }
+
+    const holdings = getHoldings();
+    holdings.push({
+      id: 'hold_' + Date.now(),
+      coinId,
+      symbol: coinSymbol,
+      name: coinName,
+      amount: parseFloat(res.amount),
+      buyPrice: parseFloat(res.buyPrice) || 0,
+      addedAt: Date.now(),
+    });
+    saveHoldings(holdings);
+    showToast(`📈 ${coinSymbol} добавлен в портфель`, 'success');
+    render();
+  }
+
+  async function removeHolding(id) {
+    const ok = await askConfirm('Удалить этот актив из портфеля?', {
+      icon: '🗑', title: 'Удаление', okText: 'Удалить', noText: 'Отмена'
+    });
+    if (!ok) return;
+    saveHoldings(getHoldings().filter(h => h.id !== id));
+    showToast('Актив удалён', 'warn');
+    render();
+  }
+
+  async function editHolding(id) {
+    const holdings = getHoldings();
+    const h = holdings.find(x => x.id === id);
+    if (!h) return;
+    const res = await askForm([
+      { key: 'amount', label: 'Количество', type: 'number', placeholder: '0', value: h.amount },
+      { key: 'buyPrice', label: 'Цена покупки (USD)', type: 'number', placeholder: '0', value: h.buyPrice },
+    ], { icon: '✏️', title: `Редактировать ${h.symbol}`, okText: 'Сохранить' });
+    if (!res) return;
+    h.amount = parseFloat(res.amount) || h.amount;
+    h.buyPrice = parseFloat(res.buyPrice) || h.buyPrice;
+    saveHoldings(holdings);
+    showToast('✅ Обновлено', 'success');
+    render();
+  }
+
+  // --- Агрегация ---
+  function getPortfolioValue() {
+    const holdings = getHoldings();
+    const prices = getCachedPrices() || {};
+
+    let totalUSD = 0;
+    let totalCost = 0;
+    for (const h of holdings) {
+      const p = prices[h.coinId];
+      const currentPrice = p ? p.usd : 0;
+      totalUSD += h.amount * currentPrice;
+      totalCost += h.amount * (h.buyPrice || 0);
+    }
+
+    const pnl = totalUSD - totalCost;
+    const changePct = totalCost > 0 ? ((totalUSD - totalCost) / totalCost) * 100 : 0;
+
+    return {
+      totalUSD,
+      totalCost,
+      pnl,
+      changePct,
+      assets: holdings.length,
+    };
+  }
+
+  // --- Рендер ---
+  let _rendering = false;
+  async function render() {
+    const container = document.getElementById('cryptoContent');
+    if (!container || _rendering) return;
+    _rendering = true;
+
+    const holdings = getHoldings();
+
+    // Загружаем цены если есть активы
+    let prices = getCachedPrices() || {};
+    if (holdings.length > 0) {
+      const coinIds = [...new Set(holdings.map(h => h.coinId))];
+      prices = await fetchPrices(coinIds);
+    }
+
+    const pv = getPortfolioValue();
+
+    let html = `
+      <div class="crypto-summary">
+        <div class="crypto-total-label">📈 Стоимость портфеля</div>
+        <div class="crypto-total-value">$${pv.totalUSD.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+        <div class="crypto-total-pnl ${pv.pnl >= 0 ? 'positive' : 'negative'}">
+          P&L: ${pv.pnl >= 0 ? '+' : ''}$${pv.pnl.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          (${pv.changePct >= 0 ? '+' : ''}${pv.changePct.toFixed(2)}%)
+        </div>
+        <div class="crypto-total-cost">Вложено: $${pv.totalCost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+      </div>
+    `;
+
+    // Распределение (пирог текстом)
+    if (holdings.length > 1) {
+      const sorted = holdings
+        .map(h => {
+          const p = prices[h.coinId];
+          const val = h.amount * (p ? p.usd : 0);
+          return { ...h, value: val };
+        })
+        .sort((a, b) => b.value - a.value);
+      const maxVal = sorted[0]?.value || 1;
+
+      html += `
+        <div class="crypto-section">
+          <div class="crypto-section-title">📊 Распределение</div>
+          <div class="crypto-alloc">
+            ${sorted.map(s => {
+              const pct = pv.totalUSD > 0 ? (s.value / pv.totalUSD * 100) : 0;
+              const barPct = maxVal > 0 ? (s.value / maxVal * 100) : 0;
+              return `<div class="crypto-alloc-row">
+                <span class="crypto-alloc-sym">${s.symbol}</span>
+                <div class="crypto-alloc-bar"><div class="crypto-alloc-fill" style="width:${barPct}%"></div></div>
+                <span class="crypto-alloc-pct">${pct.toFixed(1)}%</span>
+              </div>`;
+            }).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    // Список активов
+    html += `<div class="crypto-section"><div class="crypto-section-title">💼 Активы</div>`;
+
+    if (holdings.length === 0) {
+      html += `<div class="crypto-empty">Портфель пуст — добавьте первый актив</div>`;
+    } else {
+      html += `<div class="crypto-holdings">`;
+      for (const h of holdings) {
+        const p = prices[h.coinId];
+        const currentPrice = p ? p.usd : 0;
+        const value = h.amount * currentPrice;
+        const cost = h.amount * (h.buyPrice || 0);
+        const pnl = value - cost;
+        const pnlPct = cost > 0 ? ((value - cost) / cost * 100) : 0;
+        const change24 = p ? p.change24h : 0;
+
+        const popular = POPULAR_COINS.find(c => c.id === h.coinId);
+        const icon = popular ? popular.icon : '●';
+
+        html += `
+          <div class="crypto-holding">
+            <div class="crypto-hold-top">
+              <div class="crypto-hold-left">
+                <span class="crypto-hold-icon">${icon}</span>
+                <div>
+                  <div class="crypto-hold-symbol">${h.symbol}</div>
+                  <div class="crypto-hold-name">${escapeHtml(h.name)}</div>
+                </div>
+              </div>
+              <div class="crypto-hold-right">
+                <div class="crypto-hold-value">$${value.toLocaleString('en-US', { maximumFractionDigits: 2 })}</div>
+                <div class="crypto-hold-change ${change24 >= 0 ? 'positive' : 'negative'}">${change24 >= 0 ? '▲' : '▼'} ${Math.abs(change24).toFixed(2)}% (24ч)</div>
+              </div>
+            </div>
+            <div class="crypto-hold-details">
+              <span>Кол-во: ${h.amount}</span>
+              <span>Цена: $${currentPrice.toLocaleString('en-US', { maximumFractionDigits: 6 })}</span>
+              <span>Покупка: $${h.buyPrice.toLocaleString('en-US', { maximumFractionDigits: 2 })}</span>
+              <span class="${pnl >= 0 ? 'positive' : 'negative'}">P&L: ${pnl >= 0 ? '+' : ''}$${pnl.toFixed(2)} (${pnlPct >= 0 ? '+' : ''}${pnlPct.toFixed(1)}%)</span>
+            </div>
+            <div class="crypto-hold-actions">
+              <button onclick="CRYPTO.editHolding('${h.id}')">✏️ Изменить</button>
+              <button onclick="CRYPTO.removeHolding('${h.id}')">✕ Удалить</button>
+            </div>
+          </div>
+        `;
+      }
+      html += `</div>`;
+    }
+
+    html += `
+        <button class="crypto-add-btn" onclick="CRYPTO.addHolding()">＋ Добавить актив</button>
+      </div>
+    `;
+
+    // Кнопка обновления цен
+    html += `
+      <div class="crypto-refresh">
+        <button class="crypto-refresh-btn" onclick="CRYPTO.refreshPrices()">🔄 Обновить цены</button>
+        <span class="crypto-refresh-info">${(() => {
+          const cached = uGet(PRICES_KEY, null);
+          if (cached && cached.ts) {
+            const ago = Math.round((Date.now() - cached.ts) / 60000);
+            return ago < 1 ? 'только что' : `${ago} мин назад`;
+          }
+          return 'нет данных';
+        })()}</span>
+      </div>
+    `;
+
+    container.innerHTML = html;
+    _rendering = false;
+  }
+
+  async function refreshPrices() {
+    // Инвалидируем кеш
+    uSet(PRICES_KEY, null);
+    showToast('🔄 Обновление цен...', 'info');
+    await render();
+    showToast('✅ Цены обновлены', 'success');
+  }
+
+  function openPanel() {
+    if (typeof switchV6Tab === 'function') switchV6Tab('crypto');
+    render();
+  }
+
+  return {
+    getHoldings, addHolding, removeHolding, editHolding,
+    getPortfolioValue, fetchPrices, refreshPrices,
+    render, openPanel, POPULAR_COINS,
+  };
+})();
+
+
+// ============================================================
+//  V6 NAVIGATION — интеграция с реальной структурой v5.3
+// ============================================================
+// Реальная разметка: .tab-nav с .tab-btn, .tab-content как прямые
+// дети body, FAB-меню (#fabMenu), switchTab(name) по схеме
+// tab<Name> / content<Name>. Контейнеров .container/.tab-bar НЕТ.
+//
+// Новая структура — 5 вкладок:
+//   🏠 ГЛАВНАЯ  → dashboard (v6)
+//   💼 РАБОТА   → live      (v5, смена)
+//   🎯 ЖИЗНЬ    → life      (v6: привычки + здоровье)
+//   💰 ДЕНЬГИ   → money     (v6: финансы + портфель)
+//   📊 АНАЛИТИКА→ stats     (v5)
+// Магазин уезжает в FAB-меню.
+
+const V6_TABS = {
+  dashboard: { icon: '🏠', label: 'Главная',  render: () => DASHBOARD.render() },
+  habits:    { icon: '📋', label: 'Привычки', render: () => HABITS.render() },
+  health:    { icon: '❤️', label: 'Здоровье', render: () => HEALTH.render() },
+  finance:   { icon: '📊', label: 'Финансы',  render: () => FINANCE.render() },
+  crypto:    { icon: '📈', label: 'Портфель', render: () => CRYPTO.render() },
+};
+
+// Составные вкладки: один таб — несколько модулей подряд
+const V6_COMPOSITE = {
+  dashboard: ['dashboard'],
+  life:      ['habits', 'health'],
+  money:     ['finance', 'crypto'],
+};
+
+const V5_TABS = ['live', 'shop', 'stats'];
+
+let _v6Built = false;
+
+// --- Создание DOM-контейнеров модулей ---
+function buildV6Containers() {
+  const anchor = document.getElementById('fabContainer');
+  const mk = (id, cls) => {
+    let el = document.getElementById(id);
+    if (!el) {
+      el = document.createElement('div');
+      el.id = id;
+      el.className = cls;
+      if (anchor && anchor.parentNode) anchor.parentNode.insertBefore(el, anchor);
+      else document.body.appendChild(el);
+    }
+    return el;
+  };
+
+  // Вкладка-обёртка + внутренние слоты модулей
+  for (const [tab, mods] of Object.entries(V6_COMPOSITE)) {
+    const wrap = mk(tab + 'Content', 'tab-content v6-tab-content');
+    for (const m of mods) {
+      if (!document.getElementById(m + 'Content')) {
+        const slot = document.createElement('div');
+        slot.id = m + 'Content';
+        slot.className = 'v6-module-slot';
+        wrap.appendChild(slot);
+      }
+    }
+  }
+}
+
+// --- Перестройка нижнего таб-бара ---
+function buildV6TabBar() {
+  const nav = document.querySelector('.tab-nav');
+  if (!nav) return;
+
+  const TABS = [
+    { id: 'dashboard', icon: '🏠', label: 'ГЛАВНАЯ' },
+    { id: 'live',      icon: '💼', label: 'РАБОТА' },
+    { id: 'life',      icon: '🎯', label: 'ЖИЗНЬ' },
+    { id: 'money',     icon: '💰', label: 'ДЕНЬГИ' },
+    { id: 'stats',     icon: '📊', label: 'СТАТА' },
+  ];
+
+  nav.innerHTML = TABS.map(t => `
+    <button class="tab-btn" id="tab${t.id.charAt(0).toUpperCase() + t.id.slice(1)}"
+            data-tab="${t.id}">
+      <span class="tab-ico">${t.icon}</span>
+      <span class="tab-lbl">${t.label}</span>
+    </button>`).join('');
+
+  nav.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+  });
+}
+
+// --- Магазин + модули в FAB-меню ---
+function buildV6FabItems() {
+  const fab = document.getElementById('fabMenu');
+  if (!fab || fab.dataset.v6 === '1') return;
+  fab.dataset.v6 = '1';
+
+  const items = [
+    { icon: '🏪', label: 'Магазин',  fn: () => switchTab('shop') },
+    { icon: '📈', label: 'Портфель', fn: () => { switchTab('money'); scrollToModule('crypto'); } },
+    { icon: '❤️', label: 'Здоровье', fn: () => { switchTab('life'); scrollToModule('health'); } },
+  ];
+
+  for (const it of items) {
+    if ([...fab.querySelectorAll('.fab-item')].some(b => b.textContent.includes(it.label))) continue;
+    const btn = document.createElement('button');
+    btn.className = 'fab-item';
+    btn.innerHTML = `<span>${it.icon}</span> ${it.label}`;
+    btn.addEventListener('click', () => { if (typeof toggleFab === 'function') toggleFab(); it.fn(); });
+    fab.insertBefore(btn, fab.firstChild);
+  }
+}
+
+function scrollToModule(mod) {
+  const el = document.getElementById(mod + 'Content');
+  if (el) setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }), 120);
+}
+
+// --- Единый switchTab: обслуживает и v5, и v6 ---
+let _v6PrevSwitchTab = null;
+
+function installV6SwitchTab() {
+  if (_v6PrevSwitchTab) return;
+  _v6PrevSwitchTab = typeof switchTab === 'function' ? switchTab : null;
+
+  window.switchTab = function(tab) {
+    // Сброс активности у всех вкладок и кнопок
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+
+    const cap = tab.charAt(0).toUpperCase() + tab.slice(1);
+    const btn = document.getElementById('tab' + cap);
+    const content = document.getElementById('content' + cap) || document.getElementById(tab + 'Content');
+    if (btn) btn.classList.add('active');
+    if (content) content.classList.add('active');
+
+    try {
+      if (V6_COMPOSITE[tab]) {
+        // v6: рендерим все модули вкладки
+        for (const m of V6_COMPOSITE[tab]) {
+          if (V6_TABS[m]) V6_TABS[m].render();
+        }
+      } else {
+        // v5: прежнее поведение
+        if (tab === 'shop' && typeof renderShop === 'function') renderShop();
+        if (tab === 'stats' && typeof scheduleRender === 'function') scheduleRender();
+      }
+    } catch (e) {
+      console.error('[v6] switchTab render error:', tab, e);
+    }
+
+    try { uSet('active_tab', tab); } catch (e) {}
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+}
+
+// Совместимость: модули зовут switchV6Tab('crypto') и т.п.
+function switchV6Tab(mod) {
+  const parent = Object.keys(V6_COMPOSITE).find(t => V6_COMPOSITE[t].includes(mod));
+  if (parent) { switchTab(parent); if (V6_COMPOSITE[parent].length > 1) scrollToModule(mod); }
+}
+function switchToV5Tab(tab) { switchTab(tab); }
+
+// --- Синхронизация новых ключей в Supabase ---
+function extendProgressKeys() {
+  if (typeof PROGRESS_KEYS === 'undefined' || !Array.isArray(PROGRESS_KEYS)) return;
+  const v6Keys = [
+    'v6_habits', 'v6_habits_log',
+    'v6_health',
+    'v6_finance_tx', 'v6_finance_budget', 'v6_finance_goals',
+    'v6_crypto_holdings',
+    'water_goal', 'active_tab',
+  ];
+  for (const k of v6Keys) if (!PROGRESS_KEYS.includes(k)) PROGRESS_KEYS.push(k);
+}
+
+// --- BOOT ---
+function bootV6() {
+  if (_v6Built) return;
+  _v6Built = true;
+  try {
+    extendProgressKeys();
+    buildV6Containers();
+    buildV6TabBar();
+    buildV6FabItems();
+    installV6SwitchTab();
+
+    // Прогрев данных (создаёт дефолтные привычки при первом входе)
+    try { HABITS.getHabits(); } catch (e) {}
+    try { HEALTH.getTodayData(); } catch (e) {}
+
+    // Восстанавливаем последнюю вкладку, по умолчанию — дашборд
+    let start = 'dashboard';
+    try {
+      const saved = uGet('active_tab', null);
+      if (saved && (V6_COMPOSITE[saved] || V5_TABS.includes(saved))) start = saved;
+    } catch (e) {}
+    switchTab(start);
+
+    // Фоновая подгрузка курсов — не блокирует интерфейс
+    setTimeout(() => { try { CRYPTO.fetchPrices(); } catch (e) {} }, 1500);
+
+    console.log('[v6] Life & Work Tracker modules ready');
+  } catch (e) {
+    console.error('[v6] Boot error:', e);
+    _v6Built = false;
+  }
+}
+
+// Хук на init(): дожидаемся основной инициализации, затем строим v6.
+(function hookV6Init() {
+  if (typeof init === 'function') {
+    const _origInit = init;
+    window.init = async function() {
+      await _origInit.apply(this, arguments);
+      bootV6();
+    };
+  } else {
+    // init ещё не объявлена — пробуем после загрузки
+    if (document.readyState === 'complete') setTimeout(bootV6, 800);
+    else window.addEventListener('load', () => setTimeout(bootV6, 800));
+  }
+  // Страховка: если init не вызвался (например, вход уже выполнен)
+  setTimeout(() => { if (!_v6Built) bootV6(); }, 5000);
+})();
+
+// Глобальные алиасы для onclick в разметке модулей
+window.DASHBOARD = DASHBOARD;
+window.HABITS = HABITS;
+window.HEALTH = HEALTH;
+window.FINANCE = FINANCE;
+window.CRYPTO = CRYPTO;
+window.switchV6Tab = switchV6Tab;
+window.bootV6 = bootV6;
+
 </script>
 
 <!-- FAILSAFE: если основной скрипт завис, через 6с показать UI -->

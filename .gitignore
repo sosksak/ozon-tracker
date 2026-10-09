@@ -1,2 +1,11 @@
 nul
 _sb_env.txt
+
+# v6 build artifacts
+_v6_*.txt
+_v6_nav.*
+_build_v6.py
+_stage1.html
+_check*.js
+index_pre_v6_*.html
+index_v5.3_backup.html
