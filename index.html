@@ -1300,7 +1300,7 @@ body:not(.role-dev) .dev-only { display: none !important; }
 
 <div class="loading-overlay" id="loadingOverlay">
   <div class="loading-spinner">⏳</div>
-  <div style="color: var(--gold); font-weight: 700;" id="loadingText">Загрузка данных...</div>
+  <div style="color: var(--gold); font-weight: 700;" id="loadingText">Запуск...</div>
 </div>
 
 <div class="coin-rain" id="coinRain"></div>
@@ -2347,7 +2347,7 @@ async function bootAuth() {
   try {
     await Promise.race([
       pullAccountsOnly(),
-      new Promise((_, reject) => setTimeout(() => reject(new Error('pull timeout')), 4000))
+      new Promise((_, reject) => setTimeout(() => reject(new Error('pull timeout')), 2000))
     ]);
   } catch (e) { console.warn('accounts pull:', e); }
 
@@ -5031,34 +5031,23 @@ async function init() {
   document.getElementById('inputDate').value = todayStr();
   setDifficulty(difficulty, false);
 
-  // Сначала возвращаем потерянный XP локально, потом тянем облако —
-  // mergeLifeXP берёт максимум, так что ни одна из сторон не затрётся.
+  // Сначала возвращаем потерянный XP локально
   restoreLostXPOnce();
 
-  try { await loadShifts(); } catch(e) { console.error('Init error:', e); setSyncStatus('error', '❌ Ошибка загрузки'); }
-
-  // FIX: доливаем смены, которые не ушли в облако из-за обрыва связи
-  try { await flushPendingShifts(); } catch(e) { console.error('Flush init error:', e); }
-
-  // FIX: подтягиваем прогресс из облака ДО отрисовки — иначе новое
-  // устройство/приложение показало бы пустой XP и уровень.
-  try { await pullProgress(); } catch(e) { console.error('Progress pull error:', e); }
-
-  // Переменные в памяти были прочитаны ДО синка — перечитываем, иначе
-  // активная смена и сложность из облака не попадут на экран.
+  // ═══ ФАЗА 1: мгновенный рендер из localStorage (0 сетевых запросов) ═══
   try {
-    activeShift = uGet('ozon_active_shift', null);
-    const d = uGetRaw('ozon_difficulty');
-    if (d && d !== difficulty) setDifficulty(d, false);
-  } catch (e) { console.warn('Re-read after sync failed:', e); }
+    const local = uGet('ozon_tracker', null);
+    if (local && Array.isArray(local.shifts)) {
+      shifts = local.shifts.filter(s => !isProgressRow(s)).map(enrichShift);
+    }
+  } catch(e) { console.warn('Local load:', e); }
 
-  // Restore active shift if was running
-  if (activeShift) {
-    renderActiveShift();
-    startTimer();
-  } else {
-    renderActiveShift();
-  }
+  activeShift = uGet('ozon_active_shift', null);
+  const savedDiff = uGetRaw('ozon_difficulty');
+  if (savedDiff && savedDiff !== difficulty) setDifficulty(savedDiff, false);
+
+  if (activeShift) { renderActiveShift(); startTimer(); }
+  else { renderActiveShift(); }
 
   render();
   renderLifeQuests();
@@ -5070,11 +5059,59 @@ async function init() {
   checkWeeklyFreeChoice();
   renderVersionTag();
   renderCloudSyncTag();
-  applyRoleToUI();   // роль могла прийти из облака вместе с профилями
+  applyRoleToUI();
+
+  // UI готов — убираем лоадер СРАЗУ
   hideLoading();
-  // Без markLocalChange: простое открытие приложения не делает это устройство
-  // «свежее» облака, иначе старый клиент затирал бы новые данные.
-  if (sb) pushProgress();
+
+  // ═══ ФАЗА 2: фоновая синхронизация с облаком ═══
+  syncCloud();
+}
+
+async function syncCloud() {
+  if (!sb) return;
+  try {
+    // Загружаем смены из облака
+    try {
+      const login = currentUser ? currentUser.login : '';
+      const { data, error } = await sb.from('shifts').select('*').order('date', { ascending: false });
+      if (!error && data) {
+        const myShifts = data.filter(s => {
+          const tag = extractUserTag(s.note);
+          if (tag) return tag === login;
+          return currentUser && currentUser.role === 'dev';
+        });
+        shifts = myShifts.filter(s => !isProgressRow(s)).map(enrichShift);
+        mergePendingIntoShifts();
+        backupToLocal();
+        setSyncStatus('ok', '☁️ Синхронизировано');
+        render();
+      }
+    } catch(e) { console.error('Cloud shifts:', e); setSyncStatus('error', '❌ Облако недоступно'); }
+
+    // Доливаем офлайн-очередь
+    try { await flushPendingShifts(); } catch(e) { console.error('Flush:', e); }
+
+    // Подтягиваем прогресс
+    try {
+      const changed = await pullProgress();
+      if (changed) {
+        // Перечитываем данные после синка
+        activeShift = uGet('ozon_active_shift', null);
+        const d = uGetRaw('ozon_difficulty');
+        if (d && d !== difficulty) setDifficulty(d, false);
+        if (activeShift) { renderActiveShift(); startTimer(); }
+        else { renderActiveShift(); }
+        render();
+        renderLifeQuests();
+        renderLifeStats();
+        renderCloudSyncTag();
+        applyRoleToUI();
+      }
+    } catch(e) { console.error('Progress pull:', e); }
+
+    pushProgress();
+  } catch(e) { console.error('syncCloud:', e); }
 }
 
 // Честно говорим, работает ли облако. Если таблица app_state не создана,
@@ -6558,7 +6595,7 @@ document.addEventListener('click', function(e) {
       if (getAccounts().length) { authSetView('choose'); showAuthGate(); }
       else { authSetView('setup'); showAuthGate(); }
     }
-  }, 5000);
+  }, 3000);
 }
 
 // Update quests every 30 seconds (for timer-based ones)
@@ -6584,7 +6621,7 @@ setTimeout(function() {
       }
     } catch(e) { console.error('[FAILSAFE] error:', e); }
   }
-}, 6000);
+}, 4000);
 </script>
 
 <!-- FOCUS MODE OVERLAY -->
