@@ -15,11 +15,16 @@
 <link rel="manifest" href="manifest.json?v=5">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
-<title>📊 OZON Tracker v5.1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" onload="this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"></noscript>
+<title>OZON | Учёт рабочего времени v5.2</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="config.js?v=6"></script>
+<script src="config.js?v=7"></script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+/* fonts loaded via <link preload> in head */
 
 :root {
   --primary: #1B3A5C;
@@ -57,6 +62,13 @@
   --radius-lg: 12px;
 }
 
+/* GPU acceleration and layout containment */
+.tab-content { contain: layout style; content-visibility: auto; }
+.tab-content.active { content-visibility: visible; }
+.modal-overlay { contain: layout style paint; }
+.shift-card, .ach-item, .quest-card, .lq-card { contain: layout style; }
+.chart-bars { will-change: contents; }
+
 * { margin:0; padding:0; box-sizing:border-box; }
 
 body {
@@ -86,10 +98,7 @@ body {
 /* COIN RAIN */
 .coin-rain { position: fixed; top:0; left:0; width:100%; height:100%; pointer-events: none; z-index: 999; }
 .coin { position: absolute; font-size: 22px; animation: coinFall 1.5s ease-in forwards; opacity: 0; }
-@keyframes coinFall {
-  0% { transform: translateY(-50px) rotate(0deg); opacity: 1; }
-  100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
-}
+@keyframes coinFall { to { opacity: 0; } }
 
 /* HEADER */
 .header {
@@ -98,7 +107,7 @@ body {
   border-bottom: 3px solid var(--accent);
 }
 .header::before { display: none; }
-@keyframes headerRotate { to { transform: rotate(360deg); } }
+@keyframes headerRotate { to { transform: none; } }
 .header::after { display: none; }
 .header h1 {
   font-size: 18px; font-weight: 800; position: relative;
@@ -243,7 +252,7 @@ body {
 .million-bar-wrap { position: relative; height: 8px; background: #EDF2F7; border-radius: 4px; overflow: visible; }
 .million-bar-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--green), var(--accent)); transition: width 0.5s ease; position: relative; }
 .million-bar-fill::after { content:''; position:absolute; right:-4px; top:-4px; width:16px; height:16px; border-radius:50%; background:var(--accent); border: 2px solid #fff; box-shadow: var(--shadow-sm); }
-@keyframes millionPulse { 0%,100% { transform:scale(1); } 50% { transform:scale(1.1); } }
+@keyframes millionPulse { to { transform: none; } }
 .million-milestones { display: flex; justify-content: space-between; margin-top: 6px; font-size: 10px; color: var(--text-dim); }
 .million-milestones .reached { color: var(--green); font-weight: 700; }
 .million-current { text-align: center; margin-top: 8px; font-size: 13px; font-weight: 700; color: var(--primary); }
@@ -333,11 +342,11 @@ body {
 }
 @keyframes achFadeIn { from { opacity:0; } to { opacity:1; } }
 .ach-unlock-icon { font-size: 60px; animation: achBounce 0.4s ease; }
-@keyframes achBounce { 0% { transform:scale(0); } 60% { transform:scale(1.1); } 100% { transform:scale(1); } }
+@keyframes achBounce { to { transform:scale(1); } }
 .ach-unlock-title { font-size: 20px; font-weight: 800; color: var(--accent); margin-top: 16px; text-transform: uppercase; letter-spacing: 2px; }
 .ach-unlock-name { font-size: 16px; font-weight: 600; color: #fff; margin-top: 8px; }
 .ach-unlock-glow { width: 100px; height: 100px; position: absolute; border-radius: 50%; background: radial-gradient(circle, rgba(49,130,206,0.2), transparent); }
-@keyframes achGlow { 0%,100% { transform:scale(1); opacity:0.5; } 50% { transform:scale(1.3); opacity:0; } }
+@keyframes achGlow { to { opacity:0; } }
 
 /* SOCIAL DIARY */
 .diary-section { margin: 0 12px 12px; }
@@ -566,7 +575,7 @@ body {
   box-shadow: var(--shadow-md);
 }
 .lq-hero::after { display: none; }
-@keyframes lq-hero-sheen { 0%, 100% { left: -60%; } }
+@keyframes lq-hero-sheen { to { left: -60%; } }
 
 /* --- LEVEL BADGE --- */
 .lq-badge {
@@ -1270,6 +1279,11 @@ body:not(.role-dev) .dev-only { display: none !important; }
 .ask-btn.ok { background: var(--primary); color: #fff; }
 .ask-btn.no { background: #F0F2F5; color: var(--text); }
 .ask-err { color: var(--red); font-size: 11px; font-weight: 700; margin-top: 8px; text-align: center; min-height: 14px; }
+
+/* Respect reduce-motion for accessibility and battery */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
 </style>
 </head>
 <body>
@@ -5194,8 +5208,7 @@ function exportDataCSV() {
   for (const s of [...shifts].sort((a, b) => a.date.localeCompare(b.date))) {
     rows.push([s.date, s.hours, s.earned, s.rate, (s.displayNote || stripUserTag(s.note) || '').replace(/"/g, '""')]);
   }
-  const totalE = shifts.reduce((a, s) => a + s.earned, 0);
-  const totalH = shifts.reduce((a, s) => a + s.hours, 0);
+  const { totalEarned: totalE, totalHours: totalH } = getShiftTotals();
   rows.push(['ИТОГО', totalH.toFixed(1), totalE, totalH > 0 ? Math.round(totalE / totalH) : 0, '']);
   const csv = '\uFEFF' + rows.map(r => r.map(c => `"${c}"`).join(';')).join('\n');
   downloadFile(`ozon_smeny_${todayStr()}.csv`, csv, 'text/csv;charset=utf-8');
@@ -5297,9 +5310,7 @@ function manualRestoreXP(value) {
 // ====== RENDER ======
 function render() {
   const goal = DIFFICULTIES[difficulty].goal;
-  const totalEarned = shifts.reduce((s, x) => s + x.earned, 0);
-  const totalHours = shifts.reduce((s, x) => s + x.hours, 0);
-  const avgRate = totalHours > 0 ? Math.round(totalEarned / totalHours) : 0;
+  const { totalEarned, totalHours, avgRate } = getShiftTotals();
 
   document.getElementById('totalEarned').textContent = totalEarned.toLocaleString('ru-RU');
   document.getElementById('totalShifts').textContent = shifts.length;
@@ -5450,7 +5461,7 @@ function renderMonthGoal() {
   // Средний заработок за смену: по этому месяцу, иначе по всей истории.
   const avgPerShift = monthShifts.length
     ? earned / monthShifts.length
-    : (shifts.length ? shifts.reduce((a, s) => a + s.earned, 0) / shifts.length : 0);
+    : (shifts.length ? getShiftTotals().totalEarned / shifts.length : 0);
 
   // Прогноз: уже заработано + запланированные в календаре будущие смены.
   const plan = getCalendarPlan();
@@ -5723,7 +5734,7 @@ function renderChart() {
 
 // ====== PWA: SERVICE WORKER ======
 // Регистрируем только по http/https — с file:// браузер ругается.
-const APP_VERSION = 'v5.1.0';
+const APP_VERSION = 'v5.2.0';
 
 // Страховка: кнопка баннера обязана работать даже если обработчик
 // от service worker по какой-то причине не навесился.
@@ -5912,7 +5923,7 @@ function updateFocusMode() {
 // --- Achievement Unlock Animation ---
 let _prevUnlocked = null;
 function checkNewAchievements() {
-  const totalEarned = shifts.reduce((s, x) => s + x.earned, 0);
+  const totalEarned = getShiftTotals().totalEarned;
   const streak = calcStreak(DIFFICULTIES[difficulty].goal);
   const achData = { shifts, totalEarned, streak };
   const nowUnlocked = ACHIEVEMENTS.filter(a => a.check(achData)).map(a => a.id);
@@ -5960,7 +5971,7 @@ function closeSummary() {
 
 // --- Million Path ---
 function renderMillionPath() {
-  const total = shifts.reduce((s, x) => s + x.earned, 0);
+  const total = getShiftTotals().totalEarned;
   const el = document.getElementById('millionPath');
   if (total < 1000) { el.style.display = 'none'; return; }
   el.style.display = 'block';
@@ -5982,13 +5993,13 @@ function renderKopilka() {
   const card = document.getElementById('kopilkaCard');
   if (!k || !k.goal) { card.style.display = 'none'; return; }
   card.style.display = 'block';
-  const total = shifts.reduce((s, x) => s + x.earned, 0);
+  const total = getShiftTotals().totalEarned;
   const pct = Math.min((total / k.goal) * 100, 100);
   document.getElementById('kopilkaName').textContent = `🎯 ${k.name || 'Цель'}`;
   document.getElementById('kopilkaAmount').textContent = `${total.toLocaleString('ru-RU')} / ${k.goal.toLocaleString('ru-RU')} ₽`;
   document.getElementById('kopilkaFill').style.width = pct + '%';
   const remaining = Math.max(k.goal - total, 0);
-  const avgPerShift = shifts.length > 0 ? shifts.reduce((s, x) => s + x.earned, 0) / shifts.length : 0;
+  const avgPerShift = shifts.length > 0 ? getShiftTotals().totalEarned / shifts.length : 0;
   const shiftsLeft = avgPerShift > 0 ? Math.ceil(remaining / avgPerShift) : '∞';
   document.getElementById('kopilkaSub').textContent = remaining > 0 ? `Осталось ~${shiftsLeft} смен` : '🎉 Цель достигнута';
 }
@@ -6092,9 +6103,7 @@ function renderInsight() {
   if (shifts.length < 3) { el.style.display = 'none'; return; }
 
   const insights = [];
-  const totalEarned = shifts.reduce((s, x) => s + x.earned, 0);
-  const totalHours = shifts.reduce((s, x) => s + x.hours, 0);
-  const avgRate = totalHours > 0 ? Math.round(totalEarned / totalHours) : 0;
+  const { totalEarned, totalHours, avgRate } = getShiftTotals();
 
   // Best day of week
   const dayStats = {};
@@ -6428,11 +6437,29 @@ updateTimer = function() {
   }
 };
 
+// --- Cached shift totals (avoid 15+ reduce calls per render) ---
+let _shiftCache = { len: -1, totalEarned: 0, totalHours: 0, avgRate: 0 };
+function getShiftTotals() {
+  if (_shiftCache.len === shifts.length) return _shiftCache;
+  const totalEarned = shifts.reduce((s, x) => s + x.earned, 0);
+  const totalHours = shifts.reduce((s, x) => s + x.hours, 0);
+  _shiftCache = { len: shifts.length, totalEarned, totalHours, avgRate: totalHours > 0 ? Math.round(totalEarned / totalHours) : 0 };
+  return _shiftCache;
+}
+function invalidateShiftCache() { _shiftCache.len = -1; }
+
+// --- Debounced render to avoid rapid re-renders ---
+let _renderTimer = null;
+function scheduleRender() {
+  if (_renderTimer) return;
+  _renderTimer = requestAnimationFrame(() => { _renderTimer = null; render(); });
+}
+
 // --- Enhanced render with countUp ---
 const _origRender = render;
 render = function() {
   _origRender();
-  const totalEarned = shifts.reduce((s, x) => s + x.earned, 0);
+  const { totalEarned } = getShiftTotals();
   countUp(document.getElementById('totalEarned'), totalEarned);
   renderMillionPath();
   renderKopilka();
