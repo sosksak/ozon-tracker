@@ -3311,10 +3311,11 @@ body.v7-nav-hidden .sync-status { transform: translateY(calc(var(--nav-h) + 8px)
 .v7-reward-strip .b { padding: 8px 12px; border-radius: 10px; background: #D97706; color: #fff; font-size: 12px; font-weight: 800; border: none; font-family: inherit; }
 .v7-reward-strip.claimed { background: var(--green-bg); border-color: var(--green-border); }
 .v7-reward-strip.claimed .t { color: #22543D; } .v7-reward-strip.claimed .s { color: #2F855A; }
-.lr-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin: 12px 0; }
-.lr-day { border-radius: 12px; border: 1.5px solid var(--border); background: var(--bg-main); padding: 8px 2px 6px; text-align: center; font-size: 9.5px; font-weight: 700; color: var(--text-dim); }
-.lr-day .d { font-size: 8.5px; letter-spacing: .4px; }
-.lr-day .v { font-size: 10.5px; color: var(--text); margin-top: 3px; line-height: 1.1; }
+.lr-days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; margin: 12px 0; }
+.lr-day { min-width: 0; overflow: hidden; border-radius: 10px; border: 1.5px solid var(--border); background: var(--bg-main); padding: 7px 1px 6px; text-align: center; font-size: 9px; font-weight: 700; color: var(--text-dim); }
+.lr-day .d { font-size: 8px; letter-spacing: 0; white-space: nowrap; }
+.lr-day .v { font-size: 10px; color: var(--text); margin-top: 3px; line-height: 1.15; white-space: nowrap; }
+@media (max-width: 380px) { .lr-day .d { font-size: 7px; } .lr-day .v { font-size: 9px; } }
 .lr-day.done { background: var(--green-bg); border-color: var(--green-border); color: var(--green); }
 .lr-day.today { border-color: #D97706; background: #FFFBEB; box-shadow: 0 0 0 3px rgba(217,119,6,.15); }
 .lr-day.today .v { color: #92400E; }
@@ -6679,27 +6680,36 @@ function getActiveTitle() {
 
 // ====== THEME SYSTEM ======
 function applyTheme(themeId) {
+  // Магазинные темы = светлые палитры дизайн-системы (хедер/акценты), фон всегда светлый
   const themes = {
-    theme_neon: { gold:'#ff00ff', purple:'#00ffff', cyan:'#ff00ff', bgDark:'#0a0014', goldDark:'#cc00cc' },
-    theme_ocean: { gold:'#00bcd4', purple:'#0288d1', cyan:'#4dd0e1', bgDark:'#0a1628', goldDark:'#00838f' },
-    theme_fire: { gold:'#ff6d00', purple:'#ff3d00', cyan:'#ffab40', bgDark:'#1a0a00', goldDark:'#e65100' },
-    theme_forest: { gold:'#66bb6a', purple:'#2e7d32', cyan:'#81c784', bgDark:'#0a1a0a', goldDark:'#388e3c' },
-    theme_sakura: { gold:'#f48fb1', purple:'#ec407a', cyan:'#f8bbd0', bgDark:'#1a0a14', goldDark:'#c2185b' },
-    theme_cyber: { gold:'#76ff03', purple:'#00e676', cyan:'#69f0ae', bgDark:'#001a00', goldDark:'#64dd17' },
-    theme_royal: { gold:'#ce93d8', purple:'#9c27b0', cyan:'#e1bee7', bgDark:'#140a1a', goldDark:'#7b1fa2' },
-    theme_midnight: { gold:'#90caf9', purple:'#5c6bc0', cyan:'#b3e5fc', bgDark:'#060818', goldDark:'#1565c0' },
-    theme_sunset: { gold:'#ffab40', purple:'#ff7043', cyan:'#ffcc02', bgDark:'#1a0f05', goldDark:'#ef6c00' },
-    theme_hacker: { gold:'#00ff41', purple:'#00cc33', cyan:'#33ff77', bgDark:'#000a00', goldDark:'#00b330' },
+    theme_neon:     { primary:'#5B21B6', light:'#7C3AED', dark:'#3B0764', accent:'#D946EF', soft:'#FAF5FF', soft2:'#F3E8FF' },
+    theme_ocean:    { primary:'#0C4A6E', light:'#0369A1', dark:'#082F49', accent:'#06B6D4', soft:'#ECFEFF', soft2:'#CFFAFE' },
+    theme_fire:     { primary:'#7C2D12', light:'#C2410C', dark:'#431407', accent:'#F97316', soft:'#FFF7ED', soft2:'#FFEDD5' },
+    theme_forest:   { primary:'#14532D', light:'#15803D', dark:'#052E16', accent:'#22C55E', soft:'#F0FDF4', soft2:'#DCFCE7' },
+    theme_sakura:   { primary:'#9D174D', light:'#DB2777', dark:'#500724', accent:'#F472B6', soft:'#FDF2F8', soft2:'#FCE7F3' },
+    theme_cyber:    { primary:'#1F2937', light:'#374151', dark:'#111827', accent:'#10B981', soft:'#ECFDF5', soft2:'#D1FAE5' },
+    theme_royal:    { primary:'#4C1D95', light:'#6D28D9', dark:'#2E1065', accent:'#D4A017', soft:'#FFFBEB', soft2:'#FEF3C7' },
+    theme_midnight: { primary:'#1E1B4B', light:'#3730A3', dark:'#0F0E2E', accent:'#818CF8', soft:'#EEF2FF', soft2:'#E0E7FF' },
+    theme_sunset:   { primary:'#9A3412', light:'#C2410C', dark:'#7C2D12', accent:'#A855F7', soft:'#FFF7ED', soft2:'#FFEDD5' },
+    theme_hacker:   { primary:'#052E16', light:'#166534', dark:'#021F0F', accent:'#4ADE80', soft:'#F0FDF4', soft2:'#DCFCE7' },
   };
   const t = themes[themeId];
   if (!t) return;
   const r = document.documentElement.style;
-  r.setProperty('--gold', t.gold);
-  r.setProperty('--gold-dark', t.goldDark);
-  r.setProperty('--purple', t.purple);
-  r.setProperty('--cyan', t.cyan);
-  r.setProperty('--bg-dark', t.bgDark);
-  document.body.style.background = t.bgDark;
+  ['--gold','--gold-dark','--purple','--cyan','--bg-dark'].forEach(k => r.removeProperty(k));
+  document.body.style.background = '';
+  r.setProperty('--primary', t.primary);
+  r.setProperty('--primary-light', t.light);
+  r.setProperty('--primary-dark', t.dark);
+  r.setProperty('--bg-sidebar', t.primary);
+  r.setProperty('--accent', t.accent);
+  r.setProperty('--accent-hover', t.light);
+  r.setProperty('--accent-soft', t.soft);
+  r.setProperty('--accent-soft-2', t.soft2);
+  r.setProperty('--hero', 'linear-gradient(135deg, ' + t.primary + ' 0%, ' + t.light + ' 100%)');
+  r.setProperty('--wt-c', t.accent);
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute('content', t.primary);
 }
 
 function resetTheme() {
@@ -6709,6 +6719,7 @@ function resetTheme() {
   r.removeProperty('--bg-dark');
   document.body.style.background = '';
   uRemove('ozon_active_theme');
+  if (typeof applyWorkTheme === 'function' && typeof getWorkType === 'function') applyWorkTheme(getWorkType());
   markLocalChange();
   schedulePushProgress();
 }
@@ -8261,7 +8272,7 @@ function renderChart() {
 
 // ====== PWA: SERVICE WORKER ======
 // Регистрируем только по http/https — с file:// браузер ругается.
-const APP_VERSION = 'v7.2.0';
+const APP_VERSION = 'v7.2.1';
 
 // v7.2.0 — политика обновлений «страница никогда не стартует старой»:
 //   Воркер (sw.js) перед отдачей index.html сверяет ETag с сервером и при
@@ -10939,6 +10950,8 @@ function wtNoun() { return NOUNS[getWorkType().noun] || NOUNS.shift; }
 
 // --- Theme application ---
 function applyWorkTheme(wt) {
+  const shopTheme = (typeof uGetRaw === 'function') ? uGetRaw('ozon_active_theme') : null;
+  if (shopTheme && typeof applyTheme === 'function') { document.body.dataset.worktype = wt.id; applyTheme(shopTheme); return; }
   const t = THEMES[wt.theme] || THEMES.blue;
   const r = document.documentElement.style;
   document.documentElement.classList.add('v7-theming');
@@ -11356,7 +11369,7 @@ function lrHtml() {
   const r = LR[day - 1];
   const days = LR.map((x, i) => {
     const n = i + 1, done = n < day || (n === day && claimedToday);
-    return '<div class="lr-day ' + (done ? 'done' : '') + (n === day && !claimedToday ? ' today' : '') + '"><div class="d">ДЕНЬ ' + n + '</div><div class="v">' + (done ? '✓' : '+' + x.xp + (x.reroll ? '<br>+🎲' : '')) + '</div></div>';
+    return '<div class="lr-day ' + (done ? 'done' : '') + (n === day && !claimedToday ? ' today' : '') + '"><div class="d">Д' + n + '</div><div class="v">' + (done ? '✓' : '+' + x.xp + (x.reroll ? '<br>+🎲' : '')) + '</div></div>';
   }).join('');
   return '<div class="v7-reward-strip ' + (claimedToday ? 'claimed' : '') + '" onclick="' + (claimedToday ? '' : 'window.V7.claimLR()') + '">' +
     '<span style="font-size:22px">🎁</span><div class="t">' + (claimedToday ? 'Награда дня получена' : 'Ежедневная награда — день ' + day) + '<span class="s">' + (claimedToday ? 'Возвращайся завтра, серия ' + day + '/7' : '+' + r.xp + ' XP' + (r.reroll ? ' и +1 замена задания' : '') + ' · заходи каждый день') + '</span></div>' +
