@@ -3473,6 +3473,90 @@ body.v7-nav-hidden .sync-status { transform: translateY(calc(var(--nav-h) + 8px)
 .ui-hint-target { position:relative; z-index:10049 !important; box-shadow:0 0 0 3px #FFD166, 0 0 0 6px rgba(255,209,102,.35) !important; border-radius:12px; }
 @keyframes hintIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:none; } }
 
+
+/* ================================================================
+   MARKET — Биржа (mk-*)
+   ================================================================ */
+.mk-title { font-size: 11px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: var(--text-dim); margin: 0 var(--sp-3) var(--sp-2); }
+.mk-hero { margin: 0 var(--sp-3); padding: var(--sp-4) var(--sp-4) var(--sp-3); background: var(--hero); border-radius: var(--radius-lg); box-shadow: var(--shadow-md); color: #fff; }
+.mk-hero-top { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); }
+.mk-hero-coin { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.mk-coin-ico { width: 36px; height: 36px; border-radius: 10px; background: rgba(255,255,255,.14); display: grid; place-items: center; font-size: 18px; font-weight: 800; flex: none; }
+.mk-coin-sym { font-size: 15px; font-weight: 800; letter-spacing: .3px; }
+.mk-coin-name { font-size: 11px; color: rgba(255,255,255,.65); }
+.mk-cur { display: flex; background: rgba(255,255,255,.12); border-radius: 999px; padding: 2px; flex: none; }
+.mk-cur button { border: 0; background: transparent; color: rgba(255,255,255,.7); font: inherit; font-size: 11px; font-weight: 800; padding: 5px 10px; border-radius: 999px; cursor: pointer; }
+.mk-cur button.on { background: #fff; color: var(--primary); }
+.mk-price { font-size: 32px; font-weight: 900; margin-top: var(--sp-3); line-height: 1.05; font-variant-numeric: tabular-nums; letter-spacing: -.5px; }
+.mk-hero-row { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); margin-top: var(--sp-2); flex-wrap: wrap; }
+.mk-chg { font-size: 12px; font-weight: 800; padding: 3px 9px; border-radius: 999px; background: rgba(255,255,255,.14); }
+.mk-chg.up { background: rgba(72,187,120,.28); } .mk-chg.down { background: rgba(245,101,101,.3); }
+.mk-upd { font-size: 10.5px; color: rgba(255,255,255,.6); }
+.mk-skel { opacity: .55; animation: mkPulse 1.2s ease-in-out infinite; }
+@keyframes mkPulse { 50% { opacity: .25; } }
+
+.mk-watch { display: flex; gap: 8px; overflow-x: auto; padding: var(--sp-3) var(--sp-3) 2px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.mk-watch::-webkit-scrollbar { display: none; }
+.mk-chip { flex: none; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-width: 92px; padding: 8px 10px; background: var(--bg-card); border: 1.5px solid var(--border); border-radius: var(--radius-md); font: inherit; text-align: left; cursor: pointer; transition: border-color var(--dur-fast), box-shadow var(--dur-fast); }
+.mk-chip.on { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft, #EBF4FF); }
+.mk-chip.add { min-width: 40px; align-items: center; justify-content: center; color: var(--text-dim); font-size: 18px; font-weight: 700; border-style: dashed; }
+.mk-chip-sym { font-size: 11px; font-weight: 800; color: var(--text-secondary); }
+.mk-chip-price { font-size: 12.5px; font-weight: 800; color: var(--text); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.mk-chip-ch { font-size: 10.5px; font-weight: 700; }
+.up { color: var(--green); } .down { color: var(--red); }
+
+.mk-card { margin: var(--sp-3); padding: var(--sp-3) var(--sp-4) var(--sp-4); background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); }
+.mk-ranges { display: flex; gap: 4px; background: var(--bg-card2); border-radius: 999px; padding: 3px; }
+.mk-ranges button { flex: 1; border: 0; background: transparent; font: inherit; font-size: 11px; font-weight: 800; color: var(--text-dim); padding: 6px 0; border-radius: 999px; cursor: pointer; }
+.mk-ranges button.on { background: var(--bg-card); color: var(--primary); box-shadow: var(--shadow-xs); }
+.mk-chart-wrap { position: relative; margin-top: var(--sp-3); touch-action: pan-y; }
+.mk-svg { display: block; width: 100%; height: auto; }
+.mk-ax { font-size: 9px; font-weight: 600; fill: var(--text-dim); font-family: inherit; }
+.mk-lbl { font-size: 9.5px; font-weight: 800; fill: var(--text-secondary); font-family: inherit; }
+.mk-base { stroke: var(--border); stroke-width: 1; }
+.mk-cross { stroke: var(--text-dim); stroke-width: 1; stroke-dasharray: 3 3; }
+.mk-tip { position: absolute; top: -4px; left: 50%; transform: translateX(-50%); padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 800; background: var(--primary); color: #fff; white-space: nowrap; pointer-events: none; box-shadow: var(--shadow-sm); }
+.mk-empty { padding: 36px 0; text-align: center; color: var(--text-dim); font-size: 12px; }
+.mk-stats { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 8px; margin-top: var(--sp-3); }
+.mk-stats > div { background: var(--bg-card2); border-radius: var(--radius-sm); padding: 8px 10px; min-width: 0; }
+.mk-stats .k { font-size: 9.5px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: .4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mk-stats .v { font-size: 12.5px; font-weight: 800; color: var(--text); margin-top: 2px; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.mk-section { margin: var(--sp-3); padding: var(--sp-4); background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); }
+.mk-section-title { font-size: 13px; font-weight: 800; color: var(--text); }
+.mk-section-sub { font-size: 11.5px; color: var(--text-dim); margin-top: 3px; line-height: 1.4; }
+.mk-lookup-row { display: flex; gap: 8px; margin-top: var(--sp-3); }
+.mk-lookup-row input { flex: 1; min-width: 0; padding: 10px 12px; border: 1.5px solid var(--border-strong); border-radius: var(--radius-md); font: inherit; font-size: 13px; color: var(--text); background: var(--bg-main); }
+.mk-lookup-row input:focus { outline: none; border-color: var(--accent); }
+.mk-btn { flex: none; padding: 10px 16px; border: 0; border-radius: var(--radius-md); background: var(--primary); color: #fff; font: inherit; font-size: 12px; font-weight: 800; cursor: pointer; }
+.mk-btn:active { transform: scale(.97); }
+.mk-quick { display: flex; gap: 6px; flex-wrap: wrap; margin-top: var(--sp-2); }
+.mk-quick button { border: 1px solid var(--border); background: var(--bg-card2); color: var(--text-secondary); font: inherit; font-size: 11px; font-weight: 700; padding: 5px 10px; border-radius: 999px; cursor: pointer; }
+.mk-quick button:active { background: var(--accent-soft, #EBF4FF); }
+.mk-result { margin-top: var(--sp-3); padding: var(--sp-3) var(--sp-4); background: var(--accent-soft, #EBF4FF); border: 1px solid var(--accent-soft-2, #DBEAFE); border-radius: var(--radius-md); }
+.mk-res-k { font-size: 11px; font-weight: 700; color: var(--text-secondary); }
+.mk-res-g { color: var(--text-dim); font-weight: 600; }
+.mk-res-v { font-size: 24px; font-weight: 900; color: var(--text); margin-top: 2px; font-variant-numeric: tabular-nums; }
+.mk-res-d { font-size: 12px; font-weight: 800; margin-top: 4px; }
+.mk-hist { margin-top: var(--sp-3); border-top: 1px solid var(--border); padding-top: var(--sp-2); }
+.mk-hist-title { font-size: 10px; font-weight: 800; color: var(--text-dim); text-transform: uppercase; letter-spacing: .6px; margin-bottom: 4px; }
+.mk-hist-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; font-size: 12px; cursor: pointer; border-bottom: 1px dashed var(--border); }
+.mk-hist-row:last-child { border-bottom: 0; }
+.mk-hist-coin { font-weight: 800; color: var(--primary); min-width: 40px; }
+.mk-hist-when { color: var(--text-dim); flex: 1; }
+.mk-hist-price { font-weight: 800; color: var(--text); font-variant-numeric: tabular-nums; }
+.mk-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0 var(--sp-3) var(--sp-3); font-size: 10.5px; color: var(--text-dim); }
+.mk-err { color: var(--orange); font-weight: 700; }
+.mk-link { border: 0; background: transparent; color: var(--accent); font: inherit; font-size: 11px; font-weight: 800; cursor: pointer; padding: 4px 6px; }
+
+.mk-pick { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 10px; text-align: left; max-height: 300px; overflow-y: auto; }
+.mk-pick-row { display: flex; align-items: center; gap: 6px; padding: 6px 4px; font-size: 12px; color: var(--text); cursor: pointer; border-radius: 6px; }
+.mk-pick-row:active { background: var(--bg-card2); }
+.mk-pick-row input { accent-color: var(--accent); width: 15px; height: 15px; margin: 0; }
+.mk-pick-ico { width: 18px; text-align: center; font-weight: 800; color: var(--text-secondary); }
+.mk-pick-sym { font-weight: 800; }
+.mk-pick-name { color: var(--text-dim); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
 </style>
 </head>
 <body class="splash">
@@ -8272,7 +8356,7 @@ function renderChart() {
 
 // ====== PWA: SERVICE WORKER ======
 // Регистрируем только по http/https — с file:// браузер ругается.
-const APP_VERSION = 'v7.2.1';
+const APP_VERSION = 'v7.3.0';
 
 // v7.2.0 — политика обновлений «страница никогда не стартует старой»:
 //   Воркер (sw.js) перед отдачей index.html сверяет ETag с сервером и при
@@ -10578,6 +10662,400 @@ const CRYPTO = (() => {
 
 
 // ============================================================
+//  MARKET — Биржа: живой курс, график, курс на момент времени
+//  Источник: CoinGecko public API (без ключа). Кэш по диапазону,
+//  авто-обновление раз в 60с пока открыта вкладка ДЕНЬГИ.
+// ============================================================
+const MARKET = (() => {
+  'use strict';
+
+  const STATE_KEY = 'v7_market_state';
+  const HIST_KEY  = 'v7_market_lookups';
+  const LAST_KEY  = 'v7_market_last';
+  const API = 'https://api.coingecko.com/api/v3';
+
+  const COINS = [
+    { id: 'bitcoin',          symbol: 'BTC',  name: 'Bitcoin',   icon: '₿' },
+    { id: 'ethereum',         symbol: 'ETH',  name: 'Ethereum',  icon: 'Ξ' },
+    { id: 'solana',           symbol: 'SOL',  name: 'Solana',    icon: '◎' },
+    { id: 'the-open-network', symbol: 'TON',  name: 'Toncoin',   icon: '◆' },
+    { id: 'binancecoin',      symbol: 'BNB',  name: 'BNB',       icon: '◈' },
+    { id: 'ripple',           symbol: 'XRP',  name: 'XRP',       icon: '✕' },
+    { id: 'dogecoin',         symbol: 'DOGE', name: 'Dogecoin',  icon: 'Ð' },
+    { id: 'cardano',          symbol: 'ADA',  name: 'Cardano',   icon: '₳' },
+    { id: 'tron',             symbol: 'TRX',  name: 'TRON',      icon: '⬡' },
+    { id: 'avalanche-2',      symbol: 'AVAX', name: 'Avalanche', icon: '▲' },
+    { id: 'polkadot',         symbol: 'DOT',  name: 'Polkadot',  icon: '●' },
+    { id: 'litecoin',         symbol: 'LTC',  name: 'Litecoin',  icon: 'Ł' },
+    { id: 'chainlink',        symbol: 'LINK', name: 'Chainlink', icon: '⬢' },
+    { id: 'tether',           symbol: 'USDT', name: 'Tether',    icon: '₮' },
+  ];
+  const DEFAULT_WATCH = ['bitcoin', 'ethereum', 'solana', 'the-open-network'];
+  const RANGES = [
+    { id: '1',   label: '1Д' },
+    { id: '7',   label: '7Д' },
+    { id: '30',  label: '1М' },
+    { id: '90',  label: '3М' },
+    { id: '365', label: '1Г' },
+  ];
+  const TTL = { '1': 60e3, '7': 5 * 60e3, '30': 15 * 60e3, '90': 30 * 60e3, '365': 60 * 60e3 };
+  const REFRESH_MS = 60e3;
+
+  // --- state ---
+  function getState() {
+    const s = uGet(STATE_KEY, null) || {};
+    return {
+      coin:  COINS.some(c => c.id === s.coin) ? s.coin : 'bitcoin',
+      range: RANGES.some(r => r.id === s.range) ? s.range : '1',
+      cur:   s.cur === 'rub' ? 'rub' : 'usd',
+      watch: Array.isArray(s.watch) && s.watch.length ? s.watch.filter(id => COINS.some(c => c.id === id)) : DEFAULT_WATCH.slice(),
+    };
+  }
+  function setState(patch) {
+    const s = Object.assign(getState(), patch);
+    uSet(STATE_KEY, s);
+    return s;
+  }
+  const coinOf = id => COINS.find(c => c.id === id) || { id, symbol: id.toUpperCase().slice(0, 5), name: id, icon: '●' };
+
+  // --- memory cache + persisted last snapshot ---
+  const _mem = new Map();
+  function cached(key, ttl) {
+    const c = _mem.get(key);
+    return c && Date.now() - c.ts < ttl ? c.data : null;
+  }
+  function remember(key, data) { _mem.set(key, { ts: Date.now(), data }); }
+
+  let _rateLimitedUntil = 0;
+  async function api(path) {
+    if (Date.now() < _rateLimitedUntil) throw new Error('rate');
+    const resp = await fetch(API + path, { headers: { accept: 'application/json' } });
+    if (resp.status === 429) { _rateLimitedUntil = Date.now() + 60e3; throw new Error('rate'); }
+    if (!resp.ok) throw new Error('http ' + resp.status);
+    return resp.json();
+  }
+
+  async function fetchTicker(ids) {
+    const key = 'ticker:' + ids.slice().sort().join(',');
+    const c = cached(key, 45e3);
+    if (c) return c;
+    const data = await api('/simple/price?ids=' + ids.join(',') + '&vs_currencies=usd,rub&include_24hr_change=true&include_last_updated_at=true');
+    remember(key, data);
+    const last = uGet(LAST_KEY, {}) || {};
+    uSet(LAST_KEY, Object.assign(last, data, { _ts: Date.now() }));
+    return data;
+  }
+
+  async function fetchChart(coin, cur, range) {
+    const key = 'chart:' + coin + ':' + cur + ':' + range;
+    const c = cached(key, TTL[range] || 60e3);
+    if (c) return c;
+    const data = await api('/coins/' + coin + '/market_chart?vs_currency=' + cur + '&days=' + range + (range === '1' ? '' : (Number(range) > 90 ? '&interval=daily' : '')));
+    const pts = (data.prices || []).map(p => [p[0], p[1]]);
+    remember(key, pts);
+    return pts;
+  }
+
+  // Курс в заданный момент: ближайшая точка в окне ±window
+  async function priceAt(coin, cur, tsMs) {
+    const ageDays = (Date.now() - tsMs) / 864e5;
+    const win = ageDays <= 1 ? 3 * 3600 : ageDays <= 90 ? 12 * 3600 : 3 * 86400; // сек
+    const from = Math.floor(tsMs / 1000) - win, to = Math.floor(tsMs / 1000) + win;
+    const data = await api('/coins/' + coin + '/market_chart/range?vs_currency=' + cur + '&from=' + from + '&to=' + to);
+    const pts = data.prices || [];
+    if (!pts.length) return null;
+    let best = pts[0];
+    for (const p of pts) if (Math.abs(p[0] - tsMs) < Math.abs(best[0] - tsMs)) best = p;
+    return { ts: best[0], price: best[1], granularity: ageDays <= 1 ? '5 мин' : ageDays <= 90 ? '1 час' : '1 день' };
+  }
+
+  // --- format ---
+  const SYM = { usd: '$', rub: '₽' };
+  function fmtPrice(v, cur) {
+    if (v == null || !isFinite(v)) return '—';
+    const d = v >= 1000 ? 0 : v >= 1 ? 2 : v >= 0.01 ? 4 : 6;
+    const s = v.toLocaleString('ru-RU', { minimumFractionDigits: d, maximumFractionDigits: d });
+    return cur === 'rub' ? s + ' ₽' : '$' + s;
+  }
+  const pad = n => String(n).padStart(2, '0');
+  function fmtDT(ts, withTime = true) {
+    const d = new Date(ts);
+    const date = pad(d.getDate()) + '.' + pad(d.getMonth() + 1) + '.' + d.getFullYear();
+    return withTime ? date + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()) : date;
+  }
+  function fmtAxis(ts, range) {
+    const d = new Date(ts);
+    if (range === '1') return pad(d.getHours()) + ':' + pad(d.getMinutes());
+    if (range === '7' || range === '30') return pad(d.getDate()) + '.' + pad(d.getMonth() + 1);
+    return pad(d.getDate()) + '.' + pad(d.getMonth() + 1) + '.' + String(d.getFullYear()).slice(2);
+  }
+  function toLocalInputValue(ts) {
+    const d = new Date(ts);
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+  }
+
+  // --- chart (SVG) ---
+  let _chartPts = [], _chartMeta = null;
+  function buildChartSVG(pts, cur, range, width) {
+    const W = Math.max(280, Math.round(width || 340)), H = 188, padL = 6, padR = 6, padT = 14, padB = 32;
+    if (!pts || pts.length < 2) return '<div class="mk-empty">Нет данных графика</div>';
+    const ys = pts.map(p => p[1]);
+    let min = Math.min(...ys), max = Math.max(...ys);
+    if (max === min) { max += 1; min -= 1; }
+    const x0 = pts[0][0], x1 = pts[pts.length - 1][0];
+    const X = t => padL + (t - x0) / (x1 - x0) * (W - padL - padR);
+    const Y = v => padT + (1 - (v - min) / (max - min)) * (H - padT - padB);
+    let d = '';
+    for (let i = 0; i < pts.length; i++) d += (i ? 'L' : 'M') + X(pts[i][0]).toFixed(1) + ',' + Y(pts[i][1]).toFixed(1);
+    const area = d + 'L' + X(x1).toFixed(1) + ',' + (H - padB) + 'L' + X(x0).toFixed(1) + ',' + (H - padB) + 'Z';
+    const up = pts[pts.length - 1][1] >= pts[0][1];
+    const col = up ? 'var(--green)' : 'var(--red)';
+    const iMin = ys.indexOf(min), iMax = ys.indexOf(max);
+    const ticks = 4, axis = [];
+    for (let i = 0; i <= ticks; i++) {
+      const t = x0 + (x1 - x0) * i / ticks;
+      axis.push('<text x="' + X(t).toFixed(1) + '" y="' + (H - 6) + '" text-anchor="' + (i === 0 ? 'start' : i === ticks ? 'end' : 'middle') + '" class="mk-ax">' + fmtAxis(t, range) + '</text>');
+    }
+    const lbl = (i, anchorUp) => {
+      let x = X(pts[i][0]), ta = 'middle';
+      if (x < 40) { ta = 'start'; x = Math.max(x, padL); } else if (x > W - 40) { ta = 'end'; x = Math.min(x, W - padR); }
+      const y = anchorUp ? Y(pts[i][1]) - 5 : Y(pts[i][1]) + 12;
+      return '<text x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" text-anchor="' + ta + '" class="mk-lbl">' + fmtPrice(pts[i][1], cur) + '</text>';
+    };
+    _chartPts = pts; _chartMeta = { W, H, padL, padR, X, Y, cur, range };
+    return '<svg class="mk-svg" viewBox="0 0 ' + W + ' ' + H + '" width="' + W + '" height="' + H + '" id="mkSvg">' +
+      '<defs><linearGradient id="mkFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + col + '" stop-opacity=".22"/><stop offset="1" stop-color="' + col + '" stop-opacity="0"/></linearGradient></defs>' +
+      '<line x1="' + padL + '" x2="' + (W - padR) + '" y1="' + (H - padB) + '" y2="' + (H - padB) + '" class="mk-base"/>' +
+      '<path d="' + area + '" fill="url(#mkFill)"/>' +
+      '<path d="' + d + '" fill="none" stroke="' + col + '" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>' +
+      lbl(iMax, true) + lbl(iMin, false) + axis.join('') +
+      '<g id="mkCross" style="display:none"><line id="mkCrossL" y1="' + padT + '" y2="' + (H - padB) + '" class="mk-cross"/><circle id="mkCrossC" r="4" fill="' + col + '" stroke="#fff" stroke-width="2"/></g>' +
+      '</svg>';
+  }
+
+  function bindCrosshair() {
+    const svg = document.getElementById('mkSvg'), tip = document.getElementById('mkTip');
+    if (!svg || !tip || !_chartMeta) return;
+    const { W, padL, padR, X, Y, cur } = _chartMeta;
+    const g = document.getElementById('mkCross'), l = document.getElementById('mkCrossL'), c = document.getElementById('mkCrossC');
+    const move = ev => {
+      const r = svg.getBoundingClientRect();
+      const px = (ev.touches ? ev.touches[0].clientX : ev.clientX) - r.left;
+      const xv = px / r.width * W;
+      const x0 = _chartPts[0][0], x1 = _chartPts[_chartPts.length - 1][0];
+      const t = x0 + (Math.min(Math.max(xv, padL), W - padR) - padL) / (W - padL - padR) * (x1 - x0);
+      let lo = 0, hi = _chartPts.length - 1;
+      while (hi - lo > 1) { const m = (lo + hi) >> 1; if (_chartPts[m][0] < t) lo = m; else hi = m; }
+      const i = Math.abs(_chartPts[lo][0] - t) < Math.abs(_chartPts[hi][0] - t) ? lo : hi;
+      const p = _chartPts[i];
+      const sx = X(p[0]), sy = Y(p[1]);
+      l.setAttribute('x1', sx); l.setAttribute('x2', sx); c.setAttribute('cx', sx); c.setAttribute('cy', sy);
+      g.style.display = '';
+      tip.style.display = '';
+      tip.textContent = fmtDT(p[0]) + ' · ' + fmtPrice(p[1], cur);
+      if (ev.cancelable && ev.touches) ev.preventDefault();
+    };
+    const leave = () => { g.style.display = 'none'; tip.style.display = 'none'; };
+    svg.addEventListener('mousemove', move); svg.addEventListener('mouseleave', leave);
+    svg.addEventListener('touchstart', move, { passive: false }); svg.addEventListener('touchmove', move, { passive: false });
+    svg.addEventListener('touchend', leave);
+  }
+
+  // --- render ---
+  let _rendering = false, _timer = null, _lastTicker = null, _lastErr = null;
+  function el() { return document.getElementById('marketContent'); }
+  function isVisible() {
+    const wrap = document.getElementById('moneyContent');
+    return !!(wrap && wrap.classList.contains('active') && !document.hidden);
+  }
+
+  async function render(opts = {}) {
+    const root = el();
+    if (!root) return;
+    if (_rendering) return;
+    _rendering = true;
+    const st = getState();
+    const coin = coinOf(st.coin);
+    const ids = [...new Set([st.coin, ...st.watch])];
+
+    if (!opts.silent) renderSkeleton(root, st, coin);
+
+    let ticker = _lastTicker, pts = null, err = null;
+    try {
+      const [t, p] = await Promise.all([fetchTicker(ids), fetchChart(st.coin, st.cur, st.range)]);
+      ticker = t; pts = p; _lastTicker = t; _lastErr = null;
+    } catch (e) {
+      err = e; _lastErr = e;
+      ticker = ticker || uGet(LAST_KEY, null) || {};
+      pts = cached('chart:' + st.coin + ':' + st.cur + ':' + st.range, Infinity);
+    }
+    renderFull(root, st, coin, ticker || {}, pts, err);
+    _rendering = false;
+    ensureTimer();
+  }
+
+  function renderSkeleton(root, st, coin) {
+    if (root.querySelector('.mk-hero')) return; // уже есть — обновим на месте
+    root.innerHTML = '<div class="mk-hero"><div class="mk-hero-top"><div class="mk-hero-coin"><span class="mk-coin-ico">' + coin.icon + '</span><div><div class="mk-coin-sym">' + coin.symbol + '</div><div class="mk-coin-name">' + escapeHtml(coin.name) + '</div></div></div></div><div class="mk-price mk-skel">загрузка…</div></div>';
+  }
+
+  function headerHTML(st, coin, ticker) {
+    const t = ticker[st.coin] || {};
+    const price = t[st.cur], ch = t[st.cur + '_24h_change'];
+    const chCls = ch == null ? '' : ch >= 0 ? 'up' : 'down';
+    const chTxt = ch == null ? '—' : (ch >= 0 ? '▲ +' : '▼ ') + ch.toFixed(2) + '% за 24ч';
+    const upd = t.last_updated_at ? 'обновлено ' + fmtDT(t.last_updated_at * 1000).slice(11) : '';
+    return '<div class="mk-hero">' +
+      '<div class="mk-hero-top">' +
+        '<div class="mk-hero-coin"><span class="mk-coin-ico">' + coin.icon + '</span><div><div class="mk-coin-sym">' + coin.symbol + '</div><div class="mk-coin-name">' + escapeHtml(coin.name) + '</div></div></div>' +
+        '<div class="mk-cur" role="tablist"><button class="' + (st.cur === 'usd' ? 'on' : '') + '" onclick="MARKET.setCur(\'usd\')">USD</button><button class="' + (st.cur === 'rub' ? 'on' : '') + '" onclick="MARKET.setCur(\'rub\')">RUB</button></div>' +
+      '</div>' +
+      '<div class="mk-price">' + fmtPrice(price, st.cur) + '</div>' +
+      '<div class="mk-hero-row"><span class="mk-chg ' + chCls + '">' + chTxt + '</span><span class="mk-upd">' + upd + '</span></div>' +
+    '</div>';
+  }
+
+  function watchHTML(st, ticker) {
+    return '<div class="mk-watch">' + st.watch.map(id => {
+      const c = coinOf(id), t = ticker[id] || {};
+      const ch = t[st.cur + '_24h_change'];
+      return '<button class="mk-chip' + (id === st.coin ? ' on' : '') + '" onclick="MARKET.setCoin(\'' + id + '\')">' +
+        '<span class="mk-chip-sym">' + c.icon + ' ' + c.symbol + '</span>' +
+        '<span class="mk-chip-price">' + fmtPrice(t[st.cur], st.cur) + '</span>' +
+        (ch != null ? '<span class="mk-chip-ch ' + (ch >= 0 ? 'up' : 'down') + '">' + (ch >= 0 ? '+' : '') + ch.toFixed(1) + '%</span>' : '') +
+      '</button>';
+    }).join('') + '<button class="mk-chip add" onclick="MARKET.editWatch()" title="Настроить список">＋</button></div>';
+  }
+
+  function rangeHTML(st) {
+    return '<div class="mk-ranges">' + RANGES.map(r => '<button class="' + (r.id === st.range ? 'on' : '') + '" onclick="MARKET.setRange(\'' + r.id + '\')">' + r.label + '</button>').join('') + '</div>';
+  }
+
+  function statsHTML(pts, st) {
+    if (!pts || pts.length < 2) return '';
+    const ys = pts.map(p => p[1]);
+    const first = ys[0], last = ys[ys.length - 1];
+    const d = first ? (last - first) / first * 100 : 0;
+    const rl = RANGES.find(r => r.id === st.range);
+    return '<div class="mk-stats">' +
+      '<div><div class="k">Мин · ' + rl.label + '</div><div class="v">' + fmtPrice(Math.min(...ys), st.cur) + '</div></div>' +
+      '<div><div class="k">Макс · ' + rl.label + '</div><div class="v">' + fmtPrice(Math.max(...ys), st.cur) + '</div></div>' +
+      '<div><div class="k">Изменение</div><div class="v ' + (d >= 0 ? 'up' : 'down') + '">' + (d >= 0 ? '+' : '') + d.toFixed(2) + '%</div></div>' +
+    '</div>';
+  }
+
+  function lookupHTML(st, coin) {
+    const hist = uGet(HIST_KEY, []) || [];
+    const def = toLocalInputValue(Date.now() - 3600e3);
+    return '<div class="mk-section">' +
+      '<div class="mk-section-title">🕒 Курс на момент времени</div>' +
+      '<div class="mk-section-sub">Выбери дату и время — покажем ближайшую котировку ' + coin.symbol + ' и разницу с текущей</div>' +
+      '<div class="mk-lookup-row"><input type="datetime-local" id="mkWhen" value="' + def + '" max="' + toLocalInputValue(Date.now()) + '"><button class="mk-btn" onclick="MARKET.lookup()">Узнать</button></div>' +
+      '<div class="mk-quick">' +
+        '<button onclick="MARKET.quick(1)">час назад</button><button onclick="MARKET.quick(24)">вчера</button><button onclick="MARKET.quick(24*7)">неделю назад</button><button onclick="MARKET.quick(24*30)">месяц назад</button>' +
+      '</div>' +
+      '<div id="mkLookupResult"></div>' +
+      (hist.length ? '<div class="mk-hist"><div class="mk-hist-title">Недавние запросы</div>' + hist.map(h =>
+        '<div class="mk-hist-row" onclick="MARKET.rerun(\'' + h.coin + '\',' + h.ts + ')">' +
+          '<span class="mk-hist-coin">' + coinOf(h.coin).symbol + '</span>' +
+          '<span class="mk-hist-when">' + fmtDT(h.ts) + '</span>' +
+          '<span class="mk-hist-price">' + fmtPrice(h.price, h.cur) + '</span>' +
+        '</div>').join('') + '</div>' : '') +
+    '</div>';
+  }
+
+  function renderFull(root, st, coin, ticker, pts, err) {
+    const width = Math.max(280, (root.clientWidth || 360) - 2 * 12 - 2 * 14);
+    root.innerHTML =
+      '<div class="mk-title">📈 Биржа</div>' +
+      headerHTML(st, coin, ticker) +
+      watchHTML(st, ticker) +
+      '<div class="mk-card">' +
+        rangeHTML(st) +
+        '<div class="mk-chart-wrap">' + buildChartSVG(pts, st.cur, st.range, width) + '<div class="mk-tip" id="mkTip" style="display:none"></div></div>' +
+        statsHTML(pts, st) +
+      '</div>' +
+      lookupHTML(st, coin) +
+      '<div class="mk-foot">' +
+        (err ? '<span class="mk-err">' + (err.message === 'rate' ? '⏳ Лимит запросов — показываю кэш, повтор через минуту' : '⚠️ Нет связи с биржей — показываю кэш') + '</span>' : '<span>Обновляется каждую минуту · CoinGecko</span>') +
+        '<button class="mk-link" onclick="MARKET.refresh()">Обновить</button>' +
+      '</div>';
+    bindCrosshair();
+  }
+
+  // --- actions ---
+  function setCoin(id) { setState({ coin: id }); render(); }
+  function setRange(id) { setState({ range: id }); render(); }
+  function setCur(c) { setState({ cur: c }); render(); }
+  async function refresh() { _mem.clear(); _rateLimitedUntil = 0; await render({ silent: true }); if (!_lastErr) showToast('✅ Курсы обновлены', 'success'); }
+
+  function editWatch() {
+    const st = getState();
+    const html = '<div class="mk-pick">' + COINS.map(c => {
+      const on = st.watch.includes(c.id);
+      return '<label class="mk-pick-row"><input type="checkbox" data-coin="' + c.id + '"' + (on ? ' checked' : '') + '><span class="mk-pick-ico">' + c.icon + '</span><span class="mk-pick-sym">' + c.symbol + '</span><span class="mk-pick-name">' + escapeHtml(c.name) + '</span></label>';
+    }).join('') + '</div>';
+    askConfirm(html, { icon: '📋', title: 'Список монет', okText: 'Сохранить', noText: 'Отмена' }).then(ok => {
+      if (!ok) return;
+      const list = [...document.querySelectorAll('.mk-pick input:checked')].map(i => i.dataset.coin);
+      if (!list.length) { showToast('Нужна хотя бы одна монета', 'error'); return; }
+      const next = { watch: list };
+      if (!list.includes(st.coin)) next.coin = list[0];
+      setState(next); _mem.clear(); render();
+    });
+  }
+
+  function quick(hoursAgo) {
+    const inp = document.getElementById('mkWhen');
+    if (inp) inp.value = toLocalInputValue(Date.now() - hoursAgo * 3600e3);
+    lookup();
+  }
+  function rerun(coin, ts) {
+    if (coin !== getState().coin) { setState({ coin }); render().then(() => { const i = document.getElementById('mkWhen'); if (i) i.value = toLocalInputValue(ts); lookup(); }); return; }
+    const i = document.getElementById('mkWhen'); if (i) i.value = toLocalInputValue(ts);
+    lookup();
+  }
+
+  async function lookup() {
+    const inp = document.getElementById('mkWhen'), out = document.getElementById('mkLookupResult');
+    if (!inp || !out) return;
+    const ts = new Date(inp.value).getTime();
+    if (!isFinite(ts)) { showToast('Укажи дату и время', 'error'); return; }
+    if (ts > Date.now()) { showToast('Будущее ещё не торгуется 🙂', 'error'); return; }
+    const st = getState(), coin = coinOf(st.coin);
+    out.innerHTML = '<div class="mk-result mk-skel">Ищу котировку…</div>';
+    try {
+      const r = await priceAt(st.coin, st.cur, ts);
+      if (!r) { out.innerHTML = '<div class="mk-result"><div class="mk-res-k">Нет данных на этот момент</div></div>'; return; }
+      const now = (_lastTicker && _lastTicker[st.coin] && _lastTicker[st.coin][st.cur]) || null;
+      const d = now && r.price ? (now - r.price) / r.price * 100 : null;
+      const diffAbs = now ? now - r.price : null;
+      out.innerHTML = '<div class="mk-result">' +
+        '<div class="mk-res-k">' + coin.symbol + ' · ' + fmtDT(r.ts) + ' <span class="mk-res-g">(шаг ' + r.granularity + ')</span></div>' +
+        '<div class="mk-res-v">' + fmtPrice(r.price, st.cur) + '</div>' +
+        (d != null ? '<div class="mk-res-d ' + (d >= 0 ? 'up' : 'down') + '">Сейчас ' + fmtPrice(now, st.cur) + ' · ' + (d >= 0 ? '+' : '') + d.toFixed(2) + '% (' + (diffAbs >= 0 ? '+' : '−') + fmtPrice(Math.abs(diffAbs), st.cur) + ')</div>' : '') +
+      '</div>';
+      const hist = (uGet(HIST_KEY, []) || []).filter(h => !(h.coin === st.coin && Math.abs(h.ts - ts) < 60e3));
+      hist.unshift({ coin: st.coin, ts, price: r.price, cur: st.cur });
+      uSet(HIST_KEY, hist.slice(0, 5));
+    } catch (e) {
+      out.innerHTML = '<div class="mk-result"><div class="mk-res-k">' + (e.message === 'rate' ? '⏳ Лимит запросов, попробуй через минуту' : '⚠️ Не удалось получить данные') + '</div></div>';
+    }
+  }
+
+  // --- auto refresh ---
+  function ensureTimer() {
+    if (_timer) return;
+    _timer = setInterval(() => { if (isVisible() && el()) render({ silent: true }); }, REFRESH_MS);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden && isVisible()) render({ silent: true }); });
+    window.addEventListener('resize', () => { if (isVisible()) render({ silent: true }); });
+  }
+
+  return { render, setCoin, setRange, setCur, refresh, editWatch, lookup, quick, rerun, COINS };
+})();
+
+
+// ============================================================
 //  V6 NAVIGATION — интеграция с реальной структурой v5.3
 // ============================================================
 // Реальная разметка: .tab-nav с .tab-btn, .tab-content как прямые
@@ -10598,13 +11076,14 @@ const V6_TABS = {
   health:    { icon: '❤️', label: 'Здоровье', render: () => HEALTH.render() },
   finance:   { icon: '📊', label: 'Финансы',  render: () => FINANCE.render() },
   crypto:    { icon: '📈', label: 'Портфель', render: () => CRYPTO.render() },
+  market:    { icon: '📉', label: 'Биржа',    render: () => MARKET.render() },
 };
 
 // Составные вкладки: один таб — несколько модулей подряд
 const V6_COMPOSITE = {
   dashboard: ['dashboard'],
   life:      ['habits', 'health'],
-  money:     ['finance', 'crypto'],
+  money:     ['market', 'finance', 'crypto'],
 };
 
 const V5_TABS = ['live', 'shop', 'stats'];
@@ -10673,6 +11152,7 @@ function buildV6FabItems() {
 
   const items = [
     { icon: '🏪', label: 'Магазин',  fn: () => switchTab('shop') },
+    { icon: '📉', label: 'Биржа',    fn: () => { switchTab('money'); scrollToModule('market'); } },
     { icon: '📈', label: 'Портфель', fn: () => { switchTab('money'); scrollToModule('crypto'); } },
     { icon: '❤️', label: 'Здоровье', fn: () => { switchTab('life'); scrollToModule('health'); } },
   ];
@@ -10833,7 +11313,7 @@ window.bootV6 = bootV6;
 const UI_HINTS = [
   { id: 'wt', target: '#wtChip', title: '💼 Тип работы', text: 'Здесь меняется тип работы: цвета, термины и целевая ставка подстроятся. Это же есть в «Профиль → Режим приложения».', when: () => true },
   { id: 'cat', target: '#catHub', title: '🎯 Направление заданий', text: 'Тут выбираешь, из какого направления будут завтрашние личные задания. Цветная метка под каждым заданием — его направление.', when: () => document.getElementById('lifeContent')?.classList.contains('active') },
-  { id: 'shop', target: '#tabMoney', title: '💰 Деньги', text: 'Магазин бустов, темы и финансы — здесь. Бусты (замены, двойной XP, направление заданий) покупаются за Life XP.', when: () => true }
+  { id: 'shop', target: '#tabMoney', title: '💰 Деньги', text: 'Биржа с живым курсом крипты, финансы и портфель — здесь. Бусты (замены, двойной XP, направление заданий) покупаются за Life XP.', when: () => true }
 ];
 function getHintsSeen() { try { return uGet('v7_hints_seen', {}) || {}; } catch (e) { return {}; } }
 function markHintSeen(id) { try { const s = getHintsSeen(); s[id] = 1; uSet('v7_hints_seen', s); } catch (e) {} }
