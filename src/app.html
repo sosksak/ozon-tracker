@@ -7262,9 +7262,8 @@ function setSyncStatus(type, text) {
   el.textContent = text;
 }
 
-// v7.1.1: сплэш не убирается, пока не отработал version gate (см. блок PWA ниже):
-// если в сети лежит новая сборка, перезагрузка случится ПОД сплэшем, и старый
-// интерфейс не покажется ни на кадр.
+// v7.2.0: свежесть сборки гарантирует сам воркер до отдачи страницы (sw.js),
+// versionGate оставлен как точка расширения и резолвится сразу.
 let uiShown = false;
 function hideLoading() {
   const go = () => {
@@ -8262,64 +8261,26 @@ function renderChart() {
 
 // ====== PWA: SERVICE WORKER ======
 // Регистрируем только по http/https — с file:// браузер ругается.
-const APP_VERSION = 'v7.1.2';
+const APP_VERSION = 'v7.2.0';
 
-// v7.1.1 — политика обновлений «сразу новое, никогда не старое»:
-//   1. SW отдаёт index.html из кэша мгновенно (0 сетевых ожиданий).
-//   2. Пока на экране сплэш, страница шлёт воркеру CHECK_INDEX; тот сверяет
-//      ETag через HEAD (пара сотен байт) и, если сборка в сети новее, скачивает
-//      её в кэш и отвечает версией. Страница перезагружается, НЕ УБИРАЯ сплэш —
-//      старый интерфейс не рисуется вообще (versionGate держит hideLoading()).
-//   3. Если новая версия найдена уже после показа интерфейса (фоновая проверка,
-//      возврат в приложение) — не дёргаем, показываем баннер «Обновить».
-//   4. Защита от цикла: авто-перезагрузка не чаще раза на версию за сессию вкладки.
-const VERSION_GATE_MS = 2000;   // максимум, сколько сплэш ждёт ответа воркера
+// v7.2.0 — политика обновлений «страница никогда не стартует старой»:
+//   Воркер (sw.js) перед отдачей index.html сверяет ETag с сервером и при
+//   отличии отдаёт СРАЗУ новую сборку. Поэтому на старте нет ни проверок,
+//   ни авто-перезагрузок — они и давали серый кадр iOS и двойной сплэш.
+//   Новая версия, найденная уже в работе (фон, возврат в приложение, медленная
+//   сеть на старте) — только баннер «Обновить», без самодеятельности.
+window.versionGate = Promise.resolve();
 
 function showUpdateBanner() {
   const banner = document.getElementById('updateBanner');
   if (banner) banner.classList.add('show');
 }
 
-// true → перезагрузка запущена (сплэш остаётся), false → ничего не делали
-function reloadToNewBuild(ver, source) {
-  let autoDone = false;
-  try { autoDone = sessionStorage.getItem('lt_auto_reload') === ver; } catch (e) {}
-  if (autoDone) return false;
-  try { sessionStorage.setItem('lt_auto_reload', ver); } catch (e) {}
-  console.log('[SW] new build', ver, 'from', source, '— reload under splash');
-  location.reload();
-  return true;
-}
-
 function onNewVersionAvailable(ver, source) {
   if (ver && ver === APP_VERSION) return;              // уже запущена именно она
-  // Интерфейс ещё не показан (сплэш) — можно перезапуститься незаметно.
-  if (!uiShown && ver && reloadToNewBuild(ver, source)) return;
+  console.log('[SW] new build', ver, 'from', source);
   showUpdateBanner();
 }
-
-// Version gate: промис, которого ждёт hideLoading(). Резолвится, когда воркер
-// подтвердил актуальность кэша (или по таймауту / офлайн / без воркера).
-// При найденной новой сборке — НЕ резолвится: страница уходит в reload под сплэшем.
-window.versionGate = new Promise((resolve) => {
-  const sw = ('serviceWorker' in navigator) ? navigator.serviceWorker : null;
-  const ctrl = sw && sw.controller;
-  if (!ctrl || !navigator.onLine || !location.protocol.startsWith('http')) { resolve(); return; }
-  let settled = false;
-  const done = () => { if (!settled) { settled = true; resolve(); } };
-  const timer = setTimeout(done, VERSION_GATE_MS);
-  try {
-    const ch = new MessageChannel();
-    ch.port1.onmessage = (ev) => {
-      const d = ev.data || {};
-      if (d.type !== 'INDEX_CHECKED') return;
-      clearTimeout(timer);
-      if (d.verChanged && d.version && d.version !== APP_VERSION && reloadToNewBuild(d.version, 'gate')) return;
-      done();
-    };
-    ctrl.postMessage({ type: 'CHECK_INDEX' }, [ch.port2]);
-  } catch (e) { clearTimeout(timer); done(); }
-});
 
 // Страховка: кнопка баннера обязана работать даже если обработчик
 // от service worker по какой-то причине не навесился.

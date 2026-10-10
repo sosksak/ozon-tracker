@@ -1,12 +1,12 @@
 // Life Tracker — service worker
-// Стратегия (v7.1.1):
-//   - index.html / config.js : из кэша мгновенно + проверка версии ПО ЗАПРОСУ страницы.
-//       Страница на старте (ещё под сплэшем) шлёт CHECK_INDEX; воркер делает
-//       дешёвый HEAD-запрос и сравнивает ETag с закэшированной копией. Совпал —
-//       отвечает «без изменений» за одну короткую поездку в сеть. Не совпал —
-//       качает свежий index.html, кладёт в кэш и отвечает новой версией;
-//       страница перезагружается, НЕ УБИРАЯ сплэш, — старый интерфейс не
-//       рисуется ни на кадр.
+// Стратегия (v7.2.0): «сначала проверить, потом отдать» — без перезагрузок.
+//   - index.html / config.js : перед отдачей страницы воркер делает HEAD-запрос
+//       (пара сотен байт) и сравнивает ETag с кэшем. Совпал — отдаём кэш.
+//       Не совпал — скачиваем новую сборку в кэш и отдаём СРАЗУ ЕЁ.
+//       Страница никогда не стартует старой и потому никогда не перезагружается:
+//       ни серого кадра iOS, ни двойного сплэша.
+//       Лимит ожидания сети — NET_WAIT_MS; не успели / офлайн → кэш, проверка
+//       доезжает в фоне и страница получает INDEX_UPDATED (баннер «Обновить»).
 //   - иконки/манифест/CDN     : cache-first (не меняются).
 //   - Supabase REST/realtime  : НИКОГДА не кэшируем (данные должны быть живыми).
 //
@@ -21,6 +21,7 @@ const VERSION = '__APP_VERSION__';
 const CACHE = 'life-tracker-' + VERSION;
 const INDEX_KEY = './index.html';
 const CFG_KEY = './config.js';
+const NET_WAIT_MS = 1500;   // сколько ждём проверку версии перед отдачей страницы
 
 const PRECACHE = [
   './index.html',
@@ -161,20 +162,25 @@ self.addEventListener('fetch', (e) => {
     e.respondWith(
       caches.open(CACHE).then(async (c) => {
         const cached = await c.match(key);
-        if (cached) {
-          // Фоновая проверка — страховка для страниц, которые не прислали CHECK_INDEX
-          // (старые сборки). Новые сборки получат ответ через CHECK_INDEX, а здесь
-          // сработает дедупликация inflight.
-          e.waitUntil(refreshKey(key).then(async (r) => {
-            if (!(r.changed && r.verChanged)) return;
+        if (!cached) {
+          const res = await fetch(new Request(req.url, { cache: 'reload', credentials: 'same-origin' })).catch(() => null);
+          if (res && res.ok) c.put(key, res.clone()).catch(() => {});
+          return res || Response.error();
+        }
+        // Проверяем свежесть ДО отдачи: успели — отдаём актуальную копию,
+        // не успели — кэш, а проверка дорабатывает в фоне.
+        const check = refreshKey(key);
+        const timeout = new Promise((r) => setTimeout(() => r({ timedOut: true }), NET_WAIT_MS));
+        const r = await Promise.race([check, timeout]);
+        if (r && r.timedOut) {
+          e.waitUntil(check.then(async (res) => {
+            if (!(res.changed && res.verChanged)) return;
             const clients = await self.clients.matchAll({ type: 'window' });
-            clients.forEach((cl) => cl.postMessage({ type: 'INDEX_UPDATED', version: r.version, file: key }));
+            clients.forEach((cl) => cl.postMessage({ type: 'INDEX_UPDATED', version: res.version, file: key }));
           }));
           return cached;
         }
-        const res = await fetch(new Request(req.url, { cache: 'reload', credentials: 'same-origin' })).catch(() => null);
-        if (res && res.ok) c.put(key, res.clone()).catch(() => {});
-        return res || Response.error();
+        return (r.changed ? await c.match(key) : null) || cached;
       })
     );
     return;
