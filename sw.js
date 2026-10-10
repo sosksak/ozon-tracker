@@ -1,11 +1,12 @@
 // Life Tracker — service worker
-// Стратегия (v7.1):
-//   - index.html / config.js : stale-while-revalidate с проверкой ВЕРСИИ.
-//       Кэш отдаётся мгновенно (0 ожиданий сети). Параллельно качается свежая
-//       копия; если её <meta name="app-version"> отличается — кладём в кэш и
-//       шлём странице INDEX_UPDATED {version}. Страница сама решает: тихо
-//       перезапуститься (первые секунды, пользователь ничего не трогал) или
-//       показать баннер «Обновить».
+// Стратегия (v7.1.1):
+//   - index.html / config.js : из кэша мгновенно + проверка версии ПО ЗАПРОСУ страницы.
+//       Страница на старте (ещё под сплэшем) шлёт CHECK_INDEX; воркер делает
+//       дешёвый HEAD-запрос и сравнивает ETag с закэшированной копией. Совпал —
+//       отвечает «без изменений» за одну короткую поездку в сеть. Не совпал —
+//       качает свежий index.html, кладёт в кэш и отвечает новой версией;
+//       страница перезагружается, НЕ УБИРАЯ сплэш, — старый интерфейс не
+//       рисуется ни на кадр.
 //   - иконки/манифест/CDN     : cache-first (не меняются).
 //   - Supabase REST/realtime  : НИКОГДА не кэшируем (данные должны быть живыми).
 //
@@ -16,9 +17,10 @@
 // VERSION подставляется сборщиком (build.py) из src/app.html — одна версия
 // у страницы, воркера и имени кэша.
 
-const VERSION = 'v7.1.0';
+const VERSION = 'v7.1.1';
 const CACHE = 'life-tracker-' + VERSION;
 const INDEX_KEY = './index.html';
+const CFG_KEY = './config.js';
 
 const PRECACHE = [
   './index.html',
@@ -53,22 +55,90 @@ self.addEventListener('activate', (e) => {
   );
 });
 
-self.addEventListener('message', (e) => {
-  const msg = e.data;
-  if (msg === 'SKIP_WAITING') { self.skipWaiting(); return; }
-  if (msg === 'GET_VERSION') {
-    const reply = { type: 'VERSION', version: VERSION };
-    if (e.ports && e.ports[0]) e.ports[0].postMessage(reply);
-    else if (e.source) e.source.postMessage(reply);
-  }
-});
-
 function isSupabase(url) {
   return url.hostname.endsWith('.supabase.co') || url.pathname.includes('/rest/v1/');
 }
 
 // Версия сборки из HTML — по <meta name="app-version">; у config.js версии нет.
 const VER_RE = /<meta\s+name="app-version"\s+content="([^"]+)"/;
+const verOf = (text) => { const m = VER_RE.exec(text || ''); return m ? m[1] : null; };
+
+function netUrl(key) {
+  // './index.html' → корень scope (GitHub Pages отдаёт одно и то же для '/' и '/index.html')
+  return new URL(key === INDEX_KEY ? './' : key, self.registration.scope).href;
+}
+
+// Одна проверка на ключ за раз: навигация и CHECK_INDEX со страницы делят результат.
+const inflight = {};
+function refreshKey(key) {
+  if (inflight[key]) return inflight[key];
+  inflight[key] = (async () => {
+    const result = { changed: false, version: null, verChanged: false, error: false };
+    try {
+      const c = await caches.open(CACHE);
+      const cached = await c.match(key);
+      const url = netUrl(key);
+      const opts = { cache: 'reload', credentials: 'same-origin' };
+
+      // Быстрый путь: HEAD + ETag (или Last-Modified). Для 400 KB страницы это пара сотен байт.
+      if (cached) {
+        const tag = (r) => r.headers.get('etag') || r.headers.get('last-modified') || '';
+        const oldTag = tag(cached);
+        if (oldTag) {
+          try {
+            const h = await fetch(new Request(url, { method: 'HEAD', ...opts }));
+            if (h && h.ok && tag(h) === oldTag) return result;
+          } catch (e) { /* HEAD не прошёл — падаем на полный GET */ }
+        }
+      }
+
+      const res = await fetch(new Request(url, opts));
+      if (!res || !res.ok) { result.error = true; return result; }
+      const text = await res.clone().text();
+      const oldText = cached ? await cached.text() : null;
+      if (oldText === text) return result;
+
+      await c.put(key, res);
+      result.changed = true;
+      if (key === INDEX_KEY) {
+        result.version = verOf(text);
+        const oldVer = verOf(oldText);
+        result.verChanged = !!result.version && (!oldVer || oldVer !== result.version);
+      }
+      return result;
+    } catch (e) {
+      result.error = true;
+      return result;
+    } finally {
+      delete inflight[key];
+    }
+  })();
+  return inflight[key];
+}
+
+self.addEventListener('message', (e) => {
+  const msg = e.data;
+  const reply = (data) => {
+    if (e.ports && e.ports[0]) e.ports[0].postMessage(data);
+    else if (e.source) e.source.postMessage(data);
+  };
+  if (msg === 'SKIP_WAITING') { self.skipWaiting(); return; }
+  if (msg === 'GET_VERSION') { reply({ type: 'VERSION', version: VERSION }); return; }
+  if (msg && msg.type === 'CHECK_INDEX') {
+    // Страница ждёт под сплэшем — отвечаем в любом случае (в т.ч. при ошибке сети).
+    e.waitUntil(
+      Promise.all([refreshKey(INDEX_KEY), refreshKey(CFG_KEY)])
+        .then(([idx, cfg]) => reply({
+          type: 'INDEX_CHECKED',
+          changed: idx.changed || cfg.changed,
+          version: idx.version,
+          verChanged: idx.verChanged,
+          error: idx.error
+        }))
+        .catch(() => reply({ type: 'INDEX_CHECKED', changed: false, version: null, verChanged: false, error: true }))
+    );
+  }
+});
 
 self.addEventListener('fetch', (e) => {
   const req = e.request;
@@ -87,42 +157,24 @@ self.addEventListener('fetch', (e) => {
 
   if (isNav || isCfg) {
     // Ключ кэша нормализуем: '/', '/index.html', '/?v=2' — это всё одна запись.
-    const key = isNav ? INDEX_KEY : './config.js';
+    const key = isNav ? INDEX_KEY : CFG_KEY;
     e.respondWith(
       caches.open(CACHE).then(async (c) => {
         const cached = await c.match(key);
-        // Клонируем ДО отдачи странице: после return тело cached уже прочитано,
-        // и cached.clone() в фоне бросит «body already used».
-        const cmp = cached ? cached.clone() : null;
-        const refresh = fetch(new Request(req.url, { cache: 'reload', credentials: 'same-origin' }))
-          .then(async (res) => {
-            if (!res || !res.ok) return res;
-            const copy = res.clone();
-            // Кэш обновляем при ЛЮБОМ изменении байтов (чтобы отладочные сборки
-            // с той же версией не застревали), а страницу дёргаем только при
-            // смене версии — иначе любой пересобранный байт вызывал бы перезапуск.
-            let changed = true, verChanged = true, newVer = '';
-            if (cmp) {
-              const [t1, t2] = await Promise.all([cmp.text(), res.clone().text()]);
-              changed = t1 !== t2;
-              if (isNav) {
-                const m1 = VER_RE.exec(t1), m2 = VER_RE.exec(t2);
-                newVer = m2 ? m2[1] : '';
-                verChanged = !(m1 && m2) || m1[1] !== m2[1];
-              }
-            }
-            if (changed) {
-              await c.put(key, copy);
-              if (cmp && verChanged) {
-                const clients = await self.clients.matchAll({ type: 'window' });
-                clients.forEach((cl) => cl.postMessage({ type: 'INDEX_UPDATED', version: newVer || null, file: key }));
-              }
-            }
-            return res;
-          })
-          .catch(() => null);
-        if (cached) { e.waitUntil(refresh); return cached; }
-        return (await refresh) || Response.error();
+        if (cached) {
+          // Фоновая проверка — страховка для страниц, которые не прислали CHECK_INDEX
+          // (старые сборки). Новые сборки получат ответ через CHECK_INDEX, а здесь
+          // сработает дедупликация inflight.
+          e.waitUntil(refreshKey(key).then(async (r) => {
+            if (!(r.changed && r.verChanged)) return;
+            const clients = await self.clients.matchAll({ type: 'window' });
+            clients.forEach((cl) => cl.postMessage({ type: 'INDEX_UPDATED', version: r.version, file: key }));
+          }));
+          return cached;
+        }
+        const res = await fetch(new Request(req.url, { cache: 'reload', credentials: 'same-origin' })).catch(() => null);
+        if (res && res.ok) c.put(key, res.clone()).catch(() => {});
+        return res || Response.error();
       })
     );
     return;

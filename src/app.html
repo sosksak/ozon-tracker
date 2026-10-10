@@ -7255,9 +7255,18 @@ function setSyncStatus(type, text) {
   el.textContent = text;
 }
 
+// v7.1.1: сплэш не убирается, пока не отработал version gate (см. блок PWA ниже):
+// если в сети лежит новая сборка, перезагрузка случится ПОД сплэшем, и старый
+// интерфейс не покажется ни на кадр.
+let uiShown = false;
 function hideLoading() {
-  const overlay = document.getElementById('loadingOverlay');
-  if (overlay) { overlay.classList.add('hidden'); setTimeout(() => overlay.style.display = 'none', 500); }
+  const go = () => {
+    if (uiShown) return;
+    uiShown = true;
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) { overlay.classList.add('hidden'); setTimeout(() => overlay.style.display = 'none', 500); }
+  };
+  (window.versionGate || Promise.resolve()).then(go, go);
 }
 
 // ====== EDIT SHIFT MODAL ======
@@ -8244,39 +8253,64 @@ function renderChart() {
 
 // ====== PWA: SERVICE WORKER ======
 // Регистрируем только по http/https — с file:// браузер ругается.
-const APP_VERSION = 'v7.1.0';
+const APP_VERSION = 'v7.1.1';
 
-// v7.1 — политика обновлений «сразу новое, никогда не старое»:
-//   1. SW отдаёт index.html из кэша мгновенно (0 сетевых ожиданий) и
-//      параллельно докачивает свежую копию.
-//   2. Если свежая копия НОВЕЕ запущенной (сравниваем APP_VERSION, а не байты),
-//      и пользователь ещё ничего не нажимал (первые секунды после запуска) —
-//      страница тихо перезагружается и поднимается уже новая версия. Пользователь
-//      видит только сплэш, старый интерфейс не успевает показаться.
-//   3. Если пользователь уже работает — не дёргаем, показываем баннер «Обновить».
-//   4. Защита от цикла: авто-перезагрузка не чаще раза за сессию вкладки.
-let userInteracted = false;
-['pointerdown', 'keydown', 'touchstart'].forEach(ev =>
-  window.addEventListener(ev, () => { userInteracted = true; }, { once: true, passive: true, capture: true }));
+// v7.1.1 — политика обновлений «сразу новое, никогда не старое»:
+//   1. SW отдаёт index.html из кэша мгновенно (0 сетевых ожиданий).
+//   2. Пока на экране сплэш, страница шлёт воркеру CHECK_INDEX; тот сверяет
+//      ETag через HEAD (пара сотен байт) и, если сборка в сети новее, скачивает
+//      её в кэш и отвечает версией. Страница перезагружается, НЕ УБИРАЯ сплэш —
+//      старый интерфейс не рисуется вообще (versionGate держит hideLoading()).
+//   3. Если новая версия найдена уже после показа интерфейса (фоновая проверка,
+//      возврат в приложение) — не дёргаем, показываем баннер «Обновить».
+//   4. Защита от цикла: авто-перезагрузка не чаще раза на версию за сессию вкладки.
+const VERSION_GATE_MS = 2000;   // максимум, сколько сплэш ждёт ответа воркера
 
 function showUpdateBanner() {
   const banner = document.getElementById('updateBanner');
   if (banner) banner.classList.add('show');
 }
 
-function onNewVersionAvailable(ver, source) {
-  if (ver && ver === APP_VERSION) return;              // уже запущена именно она
-  const fresh = performance.now() < 6000 && !userInteracted;
+// true → перезагрузка запущена (сплэш остаётся), false → ничего не делали
+function reloadToNewBuild(ver, source) {
   let autoDone = false;
   try { autoDone = sessionStorage.getItem('lt_auto_reload') === ver; } catch (e) {}
-  if (fresh && ver && !autoDone) {
-    try { sessionStorage.setItem('lt_auto_reload', ver); } catch (e) {}
-    console.log('[SW] new build', ver, 'from', source, '— instant reload');
-    location.reload();
-    return;
-  }
+  if (autoDone) return false;
+  try { sessionStorage.setItem('lt_auto_reload', ver); } catch (e) {}
+  console.log('[SW] new build', ver, 'from', source, '— reload under splash');
+  location.reload();
+  return true;
+}
+
+function onNewVersionAvailable(ver, source) {
+  if (ver && ver === APP_VERSION) return;              // уже запущена именно она
+  // Интерфейс ещё не показан (сплэш) — можно перезапуститься незаметно.
+  if (!uiShown && ver && reloadToNewBuild(ver, source)) return;
   showUpdateBanner();
 }
+
+// Version gate: промис, которого ждёт hideLoading(). Резолвится, когда воркер
+// подтвердил актуальность кэша (или по таймауту / офлайн / без воркера).
+// При найденной новой сборке — НЕ резолвится: страница уходит в reload под сплэшем.
+window.versionGate = new Promise((resolve) => {
+  const sw = ('serviceWorker' in navigator) ? navigator.serviceWorker : null;
+  const ctrl = sw && sw.controller;
+  if (!ctrl || !navigator.onLine || !location.protocol.startsWith('http')) { resolve(); return; }
+  let settled = false;
+  const done = () => { if (!settled) { settled = true; resolve(); } };
+  const timer = setTimeout(done, VERSION_GATE_MS);
+  try {
+    const ch = new MessageChannel();
+    ch.port1.onmessage = (ev) => {
+      const d = ev.data || {};
+      if (d.type !== 'INDEX_CHECKED') return;
+      clearTimeout(timer);
+      if (d.verChanged && d.version && d.version !== APP_VERSION && reloadToNewBuild(d.version, 'gate')) return;
+      done();
+    };
+    ctrl.postMessage({ type: 'CHECK_INDEX' }, [ch.port2]);
+  } catch (e) { clearTimeout(timer); done(); }
+});
 
 // Страховка: кнопка баннера обязана работать даже если обработчик
 // от service worker по какой-то причине не навесился.
