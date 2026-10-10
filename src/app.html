@@ -8515,7 +8515,7 @@ function renderChart() {
 
 // ====== PWA: SERVICE WORKER ======
 // Регистрируем только по http/https — с file:// браузер ругается.
-const APP_VERSION = 'v7.5.0';
+const APP_VERSION = 'v7.5.1';
 
 // v7.2.0 — политика обновлений «страница никогда не стартует старой»:
 //   Воркер (sw.js) перед отдачей index.html сверяет ETag с сервером и при
@@ -11573,26 +11573,21 @@ const UI_HINTS = [
 function getHintsSeen() { try { return uGet('v7_hints_seen', {}) || {}; } catch (e) { return {}; } }
 function markHintSeen(id) { try { const s = getHintsSeen(); s[id] = 1; uSet('v7_hints_seen', s); } catch (e) {} }
 let _hintOpen = false;
+let _hintTimer = null;
+// Один планировщик: любые повторные вызовы схлопываются в один — раньше каждый тап по вкладке
+// плодил параллельные цепочки setTimeout, и подсказка «троила»: мигала, прыгала, скроллила страницу.
+function scheduleHint(ms) { clearTimeout(_hintTimer); _hintTimer = setTimeout(() => { try { showNextHint(); } catch (e) {} }, ms); }
 function showNextHint() {
   if (_hintOpen || !currentUser) return;
+  if (document.querySelector('.ui-hint')) return;
   if (document.querySelector('.modal-overlay.show, .ask-overlay.show')) return;
   const seen = getHintsSeen();
   const h = UI_HINTS.find(x => !seen[x.id] && x.when() && document.querySelector(x.target));
   if (!h) return;
   const el = document.querySelector(h.target);
-  let r = el.getBoundingClientRect();
-  if (r.width === 0) return;
-  const isFixed = (() => { let p = el; while (p && p !== document.body) { if (getComputedStyle(p).position === 'fixed') return true; p = p.parentElement; } return false; })();
-  if (isFixed) {
-    // Таб-бар прячется при скролле вниз — ждём, пока он снова в кадре (прокрутка вверх)
-    if (r.bottom > innerHeight || r.top < 0) { setTimeout(showNextHint, 1500); return; }
-  } else if (r.top < 60 || r.bottom > innerHeight - 140) {
-    // Цель за экраном или у самого края — подводим её в центр и показываем после скролла
-    el.scrollIntoView({ block: 'center', behavior: 'smooth' });
-    _hintOpen = true;
-    setTimeout(() => { _hintOpen = false; r = el.getBoundingClientRect(); if (r.top >= 0 && r.bottom <= innerHeight) showNextHint(); }, 550);
-    return;
-  }
+  const r = el.getBoundingClientRect();
+  // Цель не в кадре — не скроллим страницу за пользователя и не крутим циклы: покажем при следующей смене вкладки
+  if (r.width === 0 || r.top < 60 || r.bottom > innerHeight - 20) return;
   _hintOpen = true;
   el.classList.add('ui-hint-target');
   const box = document.createElement('div');
@@ -11609,16 +11604,18 @@ function showNextHint() {
   else box.style.top = (r.bottom + 10) + 'px';
   const close = () => {
     box.remove(); el.classList.remove('ui-hint-target'); markHintSeen(h.id); _hintOpen = false;
-    setTimeout(showNextHint, 600);
+    scheduleHint(600);
   };
   box.querySelector('button').onclick = close;
+  // Пользователь начал скроллить — убираем, чтобы подсказка не висела поверх контента
+  window.addEventListener('scroll', close, { once: true, passive: true });
 }
-function resetHints() { try { uSet('v7_hints_seen', {}); } catch (e) {} showToast('💡 Подсказки включены заново', 'success'); setTimeout(showNextHint, 400); }
+function resetHints() { try { uSet('v7_hints_seen', {}); } catch (e) {} showToast('💡 Подсказки включены заново', 'success'); scheduleHint(400); }
 window.showNextHint = showNextHint; window.resetHints = resetHints;
-// Запуск: после полной загрузки и при смене вкладки
-setTimeout(() => { try { showNextHint(); } catch (e) {} }, 3500);
+// Запуск: после полной загрузки и при смене вкладки (через единый планировщик)
+scheduleHint(3500);
 document.addEventListener('click', (e) => {
-  if (e.target.closest && e.target.closest('.v6-tab, [data-tab]')) setTimeout(() => { try { showNextHint(); } catch (er) {} }, 900);
+  if (e.target.closest && e.target.closest('.v6-tab, [data-tab]')) scheduleHint(900);
 });
 
 
@@ -12005,8 +12002,10 @@ function installScrollBehaviour() {
   fab.classList.add('fab-peek');
   const dock = () => { if (!fab.classList.contains('open')) fab.classList.add('fab-peek'); };
   const reveal = () => { fab.classList.remove('fab-peek'); };
+  // v7.5.1: таб-бар НЕ прячется при скролле — строка с вкладками «пропадала», это мешало.
   const navShow = () => { if (nav) nav.classList.remove('nav-hidden'); document.body.classList.remove('v7-nav-hidden'); };
-  const navHide = () => { if (nav) nav.classList.add('nav-hidden'); document.body.classList.add('v7-nav-hidden'); };
+  const navHide = () => {};
+  navShow();
   window.addEventListener('scroll', () => {
     if (document.body.classList.contains('modal-open')) return;
     const y = window.scrollY, d = y - lastY;
