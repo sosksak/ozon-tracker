@@ -541,6 +541,17 @@ body.splash .tab-nav, body.splash .fab-container, body.splash .sync-status, body
 .shift-ctrl-btn:active { transform: scale(0.97); }
 .shift-ctrl-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
+.units-counter {
+  display: grid; grid-template-columns: 44px 1fr 44px 52px; gap: 8px; align-items: center;
+  margin: 0 0 12px; padding: 8px; background: #F7F8FA; border: 1px solid var(--border); border-radius: var(--radius-md);
+}
+.uc-btn { height: 40px; border: 1px solid var(--border); background: #fff; border-radius: 6px; font-size: 18px; font-weight: 800; color: var(--text-dim); cursor: pointer; }
+.uc-btn.uc-plus, .uc-btn.uc-plus5 { background: var(--primary); color: #fff; border-color: var(--primary); }
+.uc-btn.uc-plus5 { font-size: 14px; }
+.uc-btn:active { transform: scale(0.95); }
+.uc-mid { text-align: center; }
+.uc-val { font-size: 22px; font-weight: 800; color: var(--text); font-variant-numeric: tabular-nums; line-height: 1.1; }
+.uc-lbl { font-size: 10px; color: var(--text-dim); font-weight: 600; }
 .break-log {
   margin-top: 10px; padding: 10px; background: #F7F8FA;
   border-radius: var(--radius-md); max-height: 120px; overflow-y: auto;
@@ -3781,7 +3792,14 @@ body.v7-nav-hidden .sync-status { transform: translateY(calc(var(--nav-h) + 8px)
     <button class="shift-ctrl-btn btn-end" id="btnEnd" onclick="endShift()" style="display:none">⏹ ЗАВЕРШИТЬ</button>
   </div>
 
-  <!-- Break type selector (hidden by default) -->
+  <!-- Live counter: orders during shift (v7.4) -->
+<div class="units-counter" id="unitsCounter" style="display:none">
+  <button class="uc-btn" onclick="bumpUnits(-1)" title="−1">−</button>
+  <div class="uc-mid"><div class="uc-val" id="ucVal">0</div><div class="uc-lbl" id="ucLbl">заказов · 0/ч</div></div>
+  <button class="uc-btn uc-plus" onclick="bumpUnits(1)" title="+1">+</button>
+  <button class="uc-btn uc-plus5" onclick="bumpUnits(5)" title="+5">+5</button>
+</div>
+<!-- Break type selector (hidden by default) -->
   <div id="breakTypeSelector" style="display:none; margin-bottom: 12px;">
     <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;">
       <button class="shift-ctrl-btn" style="background:rgba(255,171,64,0.15);color:var(--orange);font-size:12px;padding:10px" onclick="confirmBreak('🍽 Обед')">🍽 Обед</button>
@@ -3875,6 +3893,10 @@ body.v7-nav-hidden .sync-status { transform: translateY(calc(var(--nav-h) + 8px)
     <div class="form-row">
       <div class="form-group"><label>₽ Доход</label><input type="number" id="inputEarned" placeholder="8600" min="0"></div>
       <div class="form-group"><label>📝 Комментарий</label><input type="text" id="inputNote" placeholder="541 операция..."></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>💸 Расходы (₽)</label><input type="number" id="inputExpenses" placeholder="0" min="0" inputmode="numeric"></div>
+      <div class="form-group"><label>📦 Заказов / операций</label><input type="number" id="inputUnits" placeholder="0" min="0" inputmode="numeric"></div>
     </div>
     <button class="btn-add" id="btnAdd" onclick="addShift()" style="margin-top:6px">✅ ДОБАВИТЬ</button>
     <div style="margin-top:10px">
@@ -4070,6 +4092,10 @@ body.v7-nav-hidden .sync-status { transform: translateY(calc(var(--nav-h) + 8px)
       <label>📝 Комментарий (необязательно)</label>
       <input type="text" id="endShiftNote" placeholder="541 операция...">
     </div>
+    <div class="form-row">
+      <div class="form-group"><label>💸 Расходы (₽)</label><input type="number" id="endShiftExpenses" placeholder="0" min="0" inputmode="numeric"></div>
+      <div class="form-group"><label>📦 Заказов / операций</label><input type="number" id="endShiftUnits" placeholder="0" min="0" inputmode="numeric"></div>
+    </div>
     <div class="modal-buttons">
       <button class="modal-btn secondary" onclick="cancelEndShift()">✕ Отмена</button>
       <button class="modal-btn primary" id="btnSaveEndShift" onclick="saveEndShift()">✅ СОХРАНИТЬ</button>
@@ -4097,6 +4123,10 @@ body.v7-nav-hidden .sync-status { transform: translateY(calc(var(--nav-h) + 8px)
     <div class="form-group">
       <label>📝 Комментарий</label>
       <input type="text" id="editNote">
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>💸 Расходы (₽)</label><input type="number" id="editExpenses" placeholder="0" min="0" inputmode="numeric"></div>
+      <div class="form-group"><label>📦 Заказов / операций</label><input type="number" id="editUnits" placeholder="0" min="0" inputmode="numeric"></div>
     </div>
     <div class="modal-buttons">
       <button class="modal-btn secondary" onclick="closeEditModal()">✕ Отмена</button>
@@ -5337,8 +5367,26 @@ function enrichShift(s) {
     s.breakMs = meta.breakMs;
     s.breakCount = meta.breakCount;
     s.breakSummary = meta.breakSummary;
+    s.expenses = parseFloat(meta.expenses) || 0;
+    s.units = parseInt(meta.units, 10) || 0;
   }
+  s.expenses = s.expenses || 0;
+  s.units = s.units || 0;
+  s.net = s.earned - s.expenses;
   return s;
+}
+
+// Обновить часть метаданных смены (расходы/заказы), не трогая перерывы.
+function mergeShiftMeta(shift, patch) {
+  const all = getShiftMeta();
+  const k = shiftMetaKey(shift);
+  all[k] = Object.assign({}, all[k] || {}, patch);
+  saveShiftMeta(all);
+}
+function readMetaInputs(prefix) {
+  const ex = parseFloat((document.getElementById(prefix + 'Expenses') || {}).value) || 0;
+  const un = parseInt((document.getElementById(prefix + 'Units') || {}).value, 10) || 0;
+  return { expenses: Math.max(0, ex), units: Math.max(0, un) };
 }
 
 // ====== МЕТАДАННЫЕ СМЕН (перерывы) ======
@@ -5402,6 +5450,28 @@ function startShift() {
   showToast('🚀 Смена начата. Продуктивного дня!', 'success');
 }
 
+// Счётчик заказов прямо в смене: по кнопке, без ввода руками в конце.
+function bumpUnits(d) {
+  if (!activeShift) return;
+  activeShift.units = Math.max(0, (activeShift.units || 0) + d);
+  saveActiveShift();
+  renderUnitsCounter();
+  if (typeof haptic === 'function') haptic('light');
+}
+function renderUnitsCounter() {
+  const uc = document.getElementById('unitsCounter');
+  if (!uc) return;
+  if (!activeShift) { uc.style.display = 'none'; return; }
+  uc.style.display = '';
+  const n = activeShift.units || 0;
+  const now = Date.now();
+  const breakMs = activeShift.breaks.reduce((s, b) => s + ((b.end || now) - b.start), 0)
+    + (activeShift.currentBreak ? (now - activeShift.currentBreak.start) : 0);
+  const workH = Math.max(0.1, (now - activeShift.startTime - breakMs) / 3600000);
+  document.getElementById('ucVal').textContent = n;
+  document.getElementById('ucLbl').textContent = `заказов · ${n ? (Math.round(n / workH * 10) / 10) : 0}/ч`;
+}
+
 function startBreak() {
   document.getElementById('breakTypeSelector').style.display = 'block';
   document.getElementById('btnBreak').style.display = 'none';
@@ -5452,6 +5522,7 @@ function endShift() {
 
   // Store pending data for modal
   pendingEndShift = {
+    units: activeShift.units || 0,
     date: `${yyyy}-${mm}-${dd}`,
     hours: workHours,
     totalMs: totalMs,
@@ -5466,6 +5537,8 @@ function endShift() {
     `🕐 Всего на смене: ${formatShortDuration(totalMs)}<br>` +
     (breakMs > 0 ? `☕ Перерывов: ${activeShift.breaks.length} (${formatShortDuration(breakMs)})` : '☕ Без перерывов');
   document.getElementById('endShiftEarned').value = '';
+  document.getElementById('endShiftUnits').value = pendingEndShift.units ? String(pendingEndShift.units) : '';
+  document.getElementById('endShiftExpenses').value = '';
   document.getElementById('endShiftNote').value = breakSummary ? `Перерывы: ${breakSummary}` : '';
   document.getElementById('endShiftModal').classList.add('show');
   document.body.classList.add('modal-open');
@@ -5505,12 +5578,19 @@ async function saveEndShift() {
 
   // Перерывы считались в endShift() и раньше просто выбрасывались.
   if (ok) {
+    const extra = readMetaInputs('endShift');
     putShiftMeta({ date: pendingEndShift.date, hours: pendingEndShift.hours, earned: earned }, {
       totalMs: pendingEndShift.totalMs,
       breakMs: pendingEndShift.breakMs,
       breakCount: pendingEndShift.breakCount,
-      breakSummary: pendingEndShift.breakSummary
+      breakSummary: pendingEndShift.breakSummary,
+      expenses: extra.expenses,
+      units: extra.units
     });
+    const saved = shifts.find(x => x.date === pendingEndShift.date && x.hours === pendingEndShift.hours && x.earned === earned);
+    if (saved) enrichShift(saved);
+    document.getElementById('endShiftExpenses').value = '';
+    document.getElementById('endShiftUnits').value = '';
     const t = shifts.find(s => s.date === pendingEndShift.date && s.earned === earned);
     if (t) enrichShift(t);
   }
@@ -5586,10 +5666,12 @@ function renderActiveShift() {
     btnEnd.style.display = 'none';
     breakLog.style.display = 'none';
     breakSelector.style.display = 'none';
+    const uc0 = document.getElementById('unitsCounter'); if (uc0) uc0.style.display = 'none';
     return;
   }
 
   panel.className = 'active-shift';
+  renderUnitsCounter();
   btnStart.style.display = 'none';
   btnEnd.style.display = '';
 
@@ -7383,6 +7465,8 @@ function openEditModal(id) {
   document.getElementById('editHours').value = shift.hours;
   document.getElementById('editEarned').value = shift.earned;
   document.getElementById('editNote').value = shift.displayNote || stripUserTag(shift.note) || '';
+  document.getElementById('editExpenses').value = shift.expenses || '';
+  document.getElementById('editUnits').value = shift.units || '';
   document.getElementById('editShiftModal').classList.add('show');
   document.body.classList.add('modal-open');
 }
@@ -7412,12 +7496,23 @@ async function saveEditShift() {
   const login = currentUser ? currentUser.login : '';
   const taggedNote = injectUserTag(note, login);
 
+  const before = shifts.find(x => x.id === id);
+  const oldKey = before ? shiftMetaKey(before) : null;
+  const oldMeta = oldKey ? (getShiftMeta()[oldKey] || null) : null;
+  const extra = readMetaInputs('edit');
   const ok = await updateShift(id, { date, hours, earned, note: taggedNote });
 
   btn.disabled = false;
   btn.textContent = '💾 СОХРАНИТЬ';
 
   if (ok) {
+    // Ключ меты = дата|часы|доход: при правке переносим перерывы на новый ключ.
+    const all = getShiftMeta();
+    if (oldKey) delete all[oldKey];
+    all[shiftMetaKey({ date, hours, earned })] = Object.assign({}, oldMeta || {}, extra);
+    saveShiftMeta(all);
+    const after = shifts.find(x => x.id === id);
+    if (after) enrichShift(after);
     closeEditModal();
     showToast('✏️ Смена обновлена!', 'success');
     render();
@@ -7770,12 +7865,20 @@ async function addShift() {
   btn.disabled = true;
   btn.textContent = '⏳ Сохраняю...';
 
+  const extra = readMetaInputs('input');
   const ok = await insertShift({ date, hours, earned, note });
 
   btn.disabled = false;
   btn.textContent = '➕ ДОБАВИТЬ';
 
   if (ok) {
+    if (extra.expenses || extra.units) {
+      mergeShiftMeta({ date, hours, earned }, extra);
+      const saved = shifts.find(x => x.date === date && x.hours === hours && x.earned === earned);
+      if (saved) enrichShift(saved);
+    }
+    document.getElementById('inputExpenses').value = '';
+    document.getElementById('inputUnits').value = '';
     document.getElementById('inputHours').value = '';
     document.getElementById('inputEarned').value = '';
     document.getElementById('inputNote').value = '';
@@ -8026,12 +8129,16 @@ function render() {
       const breakHtml = (s.breakMs > 0)
         ? `<div class="shift-breaks" title="${escapeHtml(s.breakSummary || '')}">☕ ${s.breakCount} · ${formatShortDuration(s.breakMs)} · на складе ${formatShortDuration(s.totalMs)}</div>`
         : '';
+      const extraParts = [];
+      if (s.expenses > 0) extraParts.push(`💸 −${s.expenses.toLocaleString('ru-RU')} ₽ · чистыми ${s.net.toLocaleString('ru-RU')} ₽`);
+      if (s.units > 0) extraParts.push(`📦 ${s.units} · ${(s.hours > 0 ? Math.round(s.units / s.hours * 10) / 10 : 0)}/ч`);
+      const extraHtml = extraParts.length ? `<div class="shift-breaks">${extraParts.join(' · ')}</div>` : '';
       return `<div class="shift-card ${cls} slide-up">
         <div class="shift-actions dev-only">
           <button class="shift-action-btn edit" onclick='openEditModal(${idArg})' title="Редактировать">✏️</button>
           <button class="shift-action-btn delete" onclick='removeShift(${idArg})' title="Удалить">✕</button>
         </div>
-        <div class="shift-left"><div class="shift-date">${dateStr} ${pendingBadge}</div><div class="shift-hours">${s.hours} ч</div>${breakHtml}${noteHtml}</div>
+        <div class="shift-left"><div class="shift-date">${dateStr} ${pendingBadge}</div><div class="shift-hours">${s.hours} ч</div>${breakHtml}${extraHtml}${noteHtml}</div>
         <div class="shift-right"><div class="shift-earned">${s.earned.toLocaleString('ru-RU')} ₽</div><div class="shift-rate ${rateCls}">${icon} ${s.rate} ₽/час</div></div>
       </div>`;
     }).join('');
@@ -8076,6 +8183,8 @@ function renderMonthGoal() {
   const monthShifts = shifts.filter(s => s.date && s.date.startsWith(prefix));
   const earned = monthShifts.reduce((a, s) => a + s.earned, 0);
   const hours = monthShifts.reduce((a, s) => a + s.hours, 0);
+  const monthExp = monthShifts.reduce((a, s) => a + (s.expenses || 0), 0);
+  const monthUnits = monthShifts.reduce((a, s) => a + (s.units || 0), 0);
 
   // Средний заработок за смену: по этому месяцу, иначе по всей истории.
   const avgPerShift = monthShifts.length
@@ -8115,6 +8224,8 @@ function renderMonthGoal() {
     <div class="mg-forecast">
       <div class="mg-row"><span>📊 Прогноз к концу месяца</span><b>${forecast.toLocaleString('ru-RU')} ₽</b></div>
       <div class="mg-row"><span>📋 Отработано смен</span><b>${monthShifts.length} · ${hours.toFixed(1)} ч</b></div>
+      ${monthExp ? `<div class="mg-row"><span>💸 Расходы · чистыми</span><b>−${monthExp.toLocaleString('ru-RU')} ₽ · ${(earned - monthExp).toLocaleString('ru-RU')} ₽</b></div>` : ''}
+      ${monthUnits ? `<div class="mg-row"><span>📦 Заказов за месяц</span><b>${monthUnits} · ${hours > 0 ? Math.round(monthUnits / hours * 10) / 10 : 0}/ч</b></div>` : ''}
       <div class="mg-row"><span>📅 Запланировано впереди</span><b>${plannedAhead} ${pluralShifts(plannedAhead)}</b></div>
     </div>`;
 }
@@ -8166,12 +8277,17 @@ function renderRecords() {
   const bestRate = shifts.reduce((a, s) => s.rate > a.rate ? s : a, shifts[0]);
   const longest = shifts.reduce((a, s) => s.hours > a.hours ? s : a, shifts[0]);
   const bestStreak = calcBestStreak(DIFFICULTIES[difficulty].goal);
+  const withUnits = shifts.filter(s => s.units > 0);
+  const bestUnits = withUnits.length ? withUnits.reduce((a, s) => s.units > a.units ? s : a, withUnits[0]) : null;
+  const totalExp = shifts.reduce((a, s) => a + (s.expenses || 0), 0);
   const fmtD = d => { const p = d.split('-'); return new Date(parseInt(p[0]), parseInt(p[1]) - 1, parseInt(p[2])).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }); };
   el.innerHTML = `
     <div class="mg-row"><span>💰 Лучшая смена</span><b>${bestEarn.earned.toLocaleString('ru-RU')} ₽ <span class="rec-date">${fmtD(bestEarn.date)}</span></b></div>
     <div class="mg-row"><span>💎 Лучшая ставка</span><b>${bestRate.rate.toLocaleString('ru-RU')} ₽/ч <span class="rec-date">${fmtD(bestRate.date)}</span></b></div>
     <div class="mg-row"><span>⏱ Самая долгая смена</span><b>${longest.hours} ч <span class="rec-date">${fmtD(longest.date)}</span></b></div>
-    <div class="mg-row"><span>🔥 Лучший страйк</span><b>${bestStreak} ${bestStreak === 1 ? 'день' : 'дней'}</b></div>`;
+    <div class="mg-row"><span>🔥 Лучший страйк</span><b>${bestStreak} ${bestStreak === 1 ? 'день' : 'дней'}</b></div>
+    ${bestUnits ? `<div class="mg-row"><span>📦 Больше всего заказов</span><b>${bestUnits.units} <span class="rec-date">${fmtD(bestUnits.date)}</span></b></div>` : ''}
+    ${totalExp ? `<div class="mg-row"><span>💸 Расходы за всё время</span><b>${totalExp.toLocaleString('ru-RU')} ₽ <span class="rec-date">чистыми ${(getShiftTotals().totalEarned - totalExp).toLocaleString('ru-RU')} ₽</span></b></div>` : ''}`;
 }
 
 // Лучший страйк за всю историю (calcStreak считает только текущий).
@@ -8356,7 +8472,7 @@ function renderChart() {
 
 // ====== PWA: SERVICE WORKER ======
 // Регистрируем только по http/https — с file:// браузер ругается.
-const APP_VERSION = 'v7.3.0';
+const APP_VERSION = 'v7.4.0';
 
 // v7.2.0 — политика обновлений «страница никогда не стартует старой»:
 //   Воркер (sw.js) перед отдачей index.html сверяет ETag с сервером и при
@@ -8615,6 +8731,8 @@ function showDailySummary(earned, workHours, rate) {
     <div class="summary-item"><div class="summary-item-val">⏱ ${workHours} ч</div><div class="summary-item-lbl">работа</div></div>
     <div class="summary-item"><div class="summary-item-val">🚀 ${rate}</div><div class="summary-item-lbl">₽/час</div></div>
     <div class="summary-item"><div class="summary-item-val">📋 ${shifts.length}</div><div class="summary-item-lbl">смен всего</div></div>
+    ${(shifts[0] && shifts[0].expenses > 0) ? `<div class="summary-item"><div class="summary-item-val">💸 ${shifts[0].net.toLocaleString('ru-RU')}</div><div class="summary-item-lbl">чистыми (−${shifts[0].expenses.toLocaleString('ru-RU')} ₽)</div></div>` : ''}
+    ${(shifts[0] && shifts[0].units > 0) ? `<div class="summary-item"><div class="summary-item-val">📦 ${shifts[0].units}</div><div class="summary-item-lbl">заказов · ${workHours > 0 ? Math.round(shifts[0].units / workHours * 10) / 10 : 0}/ч</div></div>` : ''}
   `;
   const streakEl = document.getElementById('summaryStreak');
   streakEl.textContent = streak > 0 ? `🔥 ${streak} дней подряд в цели!` : '';
