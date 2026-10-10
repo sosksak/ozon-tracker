@@ -1197,9 +1197,11 @@ body.splash .tab-nav, body.splash .fab-container, body.splash .sync-status, body
 
 /* TOAST */
 .toast {
-  position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-80px);
+  position: fixed; top: max(20px, env(safe-area-inset-top, 20px)); left: 50%; transform: translateX(-50%) translateY(-120px);
   padding: 10px 20px; border-radius: var(--radius-md); font-size: 13px; font-weight: 700;
-  z-index: 10000; transition: transform 0.3s ease; white-space: nowrap;
+  z-index: 10000; transition: transform 0.3s ease;
+  white-space: normal; overflow-wrap: anywhere; text-align: center; line-height: 1.35;
+  width: max-content; max-width: calc(100vw - 32px); box-sizing: border-box;
   box-shadow: var(--shadow-lg);
 }
 .toast.show { transform: translateX(-50%) translateY(0); }
@@ -8472,7 +8474,7 @@ function renderChart() {
 
 // ====== PWA: SERVICE WORKER ======
 // Регистрируем только по http/https — с file:// браузер ругается.
-const APP_VERSION = 'v7.4.1';
+const APP_VERSION = 'v7.4.2';
 
 // v7.2.0 — политика обновлений «страница никогда не стартует старой»:
 //   Воркер (sw.js) перед отдачей index.html сверяет ETag с сервером и при
