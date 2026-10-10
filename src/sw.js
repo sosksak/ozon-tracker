@@ -16,7 +16,7 @@
 // VERSION подставляется сборщиком (build.py) из src/app.html — одна версия
 // у страницы, воркера и имени кэша.
 
-const VERSION = 'v7.1.0';
+const VERSION = '__APP_VERSION__';
 const CACHE = 'life-tracker-' + VERSION;
 const INDEX_KEY = './index.html';
 
