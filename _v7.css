@@ -1,0 +1,183 @@
+
+/* ============================================================
+   v7.0 LIFE TRACKER — styles
+   ============================================================ */
+
+/* — Theme transition when the work type changes — */
+html.v7-theming, html.v7-theming * { transition: background-color .35s ease, border-color .35s ease, color .35s ease !important; }
+
+/* — Smart FAB: peeks from the edge, slides out on scroll — */
+.fab-container { transition: transform .32s var(--ease-out), opacity .32s var(--ease-out); }
+.fab-container.fab-peek { transform: translateX(calc(100% - 16px)); opacity: .55; }
+.fab-container.fab-peek .fab-toggle { border-radius: 17px 0 0 17px; }
+.fab-container.open { transform: none !important; opacity: 1 !important; }
+.fab-toggle .ico { transition: transform .32s var(--ease-out); }
+.fab-container.fab-peek .fab-toggle .ico { transform: translateX(-4px); }
+
+/* — Bottom nav hides on scroll down, returns on scroll up — */
+.tab-nav { transition: transform .3s var(--ease-out), box-shadow .3s; }
+.tab-nav.nav-hidden { transform: translateY(calc(100% + 8px)); box-shadow: none; }
+.sync-status { transition: transform .3s var(--ease-out), opacity .3s; }
+body.v7-nav-hidden .sync-status { transform: translateY(calc(var(--nav-h) + 8px)); }
+
+/* — Work type chip in header — */
+.wt-chip {
+  display: inline-flex; align-items: center; gap: 6px; margin-left: 8px;
+  padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 700;
+  background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.22); color: #fff;
+  cursor: pointer; letter-spacing: .2px;
+}
+.wt-chip:active { transform: scale(.96); }
+
+/* — Work type picker — */
+.wt-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 10px 0 14px; }
+.wt-card {
+  padding: 12px 6px 10px; border-radius: 14px; border: 2px solid var(--border); background: var(--bg-main);
+  text-align: center; cursor: pointer; font-family: inherit; color: var(--text); transition: all .18s var(--ease-out);
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+}
+.wt-card .wt-ico { width: 38px; height: 38px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #fff; }
+.wt-card .wt-ico .ico { width: 20px; height: 20px; color: #fff; }
+.wt-card .wt-name { font-size: 11px; font-weight: 800; line-height: 1.15; }
+.wt-card .wt-sub { font-size: 9.5px; color: var(--text-dim); line-height: 1.15; }
+.wt-card.sel { border-color: var(--wt-c, var(--accent)); background: #fff; box-shadow: 0 0 0 3px color-mix(in srgb, var(--wt-c, var(--accent)) 18%, transparent); }
+.wt-card:active { transform: scale(.96); }
+.wt-custom { display: none; margin-top: 6px; }
+.wt-custom.show { display: block; }
+.wt-colors { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0 4px; }
+.wt-color { width: 30px; height: 30px; border-radius: 50%; border: 3px solid transparent; cursor: pointer; }
+.wt-color.sel { border-color: var(--text); box-shadow: 0 0 0 2px #fff inset; }
+.wt-goal-row { display: flex; gap: 8px; align-items: center; margin-top: 10px; }
+.wt-goal-row label { font-size: 12px; color: var(--text-dim); font-weight: 600; flex: 1; }
+.wt-goal-row input { width: 110px; padding: 10px; border: 1px solid var(--border); border-radius: 10px; font-family: inherit; font-weight: 700; font-size: 14px; text-align: center; background: var(--bg-main); }
+
+/* — Productivity score ring (dashboard) — */
+.v7-score {
+  margin: 0 var(--sp-3) var(--sp-3); padding: 14px 16px; background: #fff;
+  border: 1px solid var(--border); border-radius: var(--radius-md); box-shadow: var(--shadow-sm);
+  display: flex; align-items: center; gap: 14px;
+}
+.v7-ring { position: relative; width: 74px; height: 74px; flex-shrink: 0; }
+.v7-ring svg { width: 74px; height: 74px; transform: rotate(-90deg); }
+.v7-ring .trk { fill: none; stroke: var(--bg-card2); stroke-width: 7; }
+.v7-ring .val { fill: none; stroke: var(--accent); stroke-width: 7; stroke-linecap: round; transition: stroke-dashoffset .9s var(--ease-out); }
+.v7-ring .num { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 800; color: var(--primary); }
+.v7-score-body { flex: 1; min-width: 0; }
+.v7-score-title { font-size: 12px; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: .5px; }
+.v7-score-sub { font-size: 11.5px; color: var(--text-dim); margin-top: 2px; }
+.v7-score-bars { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin-top: 9px; }
+.v7-sb { height: 5px; border-radius: 3px; background: var(--bg-card2); overflow: hidden; position: relative; }
+.v7-sb i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--accent); border-radius: 3px; }
+.v7-sb-lbl { font-size: 8.5px; color: var(--text-dim); text-align: center; margin-top: 3px; font-weight: 600; }
+
+/* — Daily login reward — */
+.v7-reward-strip {
+  margin: 0 var(--sp-3) var(--sp-3); padding: 12px 14px; border-radius: var(--radius-md);
+  background: linear-gradient(135deg, #FFFBEB, #FEF3C7); border: 1px solid #FDE68A;
+  display: flex; align-items: center; gap: 10px; cursor: pointer;
+}
+.v7-reward-strip .t { flex: 1; font-size: 12.5px; font-weight: 700; color: #92400E; }
+.v7-reward-strip .s { display: block; font-size: 11px; color: #B45309; font-weight: 500; margin-top: 2px; }
+.v7-reward-strip .b { padding: 8px 12px; border-radius: 10px; background: #D97706; color: #fff; font-size: 12px; font-weight: 800; border: none; font-family: inherit; }
+.v7-reward-strip.claimed { background: var(--green-bg); border-color: var(--green-border); }
+.v7-reward-strip.claimed .t { color: #22543D; } .v7-reward-strip.claimed .s { color: #2F855A; }
+.lr-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin: 12px 0; }
+.lr-day { border-radius: 12px; border: 1.5px solid var(--border); background: var(--bg-main); padding: 8px 2px 6px; text-align: center; font-size: 9.5px; font-weight: 700; color: var(--text-dim); }
+.lr-day .d { font-size: 8.5px; letter-spacing: .4px; }
+.lr-day .v { font-size: 10.5px; color: var(--text); margin-top: 3px; line-height: 1.1; }
+.lr-day.done { background: var(--green-bg); border-color: var(--green-border); color: var(--green); }
+.lr-day.today { border-color: #D97706; background: #FFFBEB; box-shadow: 0 0 0 3px rgba(217,119,6,.15); }
+.lr-day.today .v { color: #92400E; }
+
+/* — Fortune wheel v2 — */
+.wheel-canvas-wrap { width: 272px; height: 272px; }
+.wheel-pointer { top: -14px; font-size: 26px; filter: drop-shadow(0 2px 2px rgba(0,0,0,.25)); }
+.wheel-hub { position: absolute; left: 50%; top: 50%; width: 46px; height: 46px; transform: translate(-50%,-50%); border-radius: 50%; background: #fff; border: 3px solid var(--primary); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 11px; color: var(--primary); z-index: 2; pointer-events: none; }
+.wheel-spin-btn { width: 100%; }
+.wheel-free { font-size: 11.5px; color: var(--green); font-weight: 700; margin-top: 6px; }
+.wheel-hist { margin-top: 12px; text-align: left; }
+.wheel-hist-t { font-size: 10.5px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+.wheel-hist-row { display: flex; justify-content: space-between; font-size: 12px; padding: 5px 0; border-top: 1px solid var(--border); }
+.wheel-hist-row span:last-child { color: var(--text-dim); font-size: 11px; }
+.wheel-result.pop { animation: v7pop .5s var(--ease-out); }
+@keyframes v7pop { 0% { transform: scale(.6); opacity: 0 } 60% { transform: scale(1.12) } 100% { transform: scale(1); opacity: 1 } }
+
+/* — Generic v7 section card — */
+.v7-sec { margin: 0 var(--sp-3) var(--sp-3); padding: 16px; background: #fff; border: 1px solid var(--border); border-radius: var(--radius-md); box-shadow: var(--shadow-sm); }
+.v7-sec-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
+.v7-sec-title { font-size: 13px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: .5px; display: flex; align-items: center; gap: 6px; }
+.v7-btn { padding: 8px 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-main); font-family: inherit; font-size: 12px; font-weight: 700; color: var(--text); cursor: pointer; transition: all .15s; }
+.v7-btn.pri { background: var(--primary); color: #fff; border-color: var(--primary); }
+.v7-btn.pri .ico { color: #fff; }
+.v7-btn:active { transform: scale(.96); }
+.v7-btn:disabled { opacity: .5; }
+.v7-empty { text-align: center; color: var(--text-dim); font-size: 12.5px; padding: 12px 6px; line-height: 1.5; }
+
+/* — Pomodoro / deep work — */
+.pomo-wrap { text-align: center; }
+.pomo-time { font-size: 44px; font-weight: 800; letter-spacing: -1px; color: var(--primary); font-variant-numeric: tabular-nums; line-height: 1; margin: 6px 0 4px; }
+.pomo-wrap.break .pomo-time { color: var(--green); }
+.pomo-sub { font-size: 11.5px; color: var(--text-dim); margin-bottom: 12px; }
+.pomo-track { height: 6px; border-radius: 3px; background: var(--bg-card2); overflow: hidden; margin: 0 10px 14px; }
+.pomo-track i { display: block; height: 100%; background: var(--accent); width: 0; transition: width 1s linear; }
+.pomo-wrap.break .pomo-track i { background: var(--green); }
+.pomo-ctrls { display: flex; gap: 8px; justify-content: center; }
+.pomo-ctrls .v7-btn { min-width: 92px; }
+.pomo-dots { display: flex; gap: 5px; justify-content: center; margin-top: 12px; flex-wrap: wrap; }
+.pomo-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--bg-card2); border: 1px solid var(--border); }
+.pomo-dot.on { background: var(--accent); border-color: var(--accent); }
+.pomo-modes { display: flex; gap: 6px; justify-content: center; margin-bottom: 8px; }
+.pomo-mode { padding: 5px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; border: 1px solid var(--border); background: var(--bg-main); color: var(--text-dim); font-family: inherit; cursor: pointer; }
+.pomo-mode.on { background: var(--accent-soft-2); color: var(--primary); border-color: var(--accent); }
+
+/* — Wheel of life (radar) — */
+.lw-wrap { display: flex; gap: 12px; align-items: center; }
+.lw-wrap canvas { width: 170px; height: 170px; flex-shrink: 0; }
+.lw-list { flex: 1; min-width: 0; display: grid; grid-template-columns: 1fr; gap: 3px 10px; }
+.lw-row { display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; color: var(--text-secondary); white-space: nowrap; overflow: hidden; }
+.lw-row b { color: var(--primary); margin-left: auto; font-size: 12px; }
+.lw-row .dlt { font-size: 9.5px; font-weight: 700; }
+.lw-row .dlt.up { color: var(--green); } .lw-row .dlt.dn { color: var(--red); }
+.lw-weak { margin-top: 10px; padding: 9px 12px; border-radius: 10px; background: var(--orange-bg); border: 1px solid var(--orange-border); font-size: 11.5px; color: #9C4221; }
+.lw-sliders { display: flex; flex-direction: column; gap: 10px; margin: 8px 0 14px; max-height: 52vh; overflow-y: auto; padding-right: 4px; }
+.lw-sl { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; align-items: center; }
+.lw-sl label { font-size: 12.5px; font-weight: 700; color: var(--text); }
+.lw-sl b { font-size: 14px; color: var(--primary); width: 28px; text-align: right; }
+.lw-sl input[type=range] { grid-column: 1 / -1; width: 100%; accent-color: var(--accent); }
+
+/* — Evening journal / gratitude — */
+.jr-q { margin-bottom: 10px; }
+.jr-q label { display: block; font-size: 12px; font-weight: 700; color: var(--text-secondary); margin-bottom: 5px; }
+.jr-q textarea { width: 100%; min-height: 60px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; font-family: inherit; font-size: 13px; background: var(--bg-main); resize: vertical; outline: none; }
+.jr-q textarea:focus { border-color: var(--accent); box-shadow: var(--focus-ring); }
+.jr-done { padding: 12px; border-radius: 10px; background: var(--green-bg); border: 1px solid var(--green-border); font-size: 12.5px; color: #22543D; line-height: 1.5; }
+.jr-done b { display: block; margin-bottom: 4px; }
+.jr-hist { display: flex; gap: 6px; margin-top: 10px; }
+.jr-hd { flex: 1; height: 22px; border-radius: 6px; background: var(--bg-card2); display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; color: var(--text-dim); }
+.jr-hd.on { background: var(--accent-soft-2); color: var(--primary); }
+.jr-cta { margin: 0 var(--sp-3) var(--sp-3); padding: 12px 14px; border-radius: var(--radius-md); background: linear-gradient(135deg, #EEF2FF, #E0E7FF); border: 1px solid #C7D2FE; display: flex; align-items: center; gap: 10px; cursor: pointer; }
+.jr-cta .t { flex: 1; font-size: 12.5px; font-weight: 700; color: #3730A3; }
+.jr-cta .s { display: block; font-size: 11px; color: #4C51BF; font-weight: 500; margin-top: 2px; }
+
+/* — Weekly review — */
+.wr-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px; }
+.wr-cell { padding: 10px 6px; border-radius: 10px; background: var(--bg-main); border: 1px solid var(--border); text-align: center; }
+.wr-cell .v { font-size: 16px; font-weight: 800; color: var(--primary); }
+.wr-cell .l { font-size: 9.5px; color: var(--text-dim); font-weight: 600; margin-top: 2px; }
+.wr-cell .d { font-size: 9.5px; font-weight: 700; }
+.wr-cell .d.up { color: var(--green); } .wr-cell .d.dn { color: var(--red); }
+.wr-insight { font-size: 12px; color: var(--text-secondary); line-height: 1.5; padding: 10px 12px; border-radius: 10px; background: var(--accent-soft); border: 1px solid var(--accent-soft-2); }
+
+/* — Life quests panel moved to Life tab: keep margins consistent — */
+#lifeContent > .life-quests, #lifeContent > .motivation-tip { margin-left: var(--sp-3); margin-right: var(--sp-3); }
+
+/* — Daily brief on dashboard — */
+.v7-brief { margin: 0 var(--sp-3) var(--sp-3); display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.v7-brief .c { padding: 10px 8px; border-radius: 12px; background: #fff; border: 1px solid var(--border); box-shadow: var(--shadow-xs); text-align: center; }
+.v7-brief .v { font-size: 15px; font-weight: 800; color: var(--primary); }
+.v7-brief .l { font-size: 9.5px; color: var(--text-dim); font-weight: 600; text-transform: uppercase; letter-spacing: .3px; margin-top: 2px; }
+
+/* — Settings row in account modal — */
+.v7-set-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid var(--border); font-size: 12.5px; }
+.v7-set-row .t { flex: 1; font-weight: 700; }
+.v7-set-row .s { font-size: 11px; color: var(--text-dim); font-weight: 500; display: block; }

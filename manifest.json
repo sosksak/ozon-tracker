@@ -1,7 +1,7 @@
 {
-  "name": "Life & Work Tracker",
-  "short_name": "Tracker",
-  "description": "Учёт смен, заработка, привычек, здоровья и финансов",
+  "name": "Life Tracker",
+  "short_name": "Life Tracker",
+  "description": "Трекер жизни: работа любого типа, привычки, здоровье, финансы, фокус и рефлексия",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

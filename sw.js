@@ -1,4 +1,4 @@
-// OZON Grind Tracker — service worker
+// Life Tracker — service worker
 // Стратегия:
 //   - index.html / config.js : network-first, в обход HTTP-кэша браузера
 //     (иначе GitHub Pages отдаёт старый файл и обновление «не прилетает»),
@@ -11,8 +11,8 @@
 // раньше, чем пользователь успел нажать кнопку. Активируемся только по команде
 // SKIP_WAITING из страницы.
 
-const VERSION = 'v6.1.0';
-const CACHE = 'ozon-tracker-' + VERSION;
+const VERSION = 'v7.0.0';
+const CACHE = 'life-tracker-' + VERSION;
 
 const PRECACHE = [
   './',
