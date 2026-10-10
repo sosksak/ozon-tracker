@@ -298,6 +298,33 @@ body.splash .tab-nav, body.splash .fab-container, body.splash .sync-status, body
 
 /* MILLION PATH */
 .million-path { margin: 0 12px 12px; padding: 14px 16px; background: #fff; border-radius: var(--radius-md); border: 1px solid var(--border); box-shadow: var(--shadow-sm); }
+/* EFFICIENCY card */
+.eff-card { margin: 0 12px 12px; padding: 14px 16px; background: #fff; border-radius: var(--radius-md); border: 1px solid var(--border); box-shadow: var(--shadow-sm); }
+.eff-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
+.eff-title { font-size: 13px; font-weight: 700; color: var(--text-secondary); letter-spacing: .3px; }
+.eff-seg { display: flex; background: #F0F2F5; border-radius: 999px; padding: 2px; }
+.eff-seg-btn { border: 0; background: transparent; padding: 5px 10px; font: inherit; font-size: 11px; font-weight: 700; color: var(--text-secondary); border-radius: 999px; cursor: pointer; }
+.eff-seg-btn.active { background: #fff; color: var(--primary); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+.eff-main { display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px; }
+.eff-main-val { font-size: 32px; font-weight: 800; color: var(--primary); letter-spacing: -.5px; }
+.eff-main-unit { font-size: 13px; font-weight: 700; color: var(--text-secondary); }
+.eff-delta { font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; }
+.eff-delta.up { color: var(--green); background: rgba(56,161,105,.12); }
+.eff-delta.down { color: var(--red); background: rgba(229,62,62,.12); }
+.eff-delta.flat { color: var(--text-secondary); background: #F0F2F5; }
+.eff-sub { font-size: 12px; color: var(--text-secondary); margin-bottom: 12px; }
+.eff-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.eff-cell { background: #F7F8FA; border-radius: var(--radius-sm); padding: 8px 10px; }
+.eff-cell-val { font-size: 15px; font-weight: 800; color: var(--text); }
+.eff-cell-val.net { color: var(--green); }
+.eff-cell-lbl { font-size: 10px; color: var(--text-secondary); font-weight: 600; text-transform: uppercase; letter-spacing: .3px; margin-top: 2px; }
+.eff-bars { display: flex; align-items: flex-end; gap: 3px; height: 44px; margin-top: 12px; }
+.eff-bar { flex: 1; background: var(--accent); border-radius: 3px 3px 0 0; min-height: 2px; opacity: .85; position: relative; }
+.eff-bar.off { background: #E2E8F0; }
+.eff-bar.best { background: var(--green); }
+.eff-bar.today { outline: 2px solid var(--primary); outline-offset: 1px; }
+.eff-bars-lbl { display: flex; justify-content: space-between; font-size: 10px; color: var(--text-secondary); margin-top: 4px; }
+.eff-empty { font-size: 12px; color: var(--text-secondary); padding: 6px 0; }
 .million-path-title { font-size: 11px; color: var(--text-dim); margin-bottom: 8px; text-align: center; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; }
 .million-bar-wrap { position: relative; height: 8px; background: #EDF2F7; border-radius: 4px; overflow: visible; }
 .million-bar-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--green), var(--accent)); transition: width 0.5s ease; position: relative; }
@@ -3817,6 +3844,19 @@ body.v7-nav-hidden .sync-status { transform: translateY(calc(var(--nav-h) + 8px)
   </div>
 </div>
 
+<!-- EFFICIENCY (work tab) -->
+<div class="eff-card" id="effCard">
+  <div class="eff-head">
+    <div class="eff-title">⚡ ЭФФЕКТИВНОСТЬ</div>
+    <div class="eff-seg" id="effSeg">
+      <button class="eff-seg-btn active" data-p="today" onclick="EFF.setPeriod('today')">Сегодня</button>
+      <button class="eff-seg-btn" data-p="7" onclick="EFF.setPeriod('7')">7 дн</button>
+      <button class="eff-seg-btn" data-p="30" onclick="EFF.setPeriod('30')">30 дн</button>
+    </div>
+  </div>
+  <div id="effBody"></div>
+</div>
+
 <!-- MILLION PATH (on live tab) -->
 <div class="million-path" id="millionPath" style="display:none">
   <div class="million-path-title">📈 ПЛАН ДОХОДА</div>
@@ -5458,6 +5498,7 @@ function bumpUnits(d) {
   activeShift.units = Math.max(0, (activeShift.units || 0) + d);
   saveActiveShift();
   renderUnitsCounter();
+  if (typeof EFF !== 'undefined') EFF.render();
   if (typeof haptic === 'function') haptic('light');
 }
 function renderUnitsCounter() {
@@ -8474,7 +8515,7 @@ function renderChart() {
 
 // ====== PWA: SERVICE WORKER ======
 // Регистрируем только по http/https — с file:// браузер ругается.
-const APP_VERSION = 'v7.4.2';
+const APP_VERSION = 'v7.5.0';
 
 // v7.2.0 — политика обновлений «страница никогда не стартует старой»:
 //   Воркер (sw.js) перед отдачей index.html сверяет ETag с сервером и при
@@ -9141,6 +9182,99 @@ updateTimer = function() {
 
 // --- Cached shift totals (avoid 15+ reduce calls per render) ---
 let _shiftCache = { len: -1, totalEarned: 0, totalHours: 0, avgRate: 0 };
+// ====== EFFICIENCY (вкладка РАБОТА): ₽/ч, заказы, расходы, чистыми за период ======
+const EFF = (() => {
+  let period = 'today';
+  try { period = localStorage.getItem('v7_eff_period') || 'today'; } catch (e) {}
+  const fmt = n => Math.round(n).toLocaleString('ru-RU');
+  const dstr = (off) => { const d = new Date(); d.setDate(d.getDate() - off); return localDateStr(d); };
+
+  // Агрегат за набор дат: закрытые смены + (для сегодня) активная смена.
+  function agg(dates) {
+    const set = new Set(dates);
+    const meta = getShiftMeta();
+    let earned = 0, hours = 0, units = 0, expenses = 0, n = 0;
+    shifts.forEach(s => {
+      if (!set.has(s.date)) return;
+      const m = meta[shiftMetaKey(s)] || {};
+      earned += s.earned || 0; hours += s.hours || 0; n++;
+      units += m.units || 0; expenses += m.expenses || 0;
+    });
+    const today = todayStr();
+    if (activeShift && set.has(today)) {
+      const brk = (activeShift.breaks || []).reduce((a, b) => a + Math.max(0, (b.end || Date.now()) - b.start), 0)
+        + (activeShift.currentBreak ? Date.now() - activeShift.currentBreak.start : 0);
+      const h = Math.max(0, (Date.now() - activeShift.startTime - brk) / 3600000);
+      hours += h; units += activeShift.units || 0; n += 1;
+    }
+    return { earned, hours, units, expenses, n, net: earned - expenses,
+      rate: hours > 0 ? earned / hours : 0, uph: hours > 0 ? units / hours : 0,
+      perUnit: units > 0 ? earned / units : 0 };
+  }
+
+  function dayRate(date) {
+    const a = agg([date]);
+    return a.hours > 0 ? a.rate : 0;
+  }
+
+  function render() {
+    const body = document.getElementById('effBody');
+    if (!body) return;
+    document.querySelectorAll('#effSeg .eff-seg-btn').forEach(b => b.classList.toggle('active', b.dataset.p === period));
+
+    const days = period === 'today' ? 1 : parseInt(period, 10);
+    const cur = agg(Array.from({ length: days }, (_, i) => dstr(i)));
+    const prev = agg(Array.from({ length: days }, (_, i) => dstr(i + days)));
+
+    if (!cur.n && !prev.n) {
+      body.innerHTML = '<div class="eff-empty">Нет смен за период. Начните смену — показатели появятся сразу.</div>';
+      return;
+    }
+    let delta = '';
+    if (prev.hours > 0 && cur.hours > 0) {
+      const d = cur.rate - prev.rate;
+      const cls = d > 5 ? 'up' : d < -5 ? 'down' : 'flat';
+      const sym = d > 5 ? '↑' : d < -5 ? '↓' : '→';
+      const vs = period === 'today' ? 'вчера' : 'пред. ' + days + ' дн';
+      delta = `<span class="eff-delta ${cls}">${sym} ${fmt(Math.abs(d))} ₽/ч vs ${vs}</span>`;
+    }
+    const live = activeShift ? ' · смена идёт' : '';
+    const sub = `${cur.n} ${plural(cur.n, 'смена', 'смены', 'смен')} · ${cur.hours.toFixed(1)} ч${live}`;
+
+    // Мини-график ₽/ч по дням (для 7/30), для «сегодня» — последние 7 дней с выделением сегодня.
+    const span = period === 'today' ? 7 : days;
+    const bars = Array.from({ length: span }, (_, i) => { const date = dstr(span - 1 - i); return { date, r: dayRate(date) }; });
+    const max = Math.max(1, ...bars.map(b => b.r));
+    const bestIdx = bars.reduce((bi, b, i) => b.r > (bars[bi]?.r || 0) ? i : bi, 0);
+    const today = todayStr();
+    const barsHtml = bars.map((b, i) => {
+      const cls = b.r <= 0 ? 'off' : (i === bestIdx ? 'best' : '');
+      const h = b.r <= 0 ? 2 : Math.max(4, Math.round(b.r / max * 44));
+      return `<div class="eff-bar ${cls} ${b.date === today ? 'today' : ''}" style="height:${h}px" title="${b.date}: ${fmt(b.r)} ₽/ч"></div>`;
+    }).join('');
+    const lbl = (d) => { const [y, m, dd] = d.split('-'); return `${+dd}.${m}`; };
+
+    body.innerHTML = `
+      <div class="eff-main"><span class="eff-main-val">${fmt(cur.rate)}</span><span class="eff-main-unit">₽/ч</span>${delta}</div>
+      <div class="eff-sub">${sub}</div>
+      <div class="eff-grid">
+        <div class="eff-cell"><div class="eff-cell-val">${fmt(cur.earned)} ₽</div><div class="eff-cell-lbl">Доход</div></div>
+        <div class="eff-cell"><div class="eff-cell-val" style="color:var(--red)">${cur.expenses ? '−' + fmt(cur.expenses) : '0'} ₽</div><div class="eff-cell-lbl">Расходы</div></div>
+        <div class="eff-cell"><div class="eff-cell-val net">${fmt(cur.net)} ₽</div><div class="eff-cell-lbl">Чистыми</div></div>
+        <div class="eff-cell"><div class="eff-cell-val">${cur.units}</div><div class="eff-cell-lbl">Заказов</div></div>
+        <div class="eff-cell"><div class="eff-cell-val">${cur.uph.toFixed(1)}</div><div class="eff-cell-lbl">Заказов/ч</div></div>
+        <div class="eff-cell"><div class="eff-cell-val">${cur.perUnit ? fmt(cur.perUnit) + ' ₽' : '—'}</div><div class="eff-cell-lbl">За заказ</div></div>
+      </div>
+      <div class="eff-bars">${barsHtml}</div>
+      <div class="eff-bars-lbl"><span>${lbl(bars[0].date)}</span><span>₽/ч по дням · лучший — зелёный</span><span>${lbl(bars[bars.length - 1].date)}</span></div>`;
+  }
+  function plural(n, a, b, c) { const m = n % 10, h = n % 100; return (m === 1 && h !== 11) ? a : (m >= 2 && m <= 4 && (h < 10 || h >= 20)) ? b : c; }
+  function setPeriod(p) { period = p; try { localStorage.setItem('v7_eff_period', p); } catch (e) {} render(); }
+  // Во время смены ₽/ч и заказы тикают — обновляем раз в 30с, только когда вкладка активна.
+  setInterval(() => { if (activeShift && document.getElementById('contentLive')?.classList.contains('active')) render(); }, 30000);
+  return { render, setPeriod };
+})();
+
 function getShiftTotals() {
   if (_shiftCache.len === shifts.length) return _shiftCache;
   const totalEarned = shifts.reduce((s, x) => s + x.earned, 0);
@@ -9161,6 +9295,7 @@ function scheduleRender() {
 const _origRender = render;
 render = function() {
   _origRender();
+  try { EFF.render(); } catch (e) { console.warn('EFF', e); }
   const { totalEarned } = getShiftTotals();
   countUp(document.getElementById('totalEarned'), totalEarned);
   // Only render heavy stats widgets when stats tab is active
