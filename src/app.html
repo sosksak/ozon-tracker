@@ -95,12 +95,19 @@ body {
 
 /* LOADING — SPLASH SCREEN */
 .loading-overlay {
-  position: fixed; top:0; left:0; width:100%; height:100%;
+  position: fixed; inset: 0; width:100%; height:100%; min-height: 100dvh;
   background: linear-gradient(160deg, #1B3A5C 0%, #2C5282 40%, #1B3A5C 100%);
   display: flex; align-items: center; justify-content: center;
   flex-direction: column; gap: 0;
   z-index: 9999; transition: opacity 0.4s ease-out;
   touch-action: none; overflow: hidden;
+  /* v7.1.2: собственный композитный слой — иначе iOS WebKit рисует fixed-элементы
+     с backdrop-filter (таб-бар) ПОВЕРХ сплэша, игнорируя z-index. */
+  transform: translateZ(0); will-change: opacity; isolation: isolate;
+}
+/* v7.1.2: пока сплэш на экране — нижняя навигация/FAB/статус не существуют для рендера */
+body.splash .tab-nav, body.splash .fab-container, body.splash .sync-status, body.splash .ptr-indicator {
+  visibility: hidden !important; pointer-events: none !important;
 }
 .loading-overlay.hidden { opacity: 0; pointer-events: none; }
 .splash-logo {
@@ -3467,7 +3474,7 @@ body.v7-nav-hidden .sync-status { transform: translateY(calc(var(--nav-h) + 8px)
 
 </style>
 </head>
-<body>
+<body class="splash">
 <!-- v6.1 icons -->
 <svg id="icoSprite" xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true">
 <symbol id="i-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect class="f" x="3" y="12" width="4" height="8" rx="1"/><rect class="f" x="10" y="6" width="4" height="14" rx="1"/><rect class="f" x="17" y="9" width="4" height="11" rx="1"/><path d="M3 20h18M5 12v8M12 6v14M19 9v11"/></symbol>
@@ -7265,6 +7272,8 @@ function hideLoading() {
     uiShown = true;
     const overlay = document.getElementById('loadingOverlay');
     if (overlay) { overlay.classList.add('hidden'); setTimeout(() => overlay.style.display = 'none', 500); }
+    // v7.1.2: навигация становится видимой только вместе с интерфейсом (см. CSS body.splash)
+    document.body.classList.remove('splash');
   };
   (window.versionGate || Promise.resolve()).then(go, go);
 }
@@ -8253,7 +8262,7 @@ function renderChart() {
 
 // ====== PWA: SERVICE WORKER ======
 // Регистрируем только по http/https — с file:// браузер ругается.
-const APP_VERSION = 'v7.1.1';
+const APP_VERSION = 'v7.1.2';
 
 // v7.1.1 — политика обновлений «сразу новое, никогда не старое»:
 //   1. SW отдаёт index.html из кэша мгновенно (0 сетевых ожиданий).
@@ -11720,6 +11729,7 @@ setTimeout(function() {
     console.warn('[FAILSAFE] loading overlay still visible after 6s — forcing hide');
     ov.classList.add('hidden');
     ov.style.display = 'none';
+    document.body.classList.remove('splash');
     try {
       if (typeof hideLoading === 'function') hideLoading();
       if (typeof getAccounts === 'function' && getAccounts().length) {
