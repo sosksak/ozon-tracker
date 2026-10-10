@@ -303,7 +303,7 @@ body.splash .tab-nav, body.splash .fab-container, body.splash .sync-status, body
 .eff-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
 .eff-title { font-size: 13px; font-weight: 700; color: var(--text-secondary); letter-spacing: .3px; }
 .eff-seg { display: flex; background: #F0F2F5; border-radius: 999px; padding: 2px; }
-.eff-seg-btn { border: 0; background: transparent; padding: 5px 10px; font: inherit; font-size: 11px; font-weight: 700; color: var(--text-secondary); border-radius: 999px; cursor: pointer; }
+.eff-seg-btn { border: 0; background: transparent; white-space: nowrap; padding: 5px 9px; font: inherit; font-size: 11px; font-weight: 700; color: var(--text-secondary); border-radius: 999px; cursor: pointer; }
 .eff-seg-btn.active { background: #fff; color: var(--primary); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
 .eff-main { display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px; }
 .eff-main-val { font-size: 32px; font-weight: 800; color: var(--primary); letter-spacing: -.5px; }
@@ -325,6 +325,62 @@ body.splash .tab-nav, body.splash .fab-container, body.splash .sync-status, body
 .eff-bar.today { outline: 2px solid var(--primary); outline-offset: 1px; }
 .eff-bars-lbl { display: flex; justify-content: space-between; font-size: 10px; color: var(--text-secondary); margin-top: 4px; }
 .eff-empty { font-size: 12px; color: var(--text-secondary); padding: 6px 0; }
+
+/* WORK ANALYTICS (wa-*) */
+.wa-chart { position: relative; margin-top: 4px; }
+.wa-chart svg { width: 100%; height: 150px; display: block; overflow: visible; }
+.wa-chart .wa-grid { stroke: #E2E8F0; stroke-width: 1; stroke-dasharray: 2 3; }
+.wa-chart .wa-area { fill: url(#waGrad); }
+.wa-chart .wa-line { fill: none; stroke: var(--primary); stroke-width: 2.2; stroke-linejoin: round; stroke-linecap: round; }
+.wa-chart .wa-avg { stroke: var(--accent); stroke-width: 1.2; stroke-dasharray: 4 3; }
+.wa-chart .wa-goal { stroke: var(--green); stroke-width: 1.2; stroke-dasharray: 4 3; }
+.wa-chart .wa-dot { fill: #fff; stroke: var(--primary); stroke-width: 2; }
+.wa-chart .wa-dot.best { fill: var(--green); stroke: var(--green); }
+.wa-chart .wa-dot.today { fill: var(--primary); }
+.wa-chart .wa-ytxt { font-size: 9px; fill: var(--text-secondary); font-weight: 600; }
+.wa-chart .wa-xtxt { font-size: 9px; fill: var(--text-secondary); font-weight: 600; text-anchor: middle; }
+.wa-chart .wa-tag { font-size: 9px; font-weight: 700; }
+.wa-legend { display: flex; flex-wrap: wrap; gap: 10px; font-size: 10px; color: var(--text-secondary); font-weight: 600; margin-top: 6px; }
+.wa-legend i { display: inline-block; width: 14px; border-top: 2px solid; margin-right: 4px; vertical-align: middle; }
+.wa-legend i.d { border-top-style: dashed; }
+.wa-sec { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); }
+.wa-sec-t { font-size: 11px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 8px; display: flex; justify-content: space-between; }
+.wa-sec-t span:last-child { font-weight: 600; text-transform: none; letter-spacing: 0; }
+.wa-rows { display: flex; flex-direction: column; gap: 6px; }
+.wa-row { display: grid; grid-template-columns: 34px 1fr 64px; align-items: center; gap: 8px; font-size: 11px; }
+.wa-row .l { font-weight: 700; color: var(--text); }
+.wa-row .b { height: 10px; background: #EDF2F7; border-radius: 5px; overflow: hidden; }
+.wa-row .b i { display: block; height: 100%; background: var(--accent); border-radius: 5px; transition: width .4s ease; }
+.wa-row.best .b i { background: var(--green); }
+.wa-row.worst .b i { background: var(--orange); }
+.wa-row .v { text-align: right; font-weight: 800; color: var(--text); font-variant-numeric: tabular-nums; }
+.wa-row .v small { font-weight: 600; color: var(--text-secondary); }
+.wa-kpi { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.wa-kpi-cell { background: #F7F8FA; border-radius: var(--radius-sm); padding: 8px 10px; display: flex; gap: 8px; align-items: center; }
+.wa-kpi-ico { font-size: 18px; flex: none; }
+.wa-kpi-val { font-size: 14px; font-weight: 800; color: var(--text); line-height: 1.1; }
+.wa-kpi-lbl { font-size: 10px; color: var(--text-secondary); font-weight: 600; margin-top: 1px; }
+.wa-hist { display: flex; align-items: flex-end; gap: 4px; height: 56px; }
+.wa-hist-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; }
+.wa-hist-col i { display: block; width: 100%; background: var(--accent); border-radius: 3px 3px 0 0; min-height: 2px; opacity: .85; }
+.wa-hist-col.hi i { background: var(--green); }
+.wa-hist-col b { font-size: 9px; color: var(--text-secondary); font-weight: 600; margin-top: 3px; white-space: nowrap; }
+.wa-hist-col small { font-size: 9px; font-weight: 800; color: var(--text); }
+.wa-fc { display: flex; align-items: center; gap: 12px; }
+.wa-ring { position: relative; width: 64px; height: 64px; flex: none; }
+.wa-ring svg { width: 64px; height: 64px; transform: rotate(-90deg); }
+.wa-ring .bg { fill: none; stroke: #EDF2F7; stroke-width: 7; }
+.wa-ring .fg { fill: none; stroke: var(--green); stroke-width: 7; stroke-linecap: round; transition: stroke-dasharray .5s ease; }
+.wa-ring .pct { position: absolute; inset: 0; display: grid; place-items: center; font-size: 13px; font-weight: 800; color: var(--text); }
+.wa-fc-txt { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
+.wa-fc-txt b { color: var(--text); font-size: 14px; }
+.wa-fc-txt .g { color: var(--green); font-weight: 700; }
+.wa-fc-txt .r { color: var(--orange); font-weight: 700; }
+.wa-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.wa-chip { font-size: 11px; font-weight: 700; padding: 5px 9px; border-radius: 999px; background: #F0F2F5; color: var(--text); }
+.wa-chip.g { background: rgba(56,161,105,.12); color: var(--green); }
+.wa-chip.o { background: rgba(221,107,32,.12); color: var(--orange); }
+.wa-chip.p { background: rgba(49,130,206,.12); color: var(--accent); }
 .million-path-title { font-size: 11px; color: var(--text-dim); margin-bottom: 8px; text-align: center; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; }
 .million-bar-wrap { position: relative; height: 8px; background: #EDF2F7; border-radius: 4px; overflow: visible; }
 .million-bar-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--green), var(--accent)); transition: width 0.5s ease; position: relative; }
@@ -3852,9 +3908,24 @@ body.v7-nav-hidden .sync-status { transform: translateY(calc(var(--nav-h) + 8px)
       <button class="eff-seg-btn active" data-p="today" onclick="EFF.setPeriod('today')">Сегодня</button>
       <button class="eff-seg-btn" data-p="7" onclick="EFF.setPeriod('7')">7 дн</button>
       <button class="eff-seg-btn" data-p="30" onclick="EFF.setPeriod('30')">30 дн</button>
+      <button class="eff-seg-btn" data-p="90" onclick="EFF.setPeriod('90')">90 дн</button>
     </div>
   </div>
   <div id="effBody"></div>
+</div>
+
+<!-- WORK ANALYTICS (work tab) -->
+<div class="eff-card" id="waCard">
+  <div class="eff-head">
+    <div class="eff-title">📈 АНАЛИТИКА</div>
+    <div class="eff-seg" id="waMetricSeg">
+      <button class="eff-seg-btn active" data-m="rate" onclick="EFF.setMetric('rate')">₽/ч</button>
+      <button class="eff-seg-btn" data-m="earned" onclick="EFF.setMetric('earned')">Доход</button>
+      <button class="eff-seg-btn" data-m="hours" onclick="EFF.setMetric('hours')">Часы</button>
+      <button class="eff-seg-btn" data-m="units" onclick="EFF.setMetric('units')">Заказы</button>
+    </div>
+  </div>
+  <div id="waBody"></div>
 </div>
 
 <!-- MILLION PATH (on live tab) -->
@@ -5571,7 +5642,9 @@ function endShift() {
     totalMs: totalMs,
     breakMs: breakMs,
     breakSummary: breakSummary,
-    breakCount: activeShift.breaks.length
+    breakCount: activeShift.breaks.length,
+    startTime: activeShift.startTime,
+    endTime: endTime
   };
 
   // Show end-shift modal
@@ -5627,6 +5700,8 @@ async function saveEndShift() {
       breakMs: pendingEndShift.breakMs,
       breakCount: pendingEndShift.breakCount,
       breakSummary: pendingEndShift.breakSummary,
+      startTime: pendingEndShift.startTime,
+      endTime: pendingEndShift.endTime,
       expenses: extra.expenses,
       units: extra.units
     });
@@ -8515,7 +8590,7 @@ function renderChart() {
 
 // ====== PWA: SERVICE WORKER ======
 // Регистрируем только по http/https — с file:// браузер ругается.
-const APP_VERSION = 'v7.5.1';
+const APP_VERSION = 'v7.6.0';
 
 // v7.2.0 — политика обновлений «страница никогда не стартует старой»:
 //   Воркер (sw.js) перед отдачей index.html сверяет ETag с сервером и при
@@ -9217,7 +9292,7 @@ const EFF = (() => {
     return a.hours > 0 ? a.rate : 0;
   }
 
-  function render() {
+  function renderEff() {
     const body = document.getElementById('effBody');
     if (!body) return;
     document.querySelectorAll('#effSeg .eff-seg-btn').forEach(b => b.classList.toggle('active', b.dataset.p === period));
@@ -9242,7 +9317,7 @@ const EFF = (() => {
     const sub = `${cur.n} ${plural(cur.n, 'смена', 'смены', 'смен')} · ${cur.hours.toFixed(1)} ч${live}`;
 
     // Мини-график ₽/ч по дням (для 7/30), для «сегодня» — последние 7 дней с выделением сегодня.
-    const span = period === 'today' ? 7 : days;
+    const span = period === 'today' ? 7 : Math.min(days, 30);
     const bars = Array.from({ length: span }, (_, i) => { const date = dstr(span - 1 - i); return { date, r: dayRate(date) }; });
     const max = Math.max(1, ...bars.map(b => b.r));
     const bestIdx = bars.reduce((bi, b, i) => b.r > (bars[bi]?.r || 0) ? i : bi, 0);
@@ -9270,9 +9345,191 @@ const EFF = (() => {
   }
   function plural(n, a, b, c) { const m = n % 10, h = n % 100; return (m === 1 && h !== 11) ? a : (m >= 2 && m <= 4 && (h < 10 || h >= 20)) ? b : c; }
   function setPeriod(p) { period = p; try { localStorage.setItem('v7_eff_period', p); } catch (e) {} render(); }
+
+  // ===== АНАЛИТИКА РАБОТЫ (#waCard): линейный график метрики, дни недели, часы начала, прогноз, рекорды =====
+  let metric = 'rate';
+  try { metric = localStorage.getItem('v7_wa_metric') || 'rate'; } catch (e) {}
+  const METRICS = {
+    rate:   { lbl: '₽/ч',    unit: '₽/ч', pick: a => a.rate,   fmtv: v => fmt(v) },
+    earned: { lbl: 'Доход',  unit: '₽',   pick: a => a.earned, fmtv: v => fmt(v) },
+    hours:  { lbl: 'Часы',   unit: 'ч',   pick: a => a.hours,  fmtv: v => (Math.round(v * 10) / 10).toString() },
+    units:  { lbl: 'Заказы', unit: '',    pick: a => a.units,  fmtv: v => fmt(v) }
+  };
+  const esc = v => String(v).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const DOW = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+  const dowIdx = date => (new Date(date + 'T12:00:00').getDay() + 6) % 7;
+
+  function goalRate() {
+    try { const g = DIFFICULTIES[difficulty] && DIFFICULTIES[difficulty].goal; return g || 0; } catch (e) { return 0; }
+  }
+
+  function lineChart(pts, M) {
+    // pts: [{date, v, has}] в хронологическом порядке
+    const W = 320, H = 150, L = 34, R = 8, T = 14, B = 22;
+    const iw = W - L - R, ih = H - T - B;
+    const vals = pts.filter(p => p.has).map(p => p.v);
+    if (!vals.length) return '<div class="eff-empty">Нет данных для графика.</div>';
+    const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
+    const goal = M === METRICS.rate ? goalRate() : 0;
+    let max = Math.max(...vals, goal || 0, 1); max *= 1.12;
+    const x = i => L + (pts.length === 1 ? iw / 2 : i / (pts.length - 1) * iw);
+    const y = v => T + ih - (v / max) * ih;
+    // Линия только через дни с данными, пропуски соединяем (визуально — тренд).
+    const withData = pts.map((p, i) => ({ ...p, i })).filter(p => p.has);
+    const path = withData.map((p, k) => (k ? 'L' : 'M') + x(p.i).toFixed(1) + ' ' + y(p.v).toFixed(1)).join(' ');
+    const area = withData.length > 1
+      ? path + ` L${x(withData[withData.length - 1].i).toFixed(1)} ${(T + ih).toFixed(1)} L${x(withData[0].i).toFixed(1)} ${(T + ih).toFixed(1)} Z` : '';
+    const bestV = Math.max(...vals);
+    const today = todayStr();
+    const dots = withData.map(p => {
+      const cls = p.date === today ? 'today' : (p.v === bestV ? 'best' : '');
+      return `<circle class="wa-dot ${cls}" cx="${x(p.i).toFixed(1)}" cy="${y(p.v).toFixed(1)}" r="${pts.length > 31 ? 2 : 3.2}"><title>${p.date}: ${M.fmtv(p.v)} ${M.unit}</title></circle>`;
+    }).join('');
+    // Сетка: 3 горизонтальные линии с подписями
+    const grid = [0.25, 0.5, 0.75, 1].map(f => {
+      const v = max * f / 1.12, yy = y(v);
+      return `<line class="wa-grid" x1="${L}" x2="${W - R}" y1="${yy.toFixed(1)}" y2="${yy.toFixed(1)}"/><text class="wa-ytxt" x="${L - 4}" y="${(yy + 3).toFixed(1)}" text-anchor="end">${M.fmtv(v)}</text>`;
+    }).join('');
+    // Подписи X: первая, середина, последняя
+    const xi = pts.length <= 7 ? pts.map((_, i) => i) : [0, Math.floor(pts.length / 2), pts.length - 1];
+    const xl = xi.map(i => { const [, m, d] = pts[i].date.split('-'); return `<text class="wa-xtxt" x="${x(i).toFixed(1)}" y="${H - 6}">${+d}.${m}</text>`; }).join('');
+    const avgL = `<line class="wa-avg" x1="${L}" x2="${W - R}" y1="${y(avg).toFixed(1)}" y2="${y(avg).toFixed(1)}"/>`;
+    const goalL = goal ? `<line class="wa-goal" x1="${L}" x2="${W - R}" y1="${y(goal).toFixed(1)}" y2="${y(goal).toFixed(1)}"/>` : '';
+    return `<div class="wa-chart"><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+      <defs><linearGradient id="waGrad" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="var(--primary)" stop-opacity=".22"/><stop offset="1" stop-color="var(--primary)" stop-opacity="0"/></linearGradient></defs>
+      ${grid}${area ? `<path class="wa-area" d="${area}"/>` : ''}<path class="wa-line" d="${path}"/>${avgL}${goalL}${dots}${xl}</svg></div>
+      <div class="wa-legend"><span><i style="border-color:var(--primary)"></i>${M.lbl}</span><span><i class="d" style="border-color:var(--accent)"></i>среднее ${M.fmtv(avg)}</span>${goal ? `<span><i class="d" style="border-color:var(--green)"></i>цель ${fmt(goal)}</span>` : ''}</div>`;
+  }
+
+  function dowSection(dates) {
+    const meta = getShiftMeta();
+    const acc = DOW.map(() => ({ e: 0, h: 0, n: 0 }));
+    const set = new Set(dates);
+    shifts.forEach(s => { if (!set.has(s.date)) return; const a = acc[dowIdx(s.date)]; a.e += s.earned || 0; a.h += s.hours || 0; a.n++; });
+    const rows = acc.map((a, i) => ({ i, rate: a.h > 0 ? a.e / a.h : 0, n: a.n, e: a.e }));
+    const has = rows.filter(r => r.n > 0);
+    if (has.length < 2) return '';
+    const max = Math.max(...rows.map(r => r.rate), 1);
+    const best = has.reduce((b, r) => r.rate > b.rate ? r : b, has[0]);
+    const worst = has.reduce((b, r) => r.rate < b.rate ? r : b, has[0]);
+    const html = rows.map(r => `<div class="wa-row ${r.i === best.i ? 'best' : r.i === worst.i && has.length > 2 ? 'worst' : ''}">
+        <span class="l">${DOW[r.i]}</span><span class="b"><i style="width:${Math.round(r.rate / max * 100)}%"></i></span>
+        <span class="v">${r.n ? fmt(r.rate) + ' <small>₽/ч · ' + r.n + '</small>' : '<small>—</small>'}</span></div>`).join('');
+    return `<div class="wa-sec"><div class="wa-sec-t"><span>По дням недели</span><span>лучший — ${DOW[best.i]}</span></div><div class="wa-rows">${html}</div></div>`;
+  }
+
+  function startHourSection(dates) {
+    const meta = getShiftMeta();
+    const set = new Set(dates);
+    const buckets = [[5, 9, 'до 9'], [9, 12, '9–12'], [12, 15, '12–15'], [15, 18, '15–18'], [18, 24, 'после 18']];
+    const acc = buckets.map(() => ({ e: 0, h: 0, n: 0 }));
+    let known = 0;
+    shifts.forEach(s => {
+      if (!set.has(s.date)) return;
+      const m = meta[shiftMetaKey(s)]; if (!m || !m.startTime) return;
+      const hr = new Date(m.startTime).getHours();
+      const bi = buckets.findIndex(b => hr >= b[0] && hr < b[1]); if (bi < 0) return;
+      acc[bi].e += s.earned || 0; acc[bi].h += s.hours || 0; acc[bi].n++; known++;
+    });
+    if (known < 2) return '';
+    const rows = acc.map((a, i) => ({ i, rate: a.h > 0 ? a.e / a.h : 0, n: a.n }));
+    const max = Math.max(...rows.map(r => r.rate), 1);
+    const has = rows.filter(r => r.n);
+    const best = has.reduce((b, r) => r.rate > b.rate ? r : b, has[0]);
+    const cols = rows.map(r => `<div class="wa-hist-col ${r.i === best.i ? 'hi' : ''}"><small>${r.n ? fmt(r.rate) : ''}</small><i style="height:${r.n ? Math.max(4, Math.round(r.rate / max * 40)) : 2}px"></i><b>${buckets[r.i][2]}</b></div>`).join('');
+    return `<div class="wa-sec"><div class="wa-sec-t"><span>₽/ч по времени старта</span><span>лучше стартовать ${buckets[best.i][2]}</span></div><div class="wa-hist">${cols}</div></div>`;
+  }
+
+  function forecastSection() {
+    const goal = getMonthGoal();
+    const now = new Date();
+    const y = now.getFullYear(), m = now.getMonth();
+    const dim = new Date(y, m + 1, 0).getDate();
+    const dayN = now.getDate();
+    const pref = `${y}-${String(m + 1).padStart(2, '0')}-`;
+    const month = shifts.filter(s => s.date.startsWith(pref));
+    const earned = month.reduce((a, s) => a + (s.earned || 0), 0);
+    const hours = month.reduce((a, s) => a + (s.hours || 0), 0);
+    if (!month.length) return '';
+    const perDay = earned / dayN;
+    const proj = Math.round(perDay * dim);
+    const left = dim - dayN;
+    let txt = `<b>${fmt(proj)} ₽</b> прогноз на месяц<br>${fmt(earned)} ₽ за ${dayN} дн · ${fmt(perDay)} ₽/день · ${month.length} ${plural(month.length, 'смена', 'смены', 'смен')}`;
+    let pct = 0;
+    if (goal > 0) {
+      pct = Math.min(100, Math.round(earned / goal * 100));
+      const need = goal - earned;
+      if (need <= 0) txt += `<br><span class="g">Цель ${fmt(goal)} ₽ выполнена ✓</span>`;
+      else {
+        const rate = hours > 0 ? earned / hours : 0;
+        const needH = rate > 0 ? Math.round(need / rate) : 0;
+        txt += `<br>до цели <span class="${proj >= goal ? 'g' : 'r'}">${fmt(need)} ₽</span> · ${left ? fmt(need / left) + ' ₽/день' : ''}${needH ? ` · ≈${needH} ч` : ''}`;
+      }
+    } else txt += '<br>Цель месяца не задана — задайте в календаре';
+    const C = 2 * Math.PI * 27;
+    return `<div class="wa-sec"><div class="wa-sec-t"><span>Прогноз месяца</span><span>осталось ${left} дн</span></div>
+      <div class="wa-fc"><div class="wa-ring"><svg viewBox="0 0 64 64"><circle class="bg" cx="32" cy="32" r="27"/><circle class="fg" cx="32" cy="32" r="27" stroke-dasharray="${(C * pct / 100).toFixed(1)} ${C.toFixed(1)}"/></svg><div class="pct">${goal ? pct + '%' : '—'}</div></div><div class="wa-fc-txt">${txt}</div></div></div>`;
+  }
+
+  function recordsSection(dates) {
+    const set = new Set(dates);
+    const meta = getShiftMeta();
+    const list = shifts.filter(s => set.has(s.date) && s.hours > 0);
+    if (!list.length) return '';
+    const byRate = [...list].sort((a, b) => b.earned / b.hours - a.earned / a.hours)[0];
+    const byEarn = [...list].sort((a, b) => b.earned - a.earned)[0];
+    const byHours = [...list].sort((a, b) => b.hours - a.hours)[0];
+    const byUnits = [...list].map(s => ({ s, u: (meta[shiftMetaKey(s)] || {}).units || 0 })).sort((a, b) => b.u - a.u)[0];
+    // Стабильность: коэффициент вариации ₽/ч
+    const rates = list.map(s => s.earned / s.hours);
+    const mean = rates.reduce((a, b) => a + b, 0) / rates.length;
+    const sd = Math.sqrt(rates.reduce((a, r) => a + (r - mean) ** 2, 0) / rates.length);
+    const cv = mean ? sd / mean : 0;
+    const stab = rates.length < 3 ? '—' : cv < .12 ? 'стабильно' : cv < .25 ? 'умеренно' : 'разброс';
+    // Доля смен выше цели
+    const goal = goalRate();
+    const aboveGoal = goal ? Math.round(rates.filter(r => r >= goal).length / rates.length * 100) : 0;
+    const d = s => { const [, m, dd] = s.date.split('-'); return `${+dd}.${m}`; };
+    const cell = (ico, val, lbl) => `<div class="wa-kpi-cell"><div class="wa-kpi-ico">${ico}</div><div><div class="wa-kpi-val">${val}</div><div class="wa-kpi-lbl">${lbl}</div></div></div>`;
+    return `<div class="wa-sec"><div class="wa-sec-t"><span>Рекорды и стабильность</span><span>${list.length} ${plural(list.length, 'смена', 'смены', 'смен')}</span></div>
+      <div class="wa-kpi">
+        ${cell('🚀', fmt(byRate.earned / byRate.hours) + ' ₽/ч', 'рекорд ₽/ч · ' + d(byRate))}
+        ${cell('💰', fmt(byEarn.earned) + ' ₽', 'рекорд дохода · ' + d(byEarn))}
+        ${cell('⏱', byHours.hours + ' ч', 'самая длинная · ' + d(byHours))}
+        ${byUnits.u ? cell('📦', byUnits.u, 'рекорд заказов · ' + d(byUnits.s)) : cell('📊', stab, 'стабильность ₽/ч')}
+      </div>
+      <div class="wa-chips" style="margin-top:8px">
+        <span class="wa-chip ${cv < .12 ? 'g' : cv < .25 ? 'p' : 'o'}">σ ${fmt(sd)} ₽/ч · ${stab}</span>
+        ${goal ? `<span class="wa-chip ${aboveGoal >= 50 ? 'g' : 'o'}">${aboveGoal}% смен ≥ ${fmt(goal)} ₽/ч</span>` : ''}
+        <span class="wa-chip">медиана ${fmt([...rates].sort((a, b) => a - b)[Math.floor(rates.length / 2)])} ₽/ч</span>
+      </div></div>`;
+  }
+
+  function renderWA() {
+    const body = document.getElementById('waBody');
+    if (!body) return;
+    document.querySelectorAll('#waMetricSeg .eff-seg-btn').forEach(b => b.classList.toggle('active', b.dataset.m === metric));
+    const M = METRICS[metric] || METRICS.rate;
+    const span = period === 'today' ? 14 : Math.max(14, parseInt(period, 10));
+    const dates = Array.from({ length: span }, (_, i) => dstr(span - 1 - i));
+    const pts = dates.map(date => { const a = agg([date]); return { date, v: M.pick(a), has: a.n > 0 && (metric === 'units' ? a.units > 0 : true) }; });
+    if (!pts.some(p => p.has)) { body.innerHTML = '<div class="eff-empty">Пока нет смен — графики появятся после первой.</div>'; return; }
+    const wide = Array.from({ length: 90 }, (_, i) => dstr(i));
+    body.innerHTML = lineChart(pts, M)
+      + `<div class="eff-sub" style="margin:6px 0 0">${span} дн · точки — смены, зелёная — лучший день</div>`
+      + forecastSection()
+      + dowSection(wide)
+      + startHourSection(wide)
+      + recordsSection(wide);
+  }
+  function setMetric(m) { metric = m; try { localStorage.setItem('v7_wa_metric', m); } catch (e) {} renderWA(); }
+
+  let render;
+  render = function () { renderEff(); try { renderWA(); } catch (e) { console.warn('WA', e); } };
+
   // Во время смены ₽/ч и заказы тикают — обновляем раз в 30с, только когда вкладка активна.
   setInterval(() => { if (activeShift && document.getElementById('contentLive')?.classList.contains('active')) render(); }, 30000);
-  return { render, setPeriod };
+  return { render: () => render(), setPeriod, setMetric };
 })();
 
 function getShiftTotals() {
