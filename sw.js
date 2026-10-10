@@ -11,7 +11,7 @@
 // раньше, чем пользователь успел нажать кнопку. Активируемся только по команде
 // SKIP_WAITING из страницы.
 
-const VERSION = 'v7.0.1';
+const VERSION = 'v7.0.2';
 const CACHE = 'life-tracker-' + VERSION;
 
 const PRECACHE = [
@@ -74,17 +74,44 @@ self.addEventListener('fetch', (e) => {
                 url.pathname.endsWith('config.js');
 
   if (isDoc) {
-    // network-first, принудительно мимо HTTP-кэша
+    // v7.0.2: stale-while-revalidate. Раньше было network-first — приложение ждало
+    // полной докачки index.html (137 KB gzip) при каждом запуске, и на слабой
+    // мобильной сети сплэш висел секундами. Теперь: кэш отдаётся МГНОВЕННО,
+    // свежая копия качается в фоне; если она отличается — кладём в кэш и
+    // сообщаем странице (та покажет баннер «Доступна новая версия»).
     e.respondWith(
-      fetch(new Request(req.url, { cache: 'reload', credentials: 'same-origin' }))
-        .then((res) => {
-          if (res && res.ok) {
+      caches.open(CACHE).then(async (c) => {
+        const isNav = req.mode === 'navigate';
+        const cached = await c.match(req, { ignoreSearch: !isNav && url.pathname.endsWith('config.js') })
+          || (isNav ? await c.match('./index.html') : null);
+        // Клонируем ДО отдачи странице: после return cached его тело уже прочитано,
+        // и cached.clone() в фоне бросит «body already used».
+        const cmp = cached ? cached.clone() : null;
+        const refresh = fetch(new Request(req.url, { cache: 'reload', credentials: 'same-origin' }))
+          .then(async (res) => {
+            if (!res || !res.ok) return res;
             const copy = res.clone();
-            caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
-          }
-          return res;
-        })
-        .catch(() => caches.match(req).then((r) => r || caches.match('./index.html')))
+            let changed = true;
+            if (cmp) {
+              const sig = (r) => r.headers.get('etag') || r.headers.get('last-modified') || '';
+              const a = sig(cmp), b = sig(res);
+              if (a && b) changed = a !== b;
+              else {
+                const [t1, t2] = await Promise.all([cmp.text(), res.clone().text()]);
+                changed = t1 !== t2;
+              }
+            }
+            await c.put(req, copy);
+            if (changed && cmp) {
+              const clients = await self.clients.matchAll({ type: 'window' });
+              clients.forEach((cl) => cl.postMessage({ type: 'INDEX_UPDATED' }));
+            }
+            return res;
+          })
+          .catch(() => null);
+        if (cached) { e.waitUntil(refresh); return cached; }
+        return (await refresh) || Response.error();
+      })
     );
     return;
   }

@@ -19,7 +19,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" onload="this.rel='stylesheet'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"></noscript>
-<title>Life Tracker v7.0</title>
+<title>Life Tracker v7.0.2</title>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="config.js?v=7"></script>
@@ -3406,6 +3406,66 @@ body.v7-nav-hidden .sync-status { transform: translateY(calc(var(--nav-h) + 8px)
 .v7-set-row .t { flex: 1; font-weight: 700; }
 .v7-set-row .s { font-size: 11px; color: var(--text-dim); font-weight: 500; display: block; }
 
+
+/* ===== v7.0.2: направление заданий — понятный блок + подсказки ===== */
+.cat-hub { background:#fff; border:1px solid var(--border); border-radius:14px; padding:12px 12px 10px; margin-bottom:12px; }
+.cat-hub-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px; }
+.cat-hub-title { font-size:12px; font-weight:700; letter-spacing:.3px; color:var(--text-dim); text-transform:uppercase; display:flex; align-items:center; gap:6px; }
+.cat-hub-help { width:22px; height:22px; border-radius:50%; border:1px solid var(--border-strong); background:#F7F8FA; color:var(--text-dim); font-size:12px; font-weight:700; cursor:pointer; font-family:inherit; display:inline-flex; align-items:center; justify-content:center; }
+.cat-hub-row { display:flex; gap:8px; }
+.cat-hub-card { flex:1; min-width:0; border-radius:12px; padding:10px; background:#F7F8FA; border:1px solid var(--border); }
+.cat-hub-card .lbl { font-size:10px; color:var(--text-dim); font-weight:600; text-transform:uppercase; letter-spacing:.3px; margin-bottom:4px; }
+.cat-hub-card .val { font-size:12.5px; font-weight:700; display:flex; align-items:center; gap:5px; min-width:0; }
+.cat-hub-card .val .tx { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.cat-hub-card .val .cat-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+.cat-hub-card.is-random .val { color:var(--text-dim); font-weight:600; }
+.cat-hub-btn { margin-top:10px; width:100%; border:none; border-radius:12px; padding:10px 12px; font-family:inherit; font-size:13px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:space-between; gap:8px; text-align:left; transition:transform .15s, filter .15s; }
+.cat-hub-btn .sub { text-align:right; flex-shrink:0; max-width:46%; }
+.cat-hub-btn:active { transform:scale(.98); }
+.cat-hub-btn.free { background:var(--gold-bg, #FFFBEA); color:var(--gold, #B7791F); border:1px solid rgba(183,121,31,.3); }
+.cat-hub-btn.bonus { background:#E6FFFA; color:#2C7A7B; border:1px solid rgba(44,122,123,.3); }
+.cat-hub-btn.paid { background:#F7F8FA; color:var(--text); border:1px solid var(--border-strong); }
+.cat-hub-btn.done { background:#F0FFF4; color:#2F855A; border:1px solid rgba(47,133,90,.3); }
+.cat-hub-btn .sub { font-size:11px; font-weight:600; opacity:.8; }
+.cat-hub-legend { display:flex; gap:6px; overflow-x:auto; padding:10px 0 2px; scrollbar-width:none; -webkit-overflow-scrolling:touch; }
+.cat-hub-legend::-webkit-scrollbar { display:none; }
+.cat-chip { flex-shrink:0; display:inline-flex; align-items:center; gap:5px; padding:5px 9px; border-radius:999px; font-size:11px; font-weight:700; border:1px solid; background:#fff; cursor:pointer; font-family:inherit; white-space:nowrap; }
+.cat-chip .n { font-weight:600; opacity:.7; }
+.cat-chip.is-focus { box-shadow:0 0 0 2px currentColor inset; }
+
+/* метка направления на каждом задании */
+.lq-cat-tag { display:inline-flex; align-items:center; gap:4px; font-size:10px; font-weight:700; padding:2px 7px; border-radius:999px; margin-top:4px; border:1px solid; }
+.lq-cat-tag .cat-dot { width:6px; height:6px; border-radius:50%; }
+
+/* пикер направления */
+#categoryPickerModal .modal { max-width:400px; }
+.cp-state { display:flex; align-items:center; gap:8px; padding:8px 10px; border-radius:10px; font-size:12px; font-weight:600; margin-bottom:10px; }
+.cp-state.free { background:var(--gold-bg, #FFFBEA); color:var(--gold, #B7791F); }
+.cp-state.bonus { background:#E6FFFA; color:#2C7A7B; }
+.cp-state.paid { background:#F7F8FA; color:var(--text-dim); }
+.cp-steps { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin-bottom:12px; }
+.cp-step { background:#F7F8FA; border-radius:10px; padding:8px 6px; text-align:center; font-size:10.5px; line-height:1.3; color:var(--text-dim); }
+.cp-step b { display:block; font-size:16px; color:var(--primary); margin-bottom:2px; }
+.cp-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.cat-pick-btn { position:relative; background:#F7F8FA; border:2px solid; border-radius:12px; padding:12px 8px 10px; cursor:pointer; text-align:center; transition:all .2s; color:var(--text); font-family:inherit; }
+.cat-pick-btn .ico { font-size:24px; margin-bottom:4px; }
+.cat-pick-btn .nm { font-size:12px; font-weight:700; }
+.cat-pick-btn .cnt { font-size:10px; color:var(--text-dim); margin-top:2px; }
+.cat-pick-btn .xp { font-size:10px; font-weight:600; margin-top:2px; opacity:.75; }
+.cat-pick-btn.is-selected::after { content:'✓ выбрано'; position:absolute; top:6px; right:6px; font-size:9px; font-weight:700; background:var(--primary); color:#fff; padding:2px 6px; border-radius:999px; }
+.cp-note { font-size:11px; color:var(--text-dim); text-align:center; margin-top:10px; line-height:1.4; }
+
+/* подсказки-ориентиры (coach marks), показываются один раз */
+.ui-hint { position:fixed; z-index:10050; max-width:260px; background:#1B3A5C; color:#fff; border-radius:12px; padding:10px 12px; font-size:12.5px; line-height:1.4; box-shadow:0 8px 24px rgba(27,58,92,.35); animation:hintIn .25s ease-out; }
+.ui-hint::before { content:''; position:absolute; width:12px; height:12px; background:#1B3A5C; transform:rotate(45deg); left:var(--ax, 20px); top:-6px; }
+.ui-hint.below::before { top:auto; bottom:-6px; }
+.ui-hint .h-t { font-weight:700; margin-bottom:3px; }
+.ui-hint .h-row { display:flex; justify-content:space-between; align-items:center; margin-top:8px; gap:8px; }
+.ui-hint .h-step { font-size:10.5px; opacity:.7; }
+.ui-hint button { background:#fff; color:#1B3A5C; border:none; border-radius:8px; padding:6px 12px; font-weight:700; font-size:12px; cursor:pointer; font-family:inherit; }
+.ui-hint-target { position:relative; z-index:10049 !important; box-shadow:0 0 0 3px #FFD166, 0 0 0 6px rgba(255,209,102,.35) !important; border-radius:12px; }
+@keyframes hintIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:none; } }
+
 </style>
 </head>
 <body>
@@ -3957,12 +4017,18 @@ body.v7-nav-hidden .sync-status { transform: translateY(calc(var(--nav-h) + 8px)
 
 <!-- ============ MODAL: CATEGORY PICKER ============ -->
 <div class="modal-overlay" id="categoryPickerModal">
-  <div class="modal" style="max-width:380px">
-    <h3>📌 ВЫБОР НАПРАВЛЕНИЯ</h3>
-    <p style="font-size:12px;color:var(--text-dim);text-align:center;margin-bottom:12px">Завтра личные задачи будут из выбранного направления</p>
-    <div id="categoryPickerList" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"></div>
+  <div class="modal">
+    <h3>🎯 НАПРАВЛЕНИЕ ЗАДАНИЙ</h3>
+    <div class="cp-state" id="cpState"></div>
+    <div class="cp-steps">
+      <div class="cp-step"><b>1</b>Выбираешь направление</div>
+      <div class="cp-step"><b>2</b>Завтра 5 из 7 заданий — из него</div>
+      <div class="cp-step"><b>3</b>Ещё 2 — случайные, для разнообразия</div>
+    </div>
+    <div id="categoryPickerList" class="cp-grid"></div>
+    <div class="cp-note" id="cpNote"></div>
     <div class="modal-buttons" style="margin-top:12px">
-      <button class="modal-btn secondary" onclick="closeCategoryPicker()">✕ Пропустить</button>
+      <button class="modal-btn secondary" onclick="closeCategoryPicker()">Закрыть</button>
     </div>
   </div>
 </div>
@@ -4602,8 +4668,8 @@ async function bootAuth() {
       hideAuthGate();
       appStarted = true;
       await init();
-      // Фоново подтягиваем профили из облака (не блокируя UI)
-      pullAccountsOnly().catch(() => {});
+      // Профили — часть прогресса, их подтянет pullProgress() внутри syncCloud().
+      // Отдельный pullAccountsOnly() здесь только дублировал запрос к app_state.
       return;
     }
   }
@@ -4698,7 +4764,7 @@ function askConfirm(text, opts = {}) {
       <div class="ask-title">${escapeHtml(title)}</div>
       <div class="ask-text">${text}</div>
       <div class="ask-row">
-        <button class="ask-btn no" onclick="askClose(false)">${escapeHtml(noText)}</button>
+        ${noText ? `<button class="ask-btn no" onclick="askClose(false)">${escapeHtml(noText)}</button>` : ''}
         <button class="ask-btn ok" onclick="askClose(true)">${escapeHtml(okText)}</button>
       </div>`;
     document.getElementById('askOverlay').classList.add('show');
@@ -5015,7 +5081,7 @@ const SHOP_ITEMS = [
   { id:'extra_reroll_1', icon:'🎲', name:'+1 замена задания', desc:'Замена 1 задания на новое сегодня', price:40, cat:'boost', consumable:true },
   { id:'extra_reroll_3', icon:'🎰', name:'+3 замены заданий', desc:'Пакет из 3 замен заданий на сегодня', price:100, cat:'boost', consumable:true },
   { id:'double_xp', icon:'⚡', name:'Двойной XP (1 день)', desc:'Все задания дают x2 XP сегодня', price:200, cat:'boost', consumable:true },
-  { id:'cat_choice', icon:'🎯', name:'Выбор категории', desc:'Выбери категорию заданий на завтра', price:150, cat:'boost', consumable:true },
+  { id:'cat_choice', icon:'🎯', name:'Направление заданий', desc:'Завтра 5 из 7 личных заданий — из выбранного направления (то же, что в разделе ЖИЗНЬ)', price:150, cat:'boost', consumable:true },
   // Расходники: покупаются многократно, чтобы XP не обесценивался после
   // выкупа всех тем и титулов (весь остальной магазин — разовый).
   { id:'streak_shield', icon:'🛡', name:'Защита серии', desc:'Серия не прервётся за пропущенный день', price:250, cat:'boost', consumable:true },
@@ -5928,22 +5994,118 @@ function checkAndGrantBonuses() {
   return { newRerolls, newCategoryChoice, messages };
 }
 
-function openCategoryPicker(isWeeklyFree = false) {
+// ====== v7.0.2: НАПРАВЛЕНИЕ ЗАДАНИЙ — один понятный блок вместо спрятанной кнопки ======
+// Яркие цвета категорий (жёлтый, сиреневый) не читаются как текст — тёмные варианты.
+const LQ_CAT_TEXT = { mindset: '#B7791F', care: '#8E44AD', style: '#DD6B20', digital: '#0E7490', skills: '#2F855A', social: '#8E24AA', approach: '#C53030', confidence: '#2B6CB0', challenge: '#B83280' };
+function catTextColor(key) { return LQ_CAT_TEXT[key] || (LQ_CATEGORIES[key] || {}).color || 'var(--text)'; }
+function catTag(key) {
+  const c = LQ_CATEGORIES[key]; if (!c) return '';
+  const tc = catTextColor(key);
+  return `<span class="lq-cat-tag" style="color:${tc};border-color:${tc}33;background:${tc}0F"><span class="cat-dot" style="background:${c.color}"></span>${c.name}</span>`;
+}
+function tomorrowStr() { const d = new Date(); d.setDate(d.getDate() + 1); return localDateStr(d); }
+function getChosenCategoryFor(dateStr) {
+  try { const s = uGet('ozon_chosen_category', {}); return s.forDate === dateStr ? s.category : null; } catch (e) { return null; }
+}
+// Откуда у пользователя право выбрать направление: weekly (бесплатно раз в неделю),
+// bonus (заработано задачей смены), либо никак — тогда ведём в магазин.
+function getCategoryChoiceSource() {
+  if (!getWeeklyCategoryChoice().used) return 'weekly';
+  if (getShiftBonuses().categoryChoice) return 'bonus';
+  return null;
+}
+function openCategoryHub() {
+  const src = getCategoryChoiceSource();
+  if (src === 'weekly') return openCategoryPicker(true);
+  if (src === 'bonus') return openCategoryPicker(false);
+  openCategoryPicker(false, 'paid');
+}
+function renderCategoryHub() {
+  const today = getChosenCategory();
+  const tomorrow = getChosenCategoryFor(tomorrowStr());
+  const src = getCategoryChoiceSource();
+  const lifeXP = (typeof getLifeXP === 'function') ? (getLifeXP().cats || {}) : {};
+  const card = (lbl, key) => {
+    const c = key && LQ_CATEGORIES[key];
+    return c
+      ? `<div class="cat-hub-card"><div class="lbl">${lbl}</div><div class="val" style="color:${catTextColor(key)}"><span class="cat-dot" style="background:${c.color}"></span><span class="tx">${c.name}</span></div></div>`
+      : `<div class="cat-hub-card is-random"><div class="lbl">${lbl}</div><div class="val">🎲 Случайные</div></div>`;
+  };
+  let btn;
+  if (tomorrow) {
+    btn = `<button class="cat-hub-btn done" onclick="openCategoryHub()"><span>✓ Направление на завтра выбрано</span><span class="sub">изменить ›</span></button>`;
+  } else if (src === 'weekly') {
+    btn = `<button class="cat-hub-btn free" onclick="openCategoryPicker(true)"><span>🎁 Выбрать направление на завтра</span><span class="sub">бесплатно · 1 раз в неделю</span></button>`;
+  } else if (src === 'bonus') {
+    btn = `<button class="cat-hub-btn bonus" onclick="openCategoryPicker(false)"><span>🏅 Выбрать направление на завтра</span><span class="sub">награда за задачу смены</span></button>`;
+  } else {
+    btn = `<button class="cat-hub-btn paid" onclick="openCategoryPicker(false, 'paid')"><span>🎯 Выбрать направление на завтра</span><span class="sub">150 XP · или бесплатно с понедельника</span></button>`;
+  }
+  const legend = Object.entries(LQ_CATEGORIES).map(([k, c]) => {
+    const tc = catTextColor(k);
+    return `<button class="cat-chip ${today === k ? 'is-focus' : ''}" style="color:${tc};border-color:${tc}55" onclick="openCategoryHub()" title="${c.name}">${c.icon} ${c.name}<span class="n">${lifeXP[k] || 0}</span></button>`;
+  }).join('');
+  return `<div class="cat-hub" id="catHub">
+    <div class="cat-hub-head">
+      <div class="cat-hub-title">🎯 Направление заданий</div>
+      <button class="cat-hub-help" onclick="showCategoryHelp()" title="Как это работает">?</button>
+    </div>
+    <div class="cat-hub-row">${card('Сегодня', today)}${card('Завтра', tomorrow)}</div>
+    ${btn}
+    <div class="cat-hub-legend">${legend}</div>
+  </div>`;
+}
+function showCategoryHelp() {
+  const fn = (typeof askConfirm === 'function') ? askConfirm : null;
+  const html = '<div style="text-align:left;line-height:1.5">'
+    + '<p style="margin:0 0 8px">Каждый день приложение даёт <b>7 личных заданий</b>. Если выбрать направление — <b>5 из 7</b> завтрашних заданий будут из него, ещё 2 останутся случайными.</p>'
+    + '<p style="margin:0 0 6px"><b>Как получить выбор:</b></p>'
+    + '<ul style="margin:0 0 8px 18px;padding:0"><li>🎁 бесплатно — 1 раз в неделю (с понедельника)</li><li>🏅 награда за задачи смены («Заработать 8000₽», «12 000₽»)</li><li>🪙 за 150 XP — прямо здесь или в ДЕНЬГИ → Бусты</li></ul>'
+    + '<p style="margin:0">Цифры в цветных метках — сколько XP набрано в каждом направлении.</p></div>';
+  if (fn) fn(html, { icon: '🎯', title: 'Как работает направление', okText: 'Понятно', noText: '' });
+  else alert(html.replace(/<[^>]+>/g, ''));
+}
+
+function openCategoryPicker(isWeeklyFree = false, mode = '') {
   const container = document.getElementById('categoryPickerList');
+  const paid = mode === 'paid';
   const source = isWeeklyFree ? 'weekly' : 'bonus';
+  const tomorrow = getChosenCategoryFor(tomorrowStr());
+  const lifeXP = (typeof getLifeXP === 'function') ? (getLifeXP().cats || {}) : {};
   container.innerHTML = Object.entries(LQ_CATEGORIES).map(([key, cat]) =>
-    `<button class="cat-pick-btn" onclick="pickCategory('${key}', '${source}')" style="background:#F7F8FA;border:2px solid ${cat.color};border-radius:12px;padding:12px 8px;cursor:pointer;text-align:center;transition:all 0.2s;color:var(--text);font-family:inherit">
-      <div style="font-size:24px;margin-bottom:4px">${cat.icon}</div>
-      <div style="font-size:12px;font-weight:700;color:${cat.color}">${cat.name}</div>
-      <div style="font-size:10px;color:var(--text-dim)">${LIFE_QUESTS.filter(q => q.cat === key).length} квестов</div>
+    `<button class="cat-pick-btn ${tomorrow === key ? 'is-selected' : ''}" onclick="${paid ? `buyCategoryChoice('${key}')` : `pickCategory('${key}', '${source}')`}" style="border-color:${cat.color}">
+      <div class="ico">${cat.icon}</div>
+      <div class="nm" style="color:${catTextColor(key)}">${cat.name}</div>
+      <div class="cnt">${LIFE_QUESTS.filter(q => q.cat === key).length} заданий</div>
+      <div class="xp" style="color:${catTextColor(key)}">${lifeXP[key] || 0} XP набрано</div>
     </button>`
   ).join('');
-  const modalTitle = document.querySelector('#categoryPickerModal h3');
-  if (modalTitle) {
-    modalTitle.textContent = isWeeklyFree ? '🎁 БЕСПЛАТНЫЙ ВЫБОР КАТЕГОРИИ' : '🎯 ВЫБОР КАТЕГОРИИ';
+  const st = document.getElementById('cpState');
+  if (st) {
+    if (isWeeklyFree) { st.className = 'cp-state free'; st.innerHTML = '🎁 <span>Бесплатный выбор недели — доступен</span>'; }
+    else if (paid) { st.className = 'cp-state paid'; st.innerHTML = '🪙 <span>Бесплатный выбор уже использован. Выбор сейчас — <b>150 XP</b> с баланса</span>'; }
+    else { st.className = 'cp-state bonus'; st.innerHTML = '🏅 <span>Выбор заработан задачей смены</span>'; }
   }
+  const note = document.getElementById('cpNote');
+  if (note) note.textContent = tomorrow
+    ? `Сейчас на завтра выбрано: ${LQ_CATEGORIES[tomorrow].icon} ${LQ_CATEGORIES[tomorrow].name}. Нажми на другое, чтобы заменить.`
+    : 'Нажми на направление — оно применится к заданиям завтрашнего дня.';
   document.getElementById('categoryPickerModal').classList.add('show');
   document.body.classList.add('modal-open');
+}
+// Выбор за XP прямо из хаба (без похода в магазин)
+function buyCategoryChoice(key) {
+  const PRICE = 150;
+  const data = getLifeXP();
+  if (data.total < PRICE) {
+    showToast(`🪙 Нужно ${PRICE} XP, на балансе ${data.total}. Бесплатный выбор вернётся в понедельник`, 'warn');
+    return;
+  }
+  // Та же логика, что в shopBuyItem('cat_choice'): списываем с Life XP
+  data.total -= PRICE;
+  saveLifeXP(data);
+  if (typeof renderLifeStats === 'function') renderLifeStats();
+  pickCategory(key, 'paid');
 }
 
 function closeCategoryPicker() {
@@ -5963,9 +6125,12 @@ function pickCategory(cat, source = 'bonus') {
     const wc = getWeeklyCategoryChoice();
     wc.used = true;
     saveWeeklyCategoryChoice(wc);
-    showToast(`🎁 ${catInfo.icon} Завтра задания из: ${catInfo.name} (бесплатно)`, 'success');
+    showToast(`🎁 ${catInfo.icon} Завтра 5 из 7 заданий — ${catInfo.name} (бесплатно)`, 'success');
+  } else if (source === 'paid') {
+    showToast(`🪙 ${catInfo.icon} Завтра 5 из 7 заданий — ${catInfo.name} (−150 XP)`, 'success');
   } else {
-    showToast(`${catInfo.icon} Завтра задания из: ${catInfo.name}`, 'success');
+    const b = getShiftBonuses(); if (b.categoryChoice) { b.categoryChoice = false; saveShiftBonuses(b); }
+    showToast(`${catInfo.icon} Завтра 5 из 7 заданий — ${catInfo.name}`, 'success');
   }
   rainCoins(5);
   renderLifeQuests();
@@ -6062,15 +6227,11 @@ function renderLifeQuests() {
   const container = document.getElementById('lifeQuestList');
   const doneCount = quests.filter(q => checked[q.id]).length;
 
-  let headerHtml = '';
-  if (chosenCat && LQ_CATEGORIES[chosenCat]) {
-    const ci = LQ_CATEGORIES[chosenCat];
-    headerHtml = `<div style="text-align:center;padding:6px 10px;margin-bottom:8px;background:var(--gold-bg);border-radius:10px;font-size:12px;color:var(--gold);border:1px solid #FEFCBF">
-      🎯 Фокус дня: ${ci.icon} <b>${ci.name}</b>
-    </div>`;
-  }
+  const headerHtml = '';
 
-  container.innerHTML = headerHtml + quests.map(q => {
+  let hubHtml = '';
+  try { hubHtml = renderCategoryHub(); } catch (e) { console.warn('catHub:', e); }
+  container.innerHTML = hubHtml + headerHtml + quests.map(q => {
     const isDone = !!checked[q.id];
     const canReroll = !isDone && rerollsLeft > 0;
     return `<div class="life-quest-item ${isDone ? 'checked' : ''}" onclick="toggleLifeQuest('${q.id}')">
@@ -6078,19 +6239,13 @@ function renderLifeQuests() {
       <div class="lq-content">
         <div class="lq-title">${q.icon} ${q.title}</div>
         <div class="lq-desc">${q.desc}</div>
+        ${catTag(q.cat)}
       </div>
       <div class="lq-reward">${q.reward}</div>
       <button class="lq-reroll" onclick="rerollLifeQuest('${q.id}', event)" ${canReroll ? '' : 'disabled'} title="Заменить квест">🔄</button>
     </div>`;
   }).join('') +
     `<div class="lq-reroll-counter">🎲 Замен: ${rerollsLeft}/${totalRerolls}${bonusRerolls > 0 ? ` <span style="color:var(--gold)">(+${bonusRerolls} бонус)</span>` : ''}${shopExtra > 0 ? ` <span style="color:var(--purple)">(+${shopExtra} магазин)</span>` : ''}</div>` +
-    (() => {
-      const wc = getWeeklyCategoryChoice();
-      if (!wc.used) {
-        return `<div style="text-align:center;margin:6px 0"><button onclick="useWeeklyCategoryChoice()" style="background:#FFFFF0;border:1px solid rgba(183,121,31,0.2);border-radius:10px;padding:8px 16px;color:var(--gold);font-weight:700;font-size:12px;cursor:pointer;font-family:inherit">🎁 Бесплатный выбор категории (1/нед.)</button></div>`;
-      }
-      return `<div style="text-align:center;margin:4px 0;font-size:10px;color:var(--text-dim)">🎁 Выбор категории использован до понедельника</div>`;
-    })() +
     (doneCount === quests.length && quests.length > 0
     ? '<div style="text-align:center;padding:10px;font-size:14px;color:var(--green);font-weight:700">🏆 ВСЕ ЗАДАНИЯ ВЫПОЛНЕНЫ! 🎉</div>'
     : `<div style="text-align:center;padding:6px;font-size:11px;color:var(--text-dim)">${doneCount}/${quests.length} выполнено · обновляются каждый день</div>`);
@@ -7420,7 +7575,7 @@ function renderCloudSyncTag() {
 function checkWeeklyFreeChoice() {
   const wc = getWeeklyCategoryChoice();
   if (!wc.used) {
-    setTimeout(() => showToast('🎁 Доступен бесплатный выбор категории заданий', 'success'), 1800);
+    setTimeout(() => showToast('🎁 ЖИЗНЬ → Направление заданий: бесплатный выбор на этой неделе', 'success'), 1800);
   }
 }
 
@@ -8068,7 +8223,7 @@ function renderChart() {
 
 // ====== PWA: SERVICE WORKER ======
 // Регистрируем только по http/https — с file:// браузер ругается.
-const APP_VERSION = 'v7.0.1';
+const APP_VERSION = 'v7.0.2';
 
 // Страховка: кнопка баннера обязана работать даже если обработчик
 // от service worker по какой-то причине не навесился.
@@ -8081,6 +8236,13 @@ document.addEventListener('click', (e) => {
 });
 
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  // v7.0.2: SW отдаёт index.html из кэша мгновенно и обновляет его в фоне.
+  // Когда свежая версия легла в кэш — показываем баннер, reload подхватит её.
+  navigator.serviceWorker.addEventListener('message', (e) => {
+    if (!e.data || e.data.type !== 'INDEX_UPDATED') return;
+    const banner = document.getElementById('updateBanner');
+    if (banner) banner.classList.add('show');
+  });
   window.addEventListener('load', () => {
     // Перезагружаемся ТОЛЬКО после осознанного нажатия «Обновить».
     // Иначе любой controllerchange (в т.ч. первая установка) дёргал reload,
@@ -10615,6 +10777,63 @@ window.CRYPTO = CRYPTO;
 window.switchV6Tab = switchV6Tab;
 window.bootV6 = bootV6;
 
+// ====== v7.0.2: подсказки «где что» — показываются по одному разу на профиль ======
+const UI_HINTS = [
+  { id: 'wt', target: '#wtChip', title: '💼 Тип работы', text: 'Здесь меняется тип работы: цвета, термины и целевая ставка подстроятся. Это же есть в «Профиль → Режим приложения».', when: () => true },
+  { id: 'cat', target: '#catHub', title: '🎯 Направление заданий', text: 'Тут выбираешь, из какого направления будут завтрашние личные задания. Цветная метка под каждым заданием — его направление.', when: () => document.getElementById('lifeContent')?.classList.contains('active') },
+  { id: 'shop', target: '#tabMoney', title: '💰 Деньги', text: 'Магазин бустов, темы и финансы — здесь. Бусты (замены, двойной XP, направление заданий) покупаются за Life XP.', when: () => true }
+];
+function getHintsSeen() { try { return uGet('v7_hints_seen', {}) || {}; } catch (e) { return {}; } }
+function markHintSeen(id) { try { const s = getHintsSeen(); s[id] = 1; uSet('v7_hints_seen', s); } catch (e) {} }
+let _hintOpen = false;
+function showNextHint() {
+  if (_hintOpen || !currentUser) return;
+  if (document.querySelector('.modal-overlay.show, .ask-overlay.show')) return;
+  const seen = getHintsSeen();
+  const h = UI_HINTS.find(x => !seen[x.id] && x.when() && document.querySelector(x.target));
+  if (!h) return;
+  const el = document.querySelector(h.target);
+  let r = el.getBoundingClientRect();
+  if (r.width === 0) return;
+  const isFixed = (() => { let p = el; while (p && p !== document.body) { if (getComputedStyle(p).position === 'fixed') return true; p = p.parentElement; } return false; })();
+  if (isFixed) {
+    // Таб-бар прячется при скролле вниз — ждём, пока он снова в кадре (прокрутка вверх)
+    if (r.bottom > innerHeight || r.top < 0) { setTimeout(showNextHint, 1500); return; }
+  } else if (r.top < 60 || r.bottom > innerHeight - 140) {
+    // Цель за экраном или у самого края — подводим её в центр и показываем после скролла
+    el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    _hintOpen = true;
+    setTimeout(() => { _hintOpen = false; r = el.getBoundingClientRect(); if (r.top >= 0 && r.bottom <= innerHeight) showNextHint(); }, 550);
+    return;
+  }
+  _hintOpen = true;
+  el.classList.add('ui-hint-target');
+  const box = document.createElement('div');
+  box.className = 'ui-hint';
+  const left = Math.max(10, Math.min(r.left, innerWidth - 270));
+  const below = r.bottom + 160 > innerHeight;   // не влезает снизу — рисуем над элементом
+  box.classList.toggle('below', below);
+  box.style.left = left + 'px';
+  box.style.setProperty('--ax', Math.max(12, Math.min(r.left + r.width / 2 - left - 6, 230)) + 'px');
+  const idx = UI_HINTS.indexOf(h) + 1;
+  box.innerHTML = `<div class="h-t">${h.title}</div><div>${h.text}</div><div class="h-row"><span class="h-step">подсказка ${idx} из ${UI_HINTS.length}</span><button>Понятно</button></div>`;
+  document.body.appendChild(box);
+  if (below) box.style.top = (r.top - box.offsetHeight - 12) + 'px';
+  else box.style.top = (r.bottom + 10) + 'px';
+  const close = () => {
+    box.remove(); el.classList.remove('ui-hint-target'); markHintSeen(h.id); _hintOpen = false;
+    setTimeout(showNextHint, 600);
+  };
+  box.querySelector('button').onclick = close;
+}
+function resetHints() { try { uSet('v7_hints_seen', {}); } catch (e) {} showToast('💡 Подсказки включены заново', 'success'); setTimeout(showNextHint, 400); }
+window.showNextHint = showNextHint; window.resetHints = resetHints;
+// Запуск: после полной загрузки и при смене вкладки
+setTimeout(() => { try { showNextHint(); } catch (e) {} }, 3500);
+document.addEventListener('click', (e) => {
+  if (e.target.closest && e.target.closest('.v6-tab, [data-tab]')) setTimeout(() => { try { showNextHint(); } catch (er) {} }, 900);
+});
+
 
 // ============================================================
 //  v7.0 LIFE TRACKER — work types, theming, wheel v2, smart FAB,
@@ -11336,7 +11555,7 @@ function hookRenders() {
   }
   if (typeof renderAccountModal === 'function' && !window._v7AccHooked) {
     const o = renderAccountModal;
-    window.renderAccountModal = function () { const r = o.apply(this, arguments); try { const el = document.getElementById('accountBody'); const wt = getWorkType(); if (el && !el.querySelector('.v7-set-row')) el.insertAdjacentHTML('afterbegin', '<div class="acc-sec"><h4>Режим приложения</h4><div class="v7-set-row"><span style="font-size:20px">' + wt.icon + '</span><div class="t">' + escapeHtml(wt.name) + '<span class="s">' + NOUN_LABELS[wt.noun] + ' · цель ' + (wt.goal || '—') + ' ₽/ч</span></div><button class="acc-mini go" onclick="closeAccountModal&&closeAccountModal();window.V7.openWorkTypePicker()">Изменить</button></div></div>'); } catch (e) {} return r; };
+    window.renderAccountModal = function () { const r = o.apply(this, arguments); try { const el = document.getElementById('accountBody'); const wt = getWorkType(); if (el && !el.querySelector('.v7-set-row')) el.insertAdjacentHTML('afterbegin', '<div class="acc-sec"><h4>Режим приложения</h4><div class="v7-set-row"><span style="font-size:20px">' + wt.icon + '</span><div class="t">' + escapeHtml(wt.name) + '<span class="s">' + NOUN_LABELS[wt.noun] + ' · цель ' + (wt.goal || '—') + ' ₽/ч</span></div><button class="acc-mini go" onclick="closeAccountModal&&closeAccountModal();window.V7.openWorkTypePicker()">Изменить</button></div>' + (function(){ try { const t = getChosenCategoryFor(tomorrowStr()); const c = t && LQ_CATEGORIES[t]; return '<div class="v7-set-row"><span style="font-size:20px">🎯</span><div class="t">Направление заданий<span class="s">' + (c ? ('завтра: ' + c.icon + ' ' + c.name) : 'на завтра не выбрано') + '</span></div><button class="acc-mini go" onclick="closeAccountModal&&closeAccountModal();switchTab(\'life\');setTimeout(openCategoryHub,350)">Выбрать</button></div>'; } catch (e) { return ''; } })() + '<div class="v7-set-row"><span style="font-size:20px">💡</span><div class="t">Подсказки по интерфейсу<span class="s">показать заново «где что находится»</span></div><button class="acc-mini" onclick="closeAccountModal&&closeAccountModal();resetHints()">Показать</button></div></div>'); } catch (e) {} return r; };
     window._v7AccHooked = 1;
   }
 }
