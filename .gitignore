@@ -9,3 +9,8 @@ _stage1.html
 _check*.js
 index_pre_v6_*.html
 index_v5.3_backup.html
+
+_build_v61.py
+_v61_icons.py
+__pycache__/
+index_pre_v61_*.html
