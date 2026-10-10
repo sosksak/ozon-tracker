@@ -11,7 +11,7 @@
 // раньше, чем пользователь успел нажать кнопку. Активируемся только по команде
 // SKIP_WAITING из страницы.
 
-const VERSION = 'v7.0.0';
+const VERSION = 'v7.0.1';
 const CACHE = 'life-tracker-' + VERSION;
 
 const PRECACHE = [
